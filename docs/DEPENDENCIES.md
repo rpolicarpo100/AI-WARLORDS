@@ -1,15 +1,36 @@
-# AI WARLORDS — DEPENDENCIES (M001)
+# AI WARLORDS — DEPENDENCIES (M002)
 
-> Estado: `NONE` — zero dependências.
-> Data: 2026-09-10
+> Data: 2026-09-10 · Versões exactas OBSERVADAS em `node_modules/` pós-`npm ci`
 
 ---
 
 ## 1. Dependências de código
 
-```text
-(nenhuma — sem package.json, requirements.txt, pyproject.toml, go.mod, Cargo.toml, etc.)
-```
+### Produção: ZERO
+
+`package.json` não declara `dependencies` (o npm removeu o bloco vazio;
+`src/env-contract.test.ts` vigia esta invariante). Runtime usa apenas
+`node:` builtins (`http`, `net`, `fs`, `path`, `url`, `child_process`, `events`).
+
+### Desenvolvimento (10 directas, 161 pacotes no total com transitivas)
+
+| Pacote                 | Declarado | Instalado | Função                              |
+| ---------------------- | --------- | --------- | ----------------------------------- |
+| typescript             | ^6.0.3    | 6.0.3     | compilador + typecheck strict       |
+| @types/node            | ^22.20.2  | 22.20.2   | tipos `node:`                       |
+| tsx                    | ^4.23.13  | 4.23.13   | dev loop TS (`npm run dev`)         |
+| vitest                 | ^4.1.11   | 4.1.11    | test runner                         |
+| @vitest/coverage-v8    | ^4.1.11   | 4.1.11    | coverage real (thresholds 100×4)    |
+| eslint                 | ^10.10.0  | 10.10.0   | lint (`--max-warnings=0`)           |
+| @eslint/js             | ^10.0.1   | 10.0.1    | config base ESLint                  |
+| typescript-eslint      | ^8.70.0   | 8.70.0    | parser+regras TS (flat config)      |
+| prettier               | ^3.9.6    | 3.9.6     | formato canónico                    |
+| eslint-config-prettier | ^10.1.8   | 10.1.8    | desliga regras ESLint conflituantes |
+
+Evidência supply-chain (M002): `package-lock.json` committed;
+`rm -rf node_modules && npm ci` → exit 0 (reprodutível); `npm audit` →
+**0 vulnerabilities**; upgrades futuros são decisões explícitas (nunca
+automáticos).
 
 ## 2. Serviços externos / Providers
 
@@ -19,29 +40,23 @@
 
 ## 3. Capacidades de providers futuros — TODAS `UNKNOWN` (§1)
 
-Nenhuma das seguintes capacidades foi verificada. Nada abaixo pode ser assumido em nenhum módulo até verificação explícita:
+Nada abaixo foi verificado; nada pode ser assumido até verificação explícita
+no módulo que precisar dele:
 
-| Provider / Área | Capacidade | Estado |
-|---|---|---|
-| Solana (RPC/cluster) | Enviar/confirmar transacções, subscrições, finality | `UNKNOWN` |
-| Solana (wallet adapters) | Signing, UX de ligação | `UNKNOWN` |
-| USDC (SPL token) | Mint/programa, decimais, fees | `UNKNOWN` |
-| Qualquer LLM provider | Modelos, latência, custo, rate limits, SLA | `UNKNOWN` |
-| Qualquer hosting | Regiões, scaling, preços | `UNKNOWN` |
-| Qualquer DB gerida | Planos, limites, backups | `UNKNOWN` |
-| KYC/AML vendors | Requisitos por jurisdição | `UNKNOWN` |
-| Lojas de app / pagamentos fiat | Se aplicável no futuro | `UNKNOWN` |
+| Provider / Área          | Capacidade                            | Estado    |
+| ------------------------ | ------------------------------------- | --------- |
+| Solana (RPC/cluster)     | transacções, subscrições, finality    | `UNKNOWN` |
+| Solana (wallet adapters) | signing, UX de ligação                | `UNKNOWN` |
+| USDC (SPL token)         | programa, decimais, fees              | `UNKNOWN` |
+| Qualquer LLM provider    | modelos, latência, custo, rate limits | `UNKNOWN` |
+| Qualquer hosting         | regiões, scaling, preços              | `UNKNOWN` |
+| Qualquer DB gerida       | planos, limites, backups              | `UNKNOWN` |
+| KYC/AML vendors          | requisitos por jurisdição             | `UNKNOWN` |
 
-Regra: qualquer módulo que precise de um provider tem de verificar a capacidade **nesse módulo** e registar a evidência. Verificação antiga não transitiva sem re-validação quando houver mudança de versão/plano.
+## 4. Política de dependências (em vigor desde M002)
 
-## 4. Política de dependências (a aplicar desde M002)
-
-1. Cada nova dependência tem de ser justificada contra §19 (simplicidade).
-2. `DEPENDENCIES.md` actualizado em cada módulo que adicione/remova/actualize algo.
-3. Lockfiles versionados; builds reproduzíveis.
-4. Sem dependências de rede em runtime crítico sem fallback (cf. §20 para AI).
-5. Auditoria de vulnerabilidades quando houver gestor de pacotes (M002 define o mecanismo).
-
----
-
-*Fim de DEPENDENCIES.md*
+1. Nova dependência só com justificação vs §19 (simplicidade).
+2. Este ficheiro actualizado em cada módulo que mexa em deps.
+3. Lockfiles versionados; builds reproduzíveis (`npm ci`).
+4. Sem dependências de rede em runtime crítico sem fallback.
+5. `npm audit` revisto por módulo; vulnerabilidades registadas (nunca escondidas).
