@@ -42,7 +42,7 @@ HOST=0.0.0.0 PORT=3000 npm run dev
 ```text
 src/            TypeScript sources (+ colocated *.test.ts)
 src/dev-server.ts  M002 dev scaffold (NOT the game server — no API contract)
-src/engine/     game engine home (authority kernel + world state + views + match + validation)
+src/engine/     game engine home (authority + state + views + match + validation + events)
 dist/           compiled output (gitignored, rebuilt by `npm run build`)
 docs/           audit, stack, risks, status, tools, test policy
 docs/modules/   per-module contract + analysis + execution record

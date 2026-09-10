@@ -12,6 +12,13 @@ import {
   type TransitionHandler,
   type Untrusted,
 } from './authority.js';
+import {
+  matchProducers,
+  matchStartedEvent,
+  runProducers,
+  type EventProducer,
+  type GameEvent,
+} from './events.js';
 import { hashState } from './hash.js';
 import { MAX_UINT32 } from './rng.js';
 import {
@@ -92,6 +99,7 @@ export interface MatchInit {
   readonly players: readonly PlayerId[];
   readonly initialState: unknown;
   readonly extraHandlers?: ReadonlyMap<string, RngHandler<WorldState>>;
+  readonly extraProducers?: ReadonlyMap<string, readonly EventProducer[]>;
 }
 
 /**
@@ -101,6 +109,8 @@ export interface MatchInit {
  * `Match.dispatch`, which keeps the timeline coherent by construction.
  * M006 owns the registry: entries are validated at registration, and every
  * handler runs wrapped (pre-rules, per-dispatch RNG, post-invariants).
+ * M007 emits domain facts: genesis on construction, producer facts on
+ * applied outcomes (observation never breaks execution).
  */
 export class Match {
   readonly id: MatchId;
@@ -109,6 +119,8 @@ export class Match {
   readonly players: readonly PlayerId[];
   private readonly kernel: AuthorityKernel<WorldState>;
   private readonly timeline: TimelineEntry[] = [];
+  private readonly producers: ReadonlyMap<string, readonly EventProducer[]>;
+  private readonly events: GameEvent[] = [];
 
   constructor(init: MatchInit) {
     if (init.matchId === undefined) {
@@ -171,12 +183,21 @@ export class Match {
       const pre = builtins.has(name) ? [noParamsRule(name), ...validator.pre] : validator.pre;
       validated.set(name, wrapWithValidation(handler, { ...validator, pre }, this.seed, nextSeq));
     }
+    const producers = new Map<string, readonly EventProducer[]>(matchProducers());
+    const extraProducers = init.extraProducers ?? new Map<string, readonly EventProducer[]>();
+    for (const [name, extra] of extraProducers) {
+      producers.set(name, [...(producers.get(name) ?? []), ...extra]);
+    }
+    this.producers = producers;
     this.players = freezeState([...init.players]);
     this.kernel = new AuthorityKernel<WorldState>({
       players: init.players,
       initialState: init.initialState,
       handlers: validated,
     });
+    this.events.push(
+      matchStartedEvent(this.seed, this.players, this.ruleset, init.initialState.tick),
+    );
     Object.freeze(this);
   }
 
@@ -185,7 +206,29 @@ export class Match {
   }
 
   dispatch(session: SessionHandle, raw: Untrusted<ClientRequest>): DispatchOutcome {
+    const before = this.kernel.getSnapshot();
     const outcome = this.kernel.dispatch(session, raw);
+    if (outcome.status === 'applied') {
+      // Kernel-accepted ⟹ well-formed: type/params below passed envelope
+      // validation inside `kernel.dispatch` (this cast documents the seam).
+      const validated = raw as ClientRequest;
+      const after = this.kernel.getSnapshot();
+      const producers = this.producers.get(validated.type) ?? [];
+      const emitted = runProducers(
+        {
+          type: validated.type,
+          caller: session.playerId,
+          params: validated.payload,
+          before,
+          after,
+        },
+        producers,
+        after.tick,
+        outcome.revision,
+        this.events.length + 1,
+      );
+      this.events.push(...emitted);
+    }
     this.syncTimeline();
     return outcome;
   }
@@ -212,6 +255,10 @@ export class Match {
 
   getTimeline(): readonly TimelineEntry[] {
     return [...this.timeline];
+  }
+
+  getEvents(): readonly GameEvent[] {
+    return [...this.events];
   }
 
   private syncTimeline(): void {

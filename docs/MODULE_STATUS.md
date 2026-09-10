@@ -1,6 +1,6 @@
-# AI WARLORDS — MODULE STATUS (M006)
+# AI WARLORDS — MODULE STATUS (M007)
 
-> Data: 2026-09-10 · Actualizado por: M006 (Action Validation)
+> Data: 2026-09-10 · Actualizado por: M007 (Event System)
 > Estados oficiais: `PLANNED · IN_ANALYSIS · IN_DEVELOPMENT · IMPLEMENTED · TESTING · FAILED · BLOCKED · VERIFIED · DEPRECATED`
 
 ---
@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 6 (M001–M006)   |
-| `PLANNED`  | 159 (M007–M165) |
+| `VERIFIED` | 7 (M001–M007)   |
+| `PLANNED`  | 158 (M008–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -29,6 +29,9 @@ Checkpoints `VERIFIED`:
 - **M006 @ 2026-09-10** — validador de acções (pré-regras + pós-invariantes +
   streams rng por dispatch); 255/255 testes, 100×4, kernel intocado.
   Registo em `docs/modules/M006.md`.
+- **M007 @ 2026-09-10** — sistema de eventos (geneses + factos por dispatch +
+  surrogates); 284/284 testes, 100×4, restrição provada.
+  Registo em `docs/modules/M007.md`.
 
 ---
 
@@ -47,7 +50,7 @@ Checkpoints `VERIFIED`:
 | M004   | World State            | `VERIFIED` |
 | M005   | Deterministic Match    | `VERIFIED` |
 | M006   | Action Validation      | `VERIFIED` |
-| M007   | Event System           | `PLANNED`  |
+| M007   | Event System           | `VERIFIED` |
 | M008   | Victory Conditions     | `PLANNED`  |
 | M009   | Core Engine Test Suite | `PLANNED`  |
 
@@ -140,10 +143,10 @@ Checkpoints `VERIFIED`:
 ## Ordem recomendada (estrita, sem saltos)
 
 ```text
-M001 → M002 → M003 → M004 → M005 → M006 (VERIFIED) → M007 → … → M165
+M001 → M002 → M003 → M004 → M005 → M006 → M007 (VERIFIED) → M008 → … → M165
 ```
 
-Próximo permitido: **M007 — Event System**, apenas após autorização
+Próximo permitido: **M008 — Victory Conditions**, apenas após autorização
 explícita. Saltos, paralelização ou batch = violação do §35 (recusar).
 
 ---

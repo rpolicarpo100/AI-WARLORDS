@@ -1,6 +1,6 @@
-# AI WARLORDS — RISK REGISTER (M006)
+# AI WARLORDS — RISK REGISTER (M007)
 
-> Data: 2026-09-10 · Actualizado por: M006
+> Data: 2026-09-10 · Actualizado por: M007
 > Convenção: `ACTIVE` = presente agora · `FUTURE` = fases vindouras ·
 > `MITIGATED` = tratado com residual declarado · `CLOSED` = encerrado
 
@@ -11,9 +11,9 @@
 | ID   | Risco                                | Fase    | Sev. | Estado | Mitigação                                              |
 | ---- | ------------------------------------ | ------- | ---- | ------ | ------------------------------------------------------ |
 | R-01 | Scope creep / exaustão (165 módulos) | Todas   | Alta | FUTURE | gates rígidos; 1 módulo de cada vez (§35); checkpoints |
-| R-02 | Complexidade prematura               | 0–1     | Alta | FUTURE | §19; M002–M006 minimalistas provam o padrão            |
+| R-02 | Complexidade prematura               | 0–1     | Alta | FUTURE | §19; M002–M007 minimalistas provam o padrão            |
 | R-03 | Assumir providers sem verificar      | 5+, 23+ | Alta | FUTURE | §1 (`UNKNOWN` até prova); TOOLS.md c/ fontes+UNKNOWNs  |
-| R-04 | Simulação apresentada como real      | Todas   | Alta | FUTURE | §11; M006: TEST MOCKs rotulados; regras mortas vetadas |
+| R-04 | Simulação apresentada como real      | Todas   | Alta | FUTURE | §11; M007: restrição provada; zero simulação           |
 | R-05 | Testes desactivados para obter PASS  | Todas   | Alta | FUTURE | §16; thresholds enforced; exclusão só com compensação  |
 
 ## 2. Riscos arquitecturais
@@ -49,18 +49,18 @@
 
 | ID   | Risco                     | Fase     | Sev.  | Estado | Mitigação                                   |
 | ---- | ------------------------- | -------- | ----- | ------ | ------------------------------------------- |
-| R-40 | Optimizar por adivinhação | 1, 5, 20 | Média | FUTURE | §27 medir; M088–M093; freeze/hash/validate  |
+| R-40 | Optimizar por adivinhação | 1, 5, 20 | Média | FUTURE | §27 medir; M088–M093; freeze/hash/emit      |
 | R-41 | Custos LLM descontrolados | 5+       | Média | FUTURE | §21; sem LLM p/ triviais; M092              |
-| R-42 | Sem audit trail da AI     | 5+       | Média | FUTURE | §26; M062–M064; kernel log+timeline preced. |
+| R-42 | Sem audit trail da AI     | 5+       | Média | FUTURE | §26; M062–M064; log+timeline+events preced. |
 
 ## 6. Riscos de ambiente / imediatos
 
 | ID   | Risco                                        | Sev.  | Estado    | Nota                                                                          |
 | ---- | -------------------------------------------- | ----- | --------- | ----------------------------------------------------------------------------- |
-| R-50 | Stack errada → reescrita em M005–M009        | Média | MITIGATED | TS/Node; residual: prova M009 (M005–M006 passaram)                            |
-| R-51 | Docker ausente no sandbox                    | Baixa | ACTIVE    | M006 não precisou; revisitar se preciso                                       |
+| R-50 | Stack errada → reescrita em M005–M009        | Média | MITIGATED | TS/Node; residual: prova M009 (M005–M007 passaram)                            |
+| R-51 | Docker ausente no sandbox                    | Baixa | ACTIVE    | M007 não precisou; revisitar se preciso                                       |
 | R-52 | TypeScript 6 = major recente                 | Baixa | ACTIVE    | pinned; gates verdes                                                          |
-| R-53 | Stores `seen`/sessions/timeline unbounded    | Baixa | FUTURE    | in-process hoje; M062: bound/persist log+timeline (L-09); M071/M085 resto     |
+| R-53 | Stores `seen`/sessions/timeline/events unb.  | Baixa | FUTURE    | in-process; M062: bound/persist log+timeline+events (L-09); M071/M085 resto   |
 | R-54 | Estado canónico unbounded (handlers futuros) | Baixa | MITIGATED | cap 1MB/escrita (M006; L-08 CLOSED). RESIDUAL: valor provisório (L-12 → M088) |
 
 ## 7. Alterações
@@ -72,3 +72,4 @@
 | 2026-09-10 | M004   | R-12 nota (mecanismo VERIFIED, fog real M015); R-54 criado (L-08 → M006)              |
 | 2026-09-10 | M005   | R-10 MITIGATED (E2E provado, residual M009/M069+); R-53 += timeline (L-09 → M062)     |
 | 2026-09-10 | M006   | R-54 MITIGATED (cap, L-08 CLOSED, residual L-12 → M088); L-10 CLOSED; R-11/R-20 notas |
+| 2026-09-10 | M007   | R-53 += events (L-09 estendido → M062); L-15/L-16 criados (delivery/payloads futuros) |
