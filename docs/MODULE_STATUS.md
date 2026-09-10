@@ -1,23 +1,25 @@
-# AI WARLORDS — MODULE STATUS (M002)
+# AI WARLORDS — MODULE STATUS (M003)
 
-> Data: 2026-09-10 · Actualizado por: M002 (Development Environment)
+> Data: 2026-09-10 · Actualizado por: M003 (Server Authority)
 > Estados oficiais: `PLANNED · IN_ANALYSIS · IN_DEVELOPMENT · IMPLEMENTED · TESTING · FAILED · BLOCKED · VERIFIED · DEPRECATED`
 
 ---
 
 ## Resumo
 
-| Estado     | Contagem        |
-| ---------- | --------------- |
-| `VERIFIED` | 2 (M001, M002)  |
-| `PLANNED`  | 163 (M003–M165) |
-| Outros     | 0               |
+| Estado     | Contagem             |
+| ---------- | -------------------- |
+| `VERIFIED` | 3 (M001, M002, M003) |
+| `PLANNED`  | 162 (M004–M165)      |
+| Outros     | 0                    |
 
 Checkpoints `VERIFIED`:
 
 - **M001 @ 2026-09-10** — audit greenfield; zero código; gate PASS.
 - **M002 @ 2026-09-10** — env TS/Node; INSTALL/BUILD/TEST/LINT/TYPECHECK PASS;
   28 testes, coverage 100×4, audit 0 vuln, 2 live checks OK.
+- **M003 @ 2026-09-10** — authority kernel + harness; 82/82 testes, 100×4,
+  zero mocks, 6 garantias provadas. Registo em `docs/modules/M003.md`.
 
 ---
 
@@ -30,15 +32,15 @@ Checkpoints `VERIFIED`:
 
 ## Fase 1 — Game Engine
 
-| Módulo | Nome                   | Estado    |
-| ------ | ---------------------- | --------- |
-| M003   | Server Authority       | `PLANNED` |
-| M004   | World State            | `PLANNED` |
-| M005   | Deterministic Match    | `PLANNED` |
-| M006   | Action Validation      | `PLANNED` |
-| M007   | Event System           | `PLANNED` |
-| M008   | Victory Conditions     | `PLANNED` |
-| M009   | Core Engine Test Suite | `PLANNED` |
+| Módulo | Nome                   | Estado     |
+| ------ | ---------------------- | ---------- |
+| M003   | Server Authority       | `VERIFIED` |
+| M004   | World State            | `PLANNED`  |
+| M005   | Deterministic Match    | `PLANNED`  |
+| M006   | Action Validation      | `PLANNED`  |
+| M007   | Event System           | `PLANNED`  |
+| M008   | Victory Conditions     | `PLANNED`  |
+| M009   | Core Engine Test Suite | `PLANNED`  |
 
 ## Fase 2 — World
 
@@ -129,10 +131,10 @@ Checkpoints `VERIFIED`:
 ## Ordem recomendada (estrita, sem saltos)
 
 ```text
-M001 (VERIFIED) → M002 (VERIFIED) → M003 → M004 → … → M165
+M001 → M002 → M003 (VERIFIED) → M004 → M005 → … → M165
 ```
 
-Próximo permitido: **M003 — Server Authority**, apenas após autorização
+Próximo permitido: **M004 — World State**, apenas após autorização
 explícita. Saltos, paralelização ou batch = violação do §35 (recusar).
 
 ---
