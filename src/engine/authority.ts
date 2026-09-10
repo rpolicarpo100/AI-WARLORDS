@@ -147,13 +147,20 @@ export interface SessionHandle {
 // ─── Deep freeze (plain data only) ───────────────────────────────────────
 
 /**
- * Deeply freezes plain JSON-style data (objects, arrays, primitives).
- * Rejects class instances, Maps, Sets and other unfreezable values loudly:
- * canonical state must be structurally freezable, never silently half-frozen.
+ * Deeply freezes plain JSON-style data (objects, arrays, strings, numbers,
+ * booleans, null). Rejects class instances, Maps, Sets, functions, symbols,
+ * bigints and undefined loudly: canonical state must be structurally
+ * freezable AND serializable, never silently half-frozen or unhashable.
  */
 export function freezeState<T>(value: T): T {
-  if (typeof value !== 'object' || value === null) {
+  const kind = typeof value;
+  if (value === null || kind === 'string' || kind === 'number' || kind === 'boolean') {
     return value;
+  }
+  if (kind !== 'object') {
+    throw new Error(
+      'AuthorityKernel state must be plain JSON-style data (objects, arrays, primitives).',
+    );
   }
   const proto: unknown = Object.getPrototypeOf(value);
   if (proto !== Object.prototype && proto !== null && !Array.isArray(value)) {
@@ -164,7 +171,7 @@ export function freezeState<T>(value: T): T {
   if (Object.isFrozen(value)) {
     return value;
   }
-  for (const key of Reflect.ownKeys(value)) {
+  for (const key of Reflect.ownKeys(value as object)) {
     freezeState((value as Record<PropertyKey, unknown>)[key]);
   }
   Object.freeze(value);

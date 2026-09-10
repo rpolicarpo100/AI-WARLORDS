@@ -1,6 +1,6 @@
-# AI WARLORDS — RISK REGISTER (M004)
+# AI WARLORDS — RISK REGISTER (M005)
 
-> Data: 2026-09-10 · Actualizado por: M004
+> Data: 2026-09-10 · Actualizado por: M005
 > Convenção: `ACTIVE` = presente agora · `FUTURE` = fases vindouras ·
 > `MITIGATED` = tratado com residual declarado · `CLOSED` = encerrado
 
@@ -11,16 +11,16 @@
 | ID   | Risco                                | Fase    | Sev. | Estado | Mitigação                                              |
 | ---- | ------------------------------------ | ------- | ---- | ------ | ------------------------------------------------------ |
 | R-01 | Scope creep / exaustão (165 módulos) | Todas   | Alta | FUTURE | gates rígidos; 1 módulo de cada vez (§35); checkpoints |
-| R-02 | Complexidade prematura               | 0–1     | Alta | FUTURE | §19; M002–M004 minimalistas provam o padrão            |
+| R-02 | Complexidade prematura               | 0–1     | Alta | FUTURE | §19; M002–M005 minimalistas provam o padrão            |
 | R-03 | Assumir providers sem verificar      | 5+, 23+ | Alta | FUTURE | §1 (`UNKNOWN` até prova); TOOLS.md c/ fontes+UNKNOWNs  |
-| R-04 | Simulação apresentada como real      | Todas   | Alta | FUTURE | §11; M004: zero mocks; placeholders rotulados          |
+| R-04 | Simulação apresentada como real      | Todas   | Alta | FUTURE | §11; M005: zero mocks; goldens generated-then-locked   |
 | R-05 | Testes desactivados para obter PASS  | Todas   | Alta | FUTURE | §16; thresholds enforced; exclusão só com compensação  |
 
 ## 2. Riscos arquitecturais
 
 | ID   | Risco                              | Fase   | Sev.       | Estado    | Mitigação                                                                                                            |
 | ---- | ---------------------------------- | ------ | ---------- | --------- | -------------------------------------------------------------------------------------------------------------------- |
-| R-10 | Determinismo inalcançável na stack | 0–1    | Alta       | FUTURE    | kernel-level provado (M003/M004); prova diferida a M005/M009                                                         |
+| R-10 | Determinismo inalcançável na stack | 0–1    | Alta       | MITIGATED | M005: E2E provado (timeline+hash+goldens). RESIDUAL: suite M009; cross-machine/async até M069+                       |
 | R-11 | Autoridade do cliente por acidente | 1, 19  | Alta       | MITIGATED | M003 VERIFIED + M004 vistas. RESIDUAL: mutações só via kernel (rever/módulo); outputs até M006; transporte até M069+ |
 | R-12 | AI com info ilícita (fog leakage)  | 2, 5   | Média–Alta | FUTURE    | M004: mecanismo de redacção VERIFIED sobre placeholder rotulado; fog REAL em M015; inferência M028                   |
 | R-13 | LLM como SPOF                      | 5+     | Alta       | FUTURE    | §20 fallback determinístico; testes de falha                                                                         |
@@ -49,24 +49,25 @@
 
 | ID   | Risco                     | Fase     | Sev.  | Estado | Mitigação                                   |
 | ---- | ------------------------- | -------- | ----- | ------ | ------------------------------------------- |
-| R-40 | Optimizar por adivinhação | 1, 5, 20 | Média | FUTURE | §27 medir; M088–M093; freeze/clone anotados |
+| R-40 | Optimizar por adivinhação | 1, 5, 20 | Média | FUTURE | §27 medir; M088–M093; freeze/hash anotados  |
 | R-41 | Custos LLM descontrolados | 5+       | Média | FUTURE | §21; sem LLM p/ triviais; M092              |
-| R-42 | Sem audit trail da AI     | 5+       | Média | FUTURE | §26; M062–M064; kernel log é precedente     |
+| R-42 | Sem audit trail da AI     | 5+       | Média | FUTURE | §26; M062–M064; kernel log+timeline preced. |
 
 ## 6. Riscos de ambiente / imediatos
 
-| ID   | Risco                                         | Sev.  | Estado    | Nota                                                       |
-| ---- | --------------------------------------------- | ----- | --------- | ---------------------------------------------------------- |
-| R-50 | Stack errada → reescrita em M005–M009         | Média | MITIGATED | TS/Node; residual: prova M005/M009                         |
-| R-51 | Docker ausente no sandbox                     | Baixa | ACTIVE    | M004 não precisou; revisitar se preciso                    |
-| R-52 | TypeScript 6 = major recente                  | Baixa | ACTIVE    | pinned; gates verdes                                       |
-| R-53 | Stores `seen`/sessions unbounded (DoS futuro) | Baixa | FUTURE    | in-process hoje; M071/M085: bound/expire (L-07)            |
-| R-54 | Estado canónico unbounded (handlers futuros)  | Baixa | FUTURE    | hoje nenhum handler escreve; M006: caps por escrita (L-08) |
+| ID   | Risco                                        | Sev.  | Estado    | Nota                                                                      |
+| ---- | -------------------------------------------- | ----- | --------- | ------------------------------------------------------------------------- |
+| R-50 | Stack errada → reescrita em M005–M009        | Média | MITIGATED | TS/Node; residual: prova M009 (M005 passou)                               |
+| R-51 | Docker ausente no sandbox                    | Baixa | ACTIVE    | M005 não precisou; revisitar se preciso                                   |
+| R-52 | TypeScript 6 = major recente                 | Baixa | ACTIVE    | pinned; gates verdes                                                      |
+| R-53 | Stores `seen`/sessions/timeline unbounded    | Baixa | FUTURE    | in-process hoje; M062: bound/persist log+timeline (L-09); M071/M085 resto |
+| R-54 | Estado canónico unbounded (handlers futuros) | Baixa | FUTURE    | hoje só tick escreve; M006: caps por escrita (L-08)                       |
 
 ## 7. Alterações
 
-| Data       | Módulo | Alteração                                                                |
-| ---------- | ------ | ------------------------------------------------------------------------ |
-| 2026-09-10 | M002   | R-50 MITIGATED (residual declarado); R-51 sem impacto; R-52 criado       |
-| 2026-09-10 | M003   | R-11 MITIGATED (residual declarado); R-53 criado (L-07 → M071/M085)      |
-| 2026-09-10 | M004   | R-12 nota (mecanismo VERIFIED, fog real M015); R-54 criado (L-08 → M006) |
+| Data       | Módulo | Alteração                                                                         |
+| ---------- | ------ | --------------------------------------------------------------------------------- |
+| 2026-09-10 | M002   | R-50 MITIGATED (residual declarado); R-51 sem impacto; R-52 criado                |
+| 2026-09-10 | M003   | R-11 MITIGATED (residual declarado); R-53 criado (L-07 → M071/M085)               |
+| 2026-09-10 | M004   | R-12 nota (mecanismo VERIFIED, fog real M015); R-54 criado (L-08 → M006)          |
+| 2026-09-10 | M005   | R-10 MITIGATED (E2E provado, residual M009/M069+); R-53 += timeline (L-09 → M062) |

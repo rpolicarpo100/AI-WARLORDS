@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   AuthorityKernel,
+  freezeState,
   markUntrusted,
   type AppliedEntry,
   type ClientRequest,
@@ -504,5 +505,48 @@ describe('determinism (kernel-level, M005 foreshadow)', () => {
     const second = run();
     expect(second.getSnapshot()).toEqual(first.getSnapshot());
     expect(second.getLog()).toEqual(first.getLog());
+  });
+});
+
+describe('freezeState (direct unit tests, M005)', () => {
+  it.each([[42], ['x'], [true], [null]] as Array<[unknown]>)(
+    'passes primitives through: %j',
+    (value) => {
+      expect(freezeState(value)).toBe(value);
+    },
+  );
+
+  it('deep-freezes objects and arrays', () => {
+    const value = { a: [1, { b: 'x' }], c: { d: true } };
+    const frozen = freezeState(value);
+    expect(frozen).toBe(value);
+    expect(Object.isFrozen(value)).toBe(true);
+    expect(Object.isFrozen(value.a)).toBe(true);
+    expect(Object.isFrozen(value.a[1])).toBe(true);
+    expect(Object.isFrozen(value.c)).toBe(true);
+  });
+
+  it('returns already-frozen values untouched (same reference)', () => {
+    const value = Object.freeze({ a: Object.freeze([1]) });
+    expect(freezeState(value)).toBe(value);
+  });
+
+  it.each([
+    [new Map()],
+    [new Set()],
+    [new Date()],
+    [/x/],
+    [1n],
+    [() => 0],
+    [Symbol('s')],
+    [undefined],
+  ] as Array<[unknown]>)('rejects exotic values (#%#)', (value) => {
+    expect(() => freezeState(value)).toThrow(/plain JSON-style data/);
+  });
+
+  it('rejects exotic values nested inside plain structures', () => {
+    expect(() => freezeState({ fn: () => 0 })).toThrow(/plain JSON-style data/);
+    expect(() => freezeState({ u: undefined })).toThrow(/plain JSON-style data/);
+    expect(() => freezeState([1n])).toThrow(/plain JSON-style data/);
   });
 });

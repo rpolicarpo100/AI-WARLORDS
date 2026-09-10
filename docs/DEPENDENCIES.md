@@ -10,7 +10,8 @@
 
 `package.json` não declara `dependencies` (o npm removeu o bloco vazio;
 `src/env-contract.test.ts` vigia esta invariante). Runtime usa apenas
-`node:` builtins (`http`, `net`, `fs`, `path`, `url`, `child_process`, `events`).
+`node:` builtins (`http`, `net`, `fs`, `path`, `url`, `child_process`, `events`,
+`crypto` — M005: ids + sha256).
 
 ### Desenvolvimento (10 directas, 161 pacotes no total com transitivas)
 

@@ -1,6 +1,6 @@
-# AI WARLORDS — MODULE STATUS (M004)
+# AI WARLORDS — MODULE STATUS (M005)
 
-> Data: 2026-09-10 · Actualizado por: M004 (World State)
+> Data: 2026-09-10 · Actualizado por: M005 (Deterministic Match)
 > Estados oficiais: `PLANNED · IN_ANALYSIS · IN_DEVELOPMENT · IMPLEMENTED · TESTING · FAILED · BLOCKED · VERIFIED · DEPRECATED`
 
 ---
@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 4 (M001–M004)   |
-| `PLANNED`  | 161 (M005–M165) |
+| `VERIFIED` | 5 (M001–M005)   |
+| `PLANNED`  | 160 (M006–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -23,6 +23,9 @@ Checkpoints `VERIFIED`:
 - **M004 @ 2026-09-10** — world state versionado + 3 vistas separadas;
   122/122 testes, 100×4; TOOLS.md (7 ferramentas verificadas).
   Registo em `docs/modules/M004.md`.
+- **M005 @ 2026-09-10** — match determinístico (proveniência + tick + timeline
+  com hashes + RNG com seed); 214/214 testes, 100×4, goldens lockados.
+  Registo em `docs/modules/M005.md`.
 
 ---
 
@@ -39,7 +42,7 @@ Checkpoints `VERIFIED`:
 | ------ | ---------------------- | ---------- |
 | M003   | Server Authority       | `VERIFIED` |
 | M004   | World State            | `VERIFIED` |
-| M005   | Deterministic Match    | `PLANNED`  |
+| M005   | Deterministic Match    | `VERIFIED` |
 | M006   | Action Validation      | `PLANNED`  |
 | M007   | Event System           | `PLANNED`  |
 | M008   | Victory Conditions     | `PLANNED`  |
@@ -134,10 +137,10 @@ Checkpoints `VERIFIED`:
 ## Ordem recomendada (estrita, sem saltos)
 
 ```text
-M001 → M002 → M003 → M004 (VERIFIED) → M005 → … → M165
+M001 → M002 → M003 → M004 → M005 (VERIFIED) → M006 → … → M165
 ```
 
-Próximo permitido: **M005 — Deterministic Match**, apenas após autorização
+Próximo permitido: **M006 — Action Validation**, apenas após autorização
 explícita. Saltos, paralelização ou batch = violação do §35 (recusar).
 
 ---
