@@ -4,10 +4,10 @@
  * seed → same sequence, golden-locked); NOT certified against external
  * vectors — compatibility is not required, reproducibility is.
  *
- * Wiring into handler context is deferred to the first stochastic consumer
- * (a future domain module): until then the seed is provenance, and this
- * primitive is what gives it meaning. No `fork`: added when a second
- * independent stream exists (no speculative streams).
+ * M006 wires streams into dispatch: `deriveSeed(seed, seq)` yields each
+ * dispatch's independent stream, injected into every handler context by the
+ * validation wrapper. No domain handler consumes randomness yet. No `fork`:
+ * added when a second independent stream exists (no speculative streams).
  */
 export const MAX_UINT32 = 0xffffffff;
 
@@ -43,4 +43,23 @@ export class SeededRng {
   getState(): number {
     return this.state;
   }
+}
+
+/**
+ * Derives an independent per-dispatch stream seed from (match seed, log
+ * sequence). Deterministic mixing (NOT cryptographic: streams need
+ * separation, not secrecy — anti-cheat secrecy is a future module's job).
+ * Any dispatch's randomness is reconstructible from (seed, seq) alone.
+ */
+export function deriveSeed(seed: number, seq: number): number {
+  if (!Number.isInteger(seed) || seed < 0 || seed > MAX_UINT32) {
+    throw new Error('deriveSeed: seed must be a uint32.');
+  }
+  if (!Number.isInteger(seq) || seq < 1 || seq > MAX_UINT32) {
+    throw new Error('deriveSeed: seq must be a positive uint32.');
+  }
+  let h = Math.imul(seed ^ 0x9e3779b9, 0x85ebca6b);
+  h = Math.imul(h ^ seq, 0xc2b2ae35);
+  h ^= h >>> 13;
+  return h >>> 0;
 }

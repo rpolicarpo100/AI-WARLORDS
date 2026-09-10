@@ -14,6 +14,12 @@ import {
 } from './authority.js';
 import { hashState } from './hash.js';
 import { MAX_UINT32 } from './rng.js';
+import {
+  createWorldValidator,
+  noParamsRule,
+  wrapWithValidation,
+  type RngHandler,
+} from './validation.js';
 import { isWorldState, worldHandlers, type WorldState } from './world-state.js';
 
 declare const matchBrand: unique symbol;
@@ -58,12 +64,12 @@ export interface TimelineEntry {
 
 /**
  * M005 registers time progression only. Domain transitions arrive with
- * their modules (via `extraHandlers` until M006 owns the registry).
- * Payload is deliberately ignored: `match.advance` takes no parameters
- * (M006 may tighten unused-payload policy globally).
+ * their modules (via `extraHandlers`). Payload is deliberately ignored by
+ * the handler itself; M006 rejects non-empty payloads to built-ins via the
+ * no-params pre-rule (fail loud on caller mistakes).
  */
-export function matchHandlers(): Map<string, TransitionHandler<WorldState>> {
-  const entries: Array<[string, TransitionHandler<WorldState>]> = [
+export function matchHandlers(): Map<string, RngHandler<WorldState>> {
+  const entries: Array<[string, RngHandler<WorldState>]> = [
     [
       'match.advance',
       (ctx) => {
@@ -85,7 +91,7 @@ export interface MatchInit {
   readonly ruleset: unknown;
   readonly players: readonly PlayerId[];
   readonly initialState: unknown;
-  readonly extraHandlers?: ReadonlyMap<string, TransitionHandler<WorldState>>;
+  readonly extraHandlers?: ReadonlyMap<string, RngHandler<WorldState>>;
 }
 
 /**
@@ -93,6 +99,8 @@ export interface MatchInit {
  * initial) + owned kernel + timeline (kernel log enriched with tick and
  * state hash, 1:1). The kernel never escapes: every dispatch flows through
  * `Match.dispatch`, which keeps the timeline coherent by construction.
+ * M006 owns the registry: entries are validated at registration, and every
+ * handler runs wrapped (pre-rules, per-dispatch RNG, post-invariants).
  */
 export class Match {
   readonly id: MatchId;
@@ -143,16 +151,31 @@ export class Match {
     }
     const world = worldHandlers();
     const match = matchHandlers();
-    const extra = init.extraHandlers ?? new Map<string, TransitionHandler<WorldState>>();
-    const merged = new Map<string, TransitionHandler<WorldState>>([...world, ...match, ...extra]);
+    const extra = init.extraHandlers ?? new Map<string, RngHandler<WorldState>>();
+    const merged = new Map<string, RngHandler<WorldState>>([...world, ...match, ...extra]);
     if (merged.size !== world.size + match.size + extra.size) {
       throw new Error('Match: duplicate handler names.');
+    }
+    const validator = createWorldValidator();
+    const builtins = new Set([...world.keys(), ...match.keys()]);
+    let dispatchCount = 0;
+    const nextSeq = (): number => {
+      dispatchCount += 1;
+      return dispatchCount;
+    };
+    const validated = new Map<string, TransitionHandler<WorldState>>();
+    for (const [name, handler] of merged) {
+      if (name.length === 0 || typeof handler !== 'function') {
+        throw new Error('Match: invalid handler registration.');
+      }
+      const pre = builtins.has(name) ? [noParamsRule(name), ...validator.pre] : validator.pre;
+      validated.set(name, wrapWithValidation(handler, { ...validator, pre }, this.seed, nextSeq));
     }
     this.players = freezeState([...init.players]);
     this.kernel = new AuthorityKernel<WorldState>({
       players: init.players,
       initialState: init.initialState,
-      handlers: merged,
+      handlers: validated,
     });
     Object.freeze(this);
   }

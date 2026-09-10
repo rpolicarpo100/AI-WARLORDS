@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SeededRng } from './rng.js';
+import { deriveSeed, SeededRng } from './rng.js';
 
 describe('constructor validation', () => {
   it.each([[1.5], [-1], [4294967296], ['x'], [NaN]] as Array<[unknown]>)(
@@ -85,5 +85,35 @@ describe('determinism + behavior', () => {
 
   it.each([[0], [-1], [1.5]] as Array<[number]>)('rejects bound %j', (bound) => {
     expect(() => new SeededRng(1).nextInt(bound)).toThrow(/positive integer/);
+  });
+});
+
+describe('deriveSeed (M006)', () => {
+  it.each([
+    [1.5, 1],
+    [-1, 1],
+    [4294967296, 1],
+    ['x', 1],
+    [NaN, 1],
+  ] as Array<[unknown, number]>)('rejects seed %j', (seed, seq) => {
+    expect(() => deriveSeed(seed as number, seq)).toThrow(/uint32/);
+  });
+
+  it.each([
+    [1234, 0],
+    [1234, -1],
+    [1234, 1.5],
+    [1234, 4294967296],
+  ] as Array<[number, number]>)('rejects seq %j', (seed, seq) => {
+    expect(() => deriveSeed(seed, seq)).toThrow(/positive uint32/);
+  });
+
+  it.each([
+    [1234, 1, 1140473049],
+    [1234, 2, 2350140726],
+    [0, 1, 24831277],
+    [4294967295, 4294967295, 3544189717],
+  ] as Array<[number, number, number]>)('locks deriveSeed(%i, %i)', (seed, seq, expected) => {
+    expect(deriveSeed(seed, seq)).toBe(expected);
   });
 });
