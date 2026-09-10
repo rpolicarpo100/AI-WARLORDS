@@ -38,6 +38,10 @@ automáticos).
 (nenhum integrado)
 ```
 
+Nota (M004): ferramentas de autoria avaliadas em `docs/TOOLS.md` (Tiled,
+LDtk, …) são design-time — zero integração runtime, zero dependências.
+Nenhum mapa/asset foi adicionado ao repo (gate: M010 escolhe o formato).
+
 ## 3. Capacidades de providers futuros — TODAS `UNKNOWN` (§1)
 
 Nada abaixo foi verificado; nada pode ser assumido até verificação explícita

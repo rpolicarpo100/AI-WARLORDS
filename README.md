@@ -11,7 +11,7 @@ see `docs/MODULE_STATUS.md` for the current phase.
 - Node.js 20+ (`nvm use`, see `.nvmrc`; `engines` field enforced by contract test)
 - npm (ships with Node)
 
-No Docker, no database, no external services required (as of Fase 0).
+No Docker, no database, no external services required (as of Fase 0–1).
 
 ## Setup
 
@@ -42,18 +42,19 @@ HOST=0.0.0.0 PORT=3000 npm run dev
 ```text
 src/            TypeScript sources (+ colocated *.test.ts)
 src/dev-server.ts  M002 dev scaffold (NOT the game server — no API contract)
-src/engine/      M003+ authority kernel + harness (game engine home)
+src/engine/     game engine home (authority kernel + world state + views)
 dist/           compiled output (gitignored, rebuilt by `npm run build`)
-docs/           audit, architecture, stack, risks, module status, test policy
+docs/           audit, stack, risks, status, tools, test policy
 docs/modules/   per-module contract + analysis + execution record
 ```
 
 ## Docs
 
 - `docs/PROJECT_AUDIT.md` — M001 repository audit (GREENFIELD)
-- `docs/ARCHITECTURE.md` — current (none yet) + target architecture (planned)
+- `docs/ARCHITECTURE.md` — current + target architecture (planned)
 - `docs/TECH_STACK.md` — stack decision and requirements
 - `docs/DEPENDENCIES.md` — dependency inventory (all capabilities UNKNOWN until verified)
+- `docs/TOOLS.md` — design-time tool registry (map/authoring tools, verified)
 - `docs/RISK_REGISTER.md` — risk register
 - `docs/MODULE_STATUS.md` — official status of all M001–M165
 - `docs/TESTING.md` — test policy (categories, negative tests, coverage, mocks)

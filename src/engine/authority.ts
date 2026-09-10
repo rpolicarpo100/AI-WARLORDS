@@ -146,7 +146,12 @@ export interface SessionHandle {
 
 // ─── Deep freeze (plain data only) ───────────────────────────────────────
 
-function deepFreeze<T>(value: T): T {
+/**
+ * Deeply freezes plain JSON-style data (objects, arrays, primitives).
+ * Rejects class instances, Maps, Sets and other unfreezable values loudly:
+ * canonical state must be structurally freezable, never silently half-frozen.
+ */
+export function freezeState<T>(value: T): T {
   if (typeof value !== 'object' || value === null) {
     return value;
   }
@@ -160,7 +165,7 @@ function deepFreeze<T>(value: T): T {
     return value;
   }
   for (const key of Reflect.ownKeys(value)) {
-    deepFreeze((value as Record<PropertyKey, unknown>)[key]);
+    freezeState((value as Record<PropertyKey, unknown>)[key]);
   }
   Object.freeze(value);
   return value;
@@ -203,7 +208,7 @@ export class AuthorityKernel<S> {
     this.handlers = new Map(init.handlers);
     // Detach from caller-owned input (clone), then freeze: from here on the
     // canonical state is immutable and unreachable except via snapshots.
-    this.canonical = deepFreeze(structuredClone(init.initialState));
+    this.canonical = freezeState(structuredClone(init.initialState));
   }
 
   /** Binds a server-authenticated player to an opaque session (transport calls this after auth). */
@@ -238,7 +243,7 @@ export class AuthorityKernel<S> {
     applied: boolean,
     detail: string,
   ): AppliedEntry {
-    return deepFreeze({
+    return freezeState({
       revision: this.revision,
       requestId,
       playerId,
@@ -279,7 +284,7 @@ export class AuthorityKernel<S> {
       }
       // Freeze BEFORE committing: if the new state is unfreezable the throw
       // below leaves revision/canonical/seen/log untouched (atomicity).
-      const frozen = deepFreeze(result.state);
+      const frozen = freezeState(result.state);
       this.revision += 1;
       this.canonical = frozen;
       const outcome: RecordedOutcome = {

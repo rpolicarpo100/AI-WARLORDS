@@ -1,17 +1,17 @@
-# AI WARLORDS — MODULE STATUS (M003)
+# AI WARLORDS — MODULE STATUS (M004)
 
-> Data: 2026-09-10 · Actualizado por: M003 (Server Authority)
+> Data: 2026-09-10 · Actualizado por: M004 (World State)
 > Estados oficiais: `PLANNED · IN_ANALYSIS · IN_DEVELOPMENT · IMPLEMENTED · TESTING · FAILED · BLOCKED · VERIFIED · DEPRECATED`
 
 ---
 
 ## Resumo
 
-| Estado     | Contagem             |
-| ---------- | -------------------- |
-| `VERIFIED` | 3 (M001, M002, M003) |
-| `PLANNED`  | 162 (M004–M165)      |
-| Outros     | 0                    |
+| Estado     | Contagem        |
+| ---------- | --------------- |
+| `VERIFIED` | 4 (M001–M004)   |
+| `PLANNED`  | 161 (M005–M165) |
+| Outros     | 0               |
 
 Checkpoints `VERIFIED`:
 
@@ -20,6 +20,9 @@ Checkpoints `VERIFIED`:
   28 testes, coverage 100×4, audit 0 vuln, 2 live checks OK.
 - **M003 @ 2026-09-10** — authority kernel + harness; 82/82 testes, 100×4,
   zero mocks, 6 garantias provadas. Registo em `docs/modules/M003.md`.
+- **M004 @ 2026-09-10** — world state versionado + 3 vistas separadas;
+  122/122 testes, 100×4; TOOLS.md (7 ferramentas verificadas).
+  Registo em `docs/modules/M004.md`.
 
 ---
 
@@ -35,7 +38,7 @@ Checkpoints `VERIFIED`:
 | Módulo | Nome                   | Estado     |
 | ------ | ---------------------- | ---------- |
 | M003   | Server Authority       | `VERIFIED` |
-| M004   | World State            | `PLANNED`  |
+| M004   | World State            | `VERIFIED` |
 | M005   | Deterministic Match    | `PLANNED`  |
 | M006   | Action Validation      | `PLANNED`  |
 | M007   | Event System           | `PLANNED`  |
@@ -131,10 +134,10 @@ Checkpoints `VERIFIED`:
 ## Ordem recomendada (estrita, sem saltos)
 
 ```text
-M001 → M002 → M003 (VERIFIED) → M004 → M005 → … → M165
+M001 → M002 → M003 → M004 (VERIFIED) → M005 → … → M165
 ```
 
-Próximo permitido: **M004 — World State**, apenas após autorização
+Próximo permitido: **M005 — Deterministic Match**, apenas após autorização
 explícita. Saltos, paralelização ou batch = violação do §35 (recusar).
 
 ---
