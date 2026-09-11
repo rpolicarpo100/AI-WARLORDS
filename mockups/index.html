@@ -2,56 +2,59 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>AI Warlords — Mockup Hub</title>
+<title>AI Warlords — Mockup Tome</title>
 <style>
-  :root { --bg:#0d1017; --panel:#151b26; --line:#2a3446; --ink:#e8ecf4; --dim:#9aa5b8; --gold:#e8b93c; --green:#57a773; }
+  :root { --gold:#e8c15a; --gold-dim:#8a6d2f; --ink:#f0e8d4; --dim:#b8ab8a; --green:#7fd08f; }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.5 system-ui,sans-serif; }
-  .ribbon { background:repeating-linear-gradient(45deg,#3a2f10,#3a2f10 12px,#2c260c 12px,#2c260c 24px);
-    color:var(--gold); text-align:center; padding:4px; font-size:12px; letter-spacing:1px; }
+  body { margin:0; color:var(--ink); font:14px/1.5 system-ui,sans-serif;
+    background:#0b0d10 radial-gradient(1200px 600px at 50% 0%, #1a2027, #0b0d10); }
+  .display { font-family:Georgia,'Palatino Linotype',serif; letter-spacing:2px; }
+  .ribbon { background:repeating-linear-gradient(45deg,#3a2f10,#3a2f10 12px,#241f0a 12px,#241f0a 24px);
+    color:var(--gold); text-align:center; padding:3px; font-size:11px; letter-spacing:2px; }
   .wrap { max-width:1000px; margin:0 auto; padding:24px 16px; }
-  h1 { color:var(--gold); margin:0 0 4px; }
+  h1 { color:var(--gold); margin:0 0 4px; font-size:32px; }
   .cards { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:16px 0; }
-  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px; text-decoration:none; color:var(--ink); }
+  .card { background:linear-gradient(#2e333b,#1d2126); border:3px double var(--gold-dim);
+    border-radius:8px; padding:14px; text-decoration:none; color:var(--ink); }
   .card:hover { border-color:var(--gold); }
-  .card b { color:var(--gold); font-size:16px; }
+  .card b { color:var(--gold); font-size:16px; font-family:Georgia,serif; letter-spacing:1px; }
   .card p { color:var(--dim); margin:6px 0 0; font-size:13px; }
   table { width:100%; border-collapse:collapse; margin:10px 0; }
-  th, td { border:1px solid var(--line); padding:6px 10px; text-align:left; font-size:13px; }
-  th { background:var(--panel); color:var(--gold); }
+  th, td { border:1px solid #3a3f47; padding:6px 10px; text-align:left; font-size:13px; }
+  th { background:#1d2126; color:var(--gold); font-family:Georgia,serif; letter-spacing:1px; }
   .real { color:var(--green); } .fake { color:var(--gold); }
-  code { background:#0a0d13; border:1px solid var(--line); border-radius:6px; padding:1px 6px; }
+  code { background:#101318; border:1px solid #3a3f47; border-radius:6px; padding:1px 6px; }
   .sw { display:inline-block; width:22px; height:22px; border-radius:6px; border:1px solid #000; vertical-align:middle; margin-right:4px; }
+  h2 { color:var(--gold); font-size:15px; }
   a { color:var(--gold); }
 </style>
 </head>
 <body>
-<div class="ribbon">DESIGN ARTIFACT — mockups, not the game client · engine untouched (M021 sealed)</div>
+<div class="ribbon">DESIGN ARTIFACT · AGE-OF-EMPIRES-STYLE CHROME · ENGINE UNTOUCHED (M022 SEALED)</div>
 <div class="wrap">
-  <h1>⚔ AI Warlords — UI Mockups</h1>
-  <div style="color:var(--dim)">Pre-M022 design pass · all screens self-contained (inline art + embedded engine state)</div>
+  <h1 class="display">⚔ Mockup Tome</h1>
+  <div style="color:var(--dim)">Hear ye! UI screens in the manner of Age of Empires — self-contained (inline art + embedded engine state).</div>
   <div class="cards">
-    <a class="card" href="menu.html"><b>📋 Main menu</b><p>Hero, New Match vs AI, commander personas (concept), live engine chip.</p></a>
-    <a class="card" href="match.html"><b>🗺 Match view ★</b><p>Hex map + fog toggle, tick scrubber, HUD, build/city/log tabs, minimap, action bar.</p></a>
-    <a class="card" href="city.html"><b>♜ City view</b><p>Level pips, live queue, counts, costs, treasury, upgrade card.</p></a>
+    <a class="card" href="menu.html"><b>📋 Main Menu</b><p>Grand title, skirmish muster, warlord personas (concept), live engine seal.</p></a>
+    <a class="card" href="match.html"><b>🗺 Match View ★</b><p>Top resource bar, hex battlefield, bottom command dock, chronicle, minimap.</p></a>
+    <a class="card" href="city.html"><b>♜ City View</b><p>Stronghold parchment, pips, live queue, garrison counts, treasury.</p></a>
   </div>
-  <h2 style="color:var(--gold); font-size:15px">What is real vs placeholder</h2>
+  <h2 class="display">What is real vs placeholder</h2>
   <table>
     <tr><th>Element</th><th>Status</th><th>Source</th></tr>
-    <tr><td>Map layout, terrain, nodes, amounts</td><td class="real">REAL</td><td>engine snapshots (scripted dispatches deplete gold 30→27)</td></tr>
-    <tr><td>Stockpiles, buildings, city level+queue</td><td class="real">REAL</td><td>final snapshot tick 2 (gather→build→advance×2)</td></tr>
-    <tr><td>Units + positions + HP</td><td class="real">REAL</td><td>snapshot (init-placed; movement lands M022)</td></tr>
-    <tr><td>Fog / explored / perception</td><td class="real">REAL</td><td>computeVisibility + markExplored + perceive (range 2)</td></tr>
-    <tr><td>Event log + order list</td><td class="real">REAL</td><td>getEvents / dispatch summaries (8 events)</td></tr>
-    <tr><td>Costs, times, caps, unit stats</td><td class="real">REAL</td><td>scenario configs (buildings/economy/unitsScenario)</td></tr>
-    <tr><td>Layout, colors, icons, names</td><td class="fake">PLACEHOLDER</td><td>mockup art — “Vale of Echoes / Valeholm” invented for feel</td></tr>
-    <tr><td>AI personas, advisor text, buttons</td><td class="fake">CONCEPT</td><td>ungrounded — personas/speech await AI phases</td></tr>
+    <tr><td>Map, terrain, nodes, amounts</td><td class="real">REAL</td><td>engine snapshots (gold 30→27 by dispatch)</td></tr>
+    <tr><td>Stockpiles, buildings, city, units</td><td class="real">REAL</td><td>final snapshot tick 2</td></tr>
+    <tr><td>Fog / explored / perception</td><td class="real">REAL</td><td>computeVisibility + markExplored + perceive</td></tr>
+    <tr><td>Chronicle + orders</td><td class="real">REAL</td><td>getEvents / dispatch summaries (8 events)</td></tr>
+    <tr><td>Costs, times, caps, stats</td><td class="real">REAL</td><td>scenario configs</td></tr>
+    <tr><td>Layout, colors, icons, names</td><td class="fake">PLACEHOLDER</td><td>AoE-style chrome — “Vale of Echoes” invented</td></tr>
+    <tr><td>Ages, pop cap, personas, advisor</td><td class="fake">CONCEPT</td><td>ungrounded — marked * in screens</td></tr>
   </table>
-  <h2 style="color:var(--gold); font-size:15px">Palette (placeholder)</h2>
+  <h2 class="display">Heraldry (placeholder palette)</h2>
   <div id="pal" style="margin-bottom:10px"></div>
-  <h2 style="color:var(--gold); font-size:15px">Regenerate</h2>
-  <p><code>npx tsx mockups/generate-state.ts &amp;&amp; node mockups/build.mjs</code> — replays the scripted match and re-embeds state into all pages.</p>
-  <p style="color:var(--dim)">Roadmap chips: movement M022 → · combat M023 → · damage M024 → · recruit M025 → · enemy scout is vision (M028+).</p>
+  <h2 class="display">Regenerate</h2>
+  <p><code>npx tsx mockups/generate-state.ts &amp;&amp; node mockups/build.mjs</code> — replays the scripted match and re-embeds state.</p>
+  <p style="color:var(--dim)">Roadmap: attack M023 → · damage M024 → · recruit M025 → · enemy scout is vision (M028+).</p>
 </div>
 <script>const SCENARIO = {
  "meta": {

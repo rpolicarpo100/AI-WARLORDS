@@ -2,57 +2,61 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>AI Warlords — Main Menu (MOCKUP)</title>
+<title>AI Warlords — Main Menu (MOCKUP · Age of Empires style)</title>
 <style>
-  :root { --bg:#0d1017; --panel:#151b26; --line:#2a3446; --ink:#e8ecf4; --dim:#9aa5b8; --gold:#e8b93c; }
+  :root { --gold:#e8c15a; --gold-dim:#8a6d2f; --ink:#f0e8d4; --dim:#b8ab8a; }
   * { box-sizing:border-box; }
-  body { margin:0; background:radial-gradient(1000px 500px at 50% -10%, #1c2536, var(--bg));
-    color:var(--ink); font:15px/1.5 system-ui,sans-serif; min-height:100vh; }
-  .ribbon { background:repeating-linear-gradient(45deg,#3a2f10,#3a2f10 12px,#2c260c 12px,#2c260c 24px);
-    color:var(--gold); text-align:center; padding:4px; font-size:12px; letter-spacing:1px; }
-  .wrap { max-width:900px; margin:0 auto; padding:40px 16px; text-align:center; }
-  h1 { font-size:52px; margin:10px 0 0; color:var(--gold); letter-spacing:2px; }
-  .sub { color:var(--dim); margin-bottom:28px; }
-  .btns { display:flex; flex-direction:column; gap:10px; max-width:340px; margin:0 auto 30px; }
-  .btns a, .btns button { padding:12px; border-radius:10px; font-size:16px; text-decoration:none;
-    border:1px solid var(--line); background:var(--panel); color:var(--ink); cursor:pointer; }
-  .btns a.go { background:var(--gold); color:#0a0d13; font-weight:800; border:none; }
+  body { margin:0; color:var(--ink); font:15px/1.5 system-ui,sans-serif; min-height:100vh;
+    background:linear-gradient(#101623 0%, #1a2230 40%, #0b0d10 100%); }
+  .display { font-family:Georgia,'Palatino Linotype',serif; letter-spacing:3px; }
+  .ribbon { background:repeating-linear-gradient(45deg,#3a2f10,#3a2f10 12px,#241f0a 12px,#241f0a 24px);
+    color:var(--gold); text-align:center; padding:3px; font-size:11px; letter-spacing:2px; }
+  .wrap { max-width:860px; margin:0 auto; padding:48px 16px; text-align:center; }
+  .crest { font-size:56px; }
+  h1 { font-size:60px; margin:6px 0 0; color:var(--gold); text-shadow:0 3px 0 #4a3a10, 0 6px 18px #000; }
+  .sub { color:var(--dim); margin-bottom:26px; font-style:italic; font-family:Georgia,serif; }
+  .btns { display:flex; flex-direction:column; gap:10px; max-width:360px; margin:0 auto 30px; }
+  .btns a, .btns button { padding:12px; border-radius:4px; font-size:17px; text-decoration:none;
+    font-family:Georgia,serif; letter-spacing:2px; border:3px double var(--gold-dim);
+    background:linear-gradient(#3a4048,#23272e); color:var(--ink); cursor:pointer; }
+  .btns a.go { background:linear-gradient(#6b5320,#3d2f12); color:var(--gold); font-weight:700; }
+  .btns a.go:hover { border-color:var(--gold); }
   .btns button:disabled { opacity:.45; cursor:not-allowed; }
-  .cmds { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; text-align:left; margin-bottom:24px; }
-  .cmd { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px; }
-  .cmd h3 { margin:0 0 4px; color:var(--gold); font-size:15px; }
+  .tag { font-size:11px; color:var(--gold); border:1px solid var(--gold-dim); border-radius:6px; padding:0 6px; font-family:system-ui; }
+  .cmds { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; text-align:left; margin-bottom:22px; }
+  .cmd { background:linear-gradient(#2e333b,#1d2126); border:3px double var(--gold-dim); border-radius:8px; padding:12px; }
+  .cmd h3 { margin:0 0 4px; color:var(--gold); font-size:15px; font-family:Georgia,serif; letter-spacing:1px; }
   .cmd p { margin:0 0 8px; color:var(--dim); font-size:13px; }
-  .bar { height:6px; background:#0a0d13; border-radius:3px; overflow:hidden; margin:2px 0 6px; }
+  .bar { height:6px; background:#101318; border-radius:3px; overflow:hidden; margin:2px 0 6px; }
   .bar i { display:block; height:100%; background:var(--gold); }
-  .tag { font-size:11px; color:var(--gold); border:1px solid var(--gold); border-radius:6px; padding:0 6px; }
-  .chip { display:inline-block; background:#0a0d13; border:1px solid var(--line); border-radius:8px;
-    padding:6px 12px; color:var(--dim); font-size:13px; margin:2px; }
+  .chip { display:inline-block; background:#101318; border:2px solid var(--gold-dim); border-radius:8px;
+    padding:5px 12px; color:var(--dim); font-size:13px; margin:2px; }
   a { color:var(--gold); }
 </style>
 </head>
 <body>
-<div class="ribbon">MOCKUP — concept screens · engine link below is REAL scenario data</div>
+<div class="ribbon">MOCKUP · AGE-OF-EMPIRES-STYLE CHROME · ENGINE LINK BELOW IS REAL</div>
 <div class="wrap">
-  <div style="font-size:40px">⚔</div>
-  <h1>AI WARLORDS</h1>
-  <div class="sub">AI-commanded warfare · deterministic engine · you are the overseer (concept)</div>
+  <div class="crest">⚔</div>
+  <h1 class="display">AI WARLORDS</h1>
+  <div class="sub">“Thy AI commanders await thy banner, sire.” (concept)</div>
   <div class="btns">
-    <a class="go" href="match.html">⚔ New Match vs AI</a>
-    <button disabled>🕰 Continue <span class="tag">no saves in mockup</span></button>
+    <a class="go" href="match.html">⚔ &nbsp;Skirmish vs AI&nbsp; ⚔</a>
+    <button disabled>📜 Campaign <span class="tag">concept</span></button>
     <button disabled>📼 Replays <span class="tag">needs replay module</span></button>
-    <button disabled>⚙ Settings <span class="tag">concept</span></button>
+    <button disabled>⚙ Options <span class="tag">concept</span></button>
   </div>
-  <h2 style="color:var(--gold); font-size:16px; letter-spacing:1px">ENEMY COMMANDERS <span class="tag">CONCEPT — personas ungrounded</span></h2>
+  <h2 class="display" style="color:var(--gold); font-size:15px">ENEMY WARLORDS <span class="tag">CONCEPT — personas ungrounded</span></h2>
   <div class="cmds">
-    <div class="cmd"><h3>🛡 Bastion</h3><p>Turtle · walls + towers · strikes at tick 40.</p>
-      Aggression<div class="bar"><i style="width:25%"></i></div>Greed<div class="bar"><i style="width:60%"></i></div></div>
+    <div class="cmd"><h3>🛡 Bastion</h3><p>Turtle · walls and towers · strikes at tick 40.</p>
+      Fervor<div class="bar"><i style="width:25%"></i></div>Avarice<div class="bar"><i style="width:60%"></i></div></div>
     <div class="cmd"><h3>🐺 Fang</h3><p>Rush · warriors first · all-in by tick 15.</p>
-      Aggression<div class="bar"><i style="width:90%"></i></div>Greed<div class="bar"><i style="width:20%"></i></div></div>
-    <div class="cmd"><h3>🦉 Augur</h3><p>Adaptive · scouts, then counters your army.</p>
-      Aggression<div class="bar"><i style="width:55%"></i></div>Cunning<div class="bar"><i style="width:95%"></i></div></div>
+      Fervor<div class="bar"><i style="width:90%"></i></div>Avarice<div class="bar"><i style="width:20%"></i></div></div>
+    <div class="cmd"><h3>🦉 Augur</h3><p>Adaptive · scouts, then counters thy army.</p>
+      Fervor<div class="bar"><i style="width:55%"></i></div>Cunning<div class="bar"><i style="width:95%"></i></div></div>
   </div>
   <div><span class="chip">engine: ruleset standard v1</span><span class="chip" id="c1"></span>
-    <span class="chip" id="c2"></span><span class="chip"><a href="index.html">mockup hub →</a></span></div>
+    <span class="chip" id="c2"></span><span class="chip"><a href="index.html">mockup tome →</a></span></div>
 </div>
 <script>const SCENARIO = {
  "meta": {

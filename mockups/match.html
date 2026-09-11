@@ -2,97 +2,116 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>AI Warlords — Match (MOCKUP)</title>
+<title>AI Warlords — Match (MOCKUP · Age of Empires style)</title>
 <style>
-  :root { --bg:#0d1017; --panel:#151b26; --line:#2a3446; --ink:#e8ecf4; --dim:#9aa5b8;
-         --gold:#e8b93c; --blue:#3d7dd6; --red:#d64545; --green:#57a773; }
+  :root {
+    --gold:#e8c15a; --gold-dim:#8a6d2f; --ink:#f0e8d4; --dim:#b8ab8a;
+    --stone1:#33383f; --stone2:#22262c; --stone3:#171b20; --parch:#d8c491; --parch-ink:#2a2118;
+  }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.45 system-ui,sans-serif; }
-  .ribbon { background:repeating-linear-gradient(45deg,#3a2f10,#3a2f10 12px,#2c260c 12px,#2c260c 24px);
-    color:var(--gold); text-align:center; padding:4px; font-size:12px; letter-spacing:1px; }
-  header.hud { display:flex; gap:10px; align-items:center; padding:8px 14px; background:var(--panel);
-    border-bottom:1px solid var(--line); flex-wrap:wrap; }
-  header.hud .logo { font-weight:800; color:var(--gold); }
-  .tickbox { display:flex; align-items:center; gap:6px; background:#0a0d13; border:1px solid var(--line);
-    border-radius:8px; padding:4px 8px; }
-  .tickbox button { background:#222c3e; color:var(--ink); border:1px solid var(--line); border-radius:6px;
-    cursor:pointer; padding:2px 10px; font-size:14px; }
-  .res { display:flex; gap:8px; margin-left:auto; flex-wrap:wrap; }
-  .res span { background:#0a0d13; border:1px solid var(--line); border-radius:8px; padding:4px 10px; }
-  .viewtoggle button { background:#222c3e; color:var(--dim); border:1px solid var(--line); border-radius:6px;
-    cursor:pointer; padding:4px 10px; }
-  .viewtoggle button.on { color:#0a0d13; background:var(--gold); border-color:var(--gold); font-weight:700; }
-  main { display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:10px; padding:10px; }
-  section.mapcard, aside.panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:10px; }
-  svg.map { width:100%; height:auto; display:block; background:#07090e; border-radius:8px; }
-  .hex { cursor:pointer; stroke:#0a0d13; stroke-width:1.5; }
+  body { margin:0; color:var(--ink); font:14px/1.45 system-ui,sans-serif;
+    background:#0b0d10 radial-gradient(1200px 600px at 50% 0%, #1a2027, #0b0d10); }
+  .display { font-family:Georgia,'Palatino Linotype','Times New Roman',serif; letter-spacing:2px; }
+  .ribbon { background:repeating-linear-gradient(45deg,#3a2f10,#3a2f10 12px,#241f0a 12px,#241f0a 24px);
+    color:var(--gold); text-align:center; padding:3px; font-size:11px; letter-spacing:2px; }
+  /* ── Top resource bar (AoE style) ── */
+  .topbar { display:flex; align-items:center; justify-content:center; gap:14px; padding:6px 12px;
+    background:linear-gradient(#3a4048,#23272e); border-bottom:3px double var(--gold-dim); flex-wrap:wrap; }
+  .realm { font-size:18px; color:var(--gold); }
+  .resbar { display:flex; gap:0; background:#101318; border:2px solid var(--gold-dim); border-radius:8px; overflow:hidden; }
+  .resbar span { padding:5px 12px; border-left:1px solid #3a3f47; white-space:nowrap; }
+  .resbar span:first-child { border-left:none; }
+  .resbar b { color:var(--gold); }
+  .age { background:#3d2f12; border:2px solid var(--gold-dim); border-radius:8px; padding:5px 12px; color:var(--gold); }
+  .tickbox { display:flex; align-items:center; gap:6px; }
+  .sbtn { background:linear-gradient(#4a5058,#2c3138); color:var(--ink); border:2px solid var(--gold-dim);
+    border-radius:8px; padding:4px 12px; cursor:pointer; font-family:inherit; }
+  .sbtn:hover { border-color:var(--gold); color:var(--gold); }
+  .sbtn.on { background:var(--gold); color:#171204; font-weight:700; }
+  .links a { color:var(--dim); font-size:12px; margin-left:8px; }
+  /* ── Map ── */
+  .mapwrap { padding:8px 10px 0; }
+  svg.map { width:100%; height:auto; display:block; background:#05070a;
+    border:3px double var(--gold-dim); border-radius:6px; }
+  .hex { cursor:pointer; stroke:#05070a; stroke-width:1.5; }
   .hex.sel { stroke:var(--gold); stroke-width:3; }
-  .tabs { display:flex; gap:6px; margin-bottom:8px; }
-  .tabs button { flex:1; background:#0a0d13; color:var(--dim); border:1px solid var(--line);
-    border-radius:6px; padding:6px; cursor:pointer; }
-  .tabs button.on { color:var(--gold); border-color:var(--gold); }
-  .card { background:#0a0d13; border:1px solid var(--line); border-radius:8px; padding:8px 10px; margin-bottom:8px; }
-  .card h4 { margin:0 0 6px; color:var(--gold); font-size:13px; text-transform:uppercase; letter-spacing:1px; }
-  .brow { display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-top:1px dotted #222c3e; }
+  /* ── Bottom dock (AoE command panel) ── */
+  .dock { display:grid; grid-template-columns:190px minmax(0,1fr) 300px; gap:8px; padding:8px 10px; }
+  .stone { background:linear-gradient(#2e333b,#1d2126); border:3px double var(--gold-dim);
+    border-radius:8px; padding:8px; }
+  .stone h4 { margin:0 0 6px; color:var(--gold); font-size:12px; letter-spacing:2px; }
+  #mini { width:100%; display:block; border:2px solid #101318; border-radius:4px; }
+  .tabs { display:flex; gap:6px; margin-bottom:6px; }
+  .tabs button { flex:1; background:#101318; color:var(--dim); border:2px solid #3a3f47;
+    border-radius:6px; padding:5px; cursor:pointer; font-family:Georgia,serif; letter-spacing:1px; }
+  .tabs button.on { color:var(--gold); border-color:var(--gold-dim); }
+  .card { background:#101318; border:1px solid #3a3f47; border-radius:6px; padding:6px 8px; margin-bottom:6px; }
+  .card h5 { margin:0 0 4px; color:var(--gold); font-size:11px; letter-spacing:2px; }
+  .brow { display:flex; justify-content:space-between; align-items:center; padding:3px 0; border-top:1px dotted #3a3f47; font-size:13px; }
   .brow:first-of-type { border-top:none; }
   .cost { color:var(--dim); font-size:12px; }
-  .afford { color:var(--green); } .poor { color:var(--red); }
-  .mockbtn { background:#222c3e; color:var(--dim); border:1px solid var(--line); border-radius:6px;
-    padding:3px 10px; cursor:not-allowed; font-size:12px; }
-  .qbar { height:8px; background:#222c3e; border-radius:4px; overflow:hidden; margin-top:3px; }
+  .afford { color:#7fd08f; } .poor { color:#e07f7f; }
+  .mockbtn { background:#2c3138; color:var(--dim); border:1px solid #3a3f47; border-radius:5px;
+    padding:2px 10px; cursor:not-allowed; font-size:12px; font-family:inherit; }
+  .qbar { height:8px; background:#2c3138; border-radius:4px; overflow:hidden; margin-top:3px; }
   .qbar i { display:block; height:100%; background:var(--gold); }
-  .log { max-height:260px; overflow:auto; font-size:12.5px; }
-  .log div { padding:3px 0; border-top:1px dotted #222c3e; }
+  .log { max-height:220px; overflow:auto; font-size:12px; }
+  .log div { padding:2px 0; border-top:1px dotted #3a3f47; }
   .log .t { color:var(--dim); }
-  footer.actions { display:flex; gap:8px; align-items:center; padding:10px 14px; background:var(--panel);
-    border-top:1px solid var(--line); flex-wrap:wrap; }
-  footer.actions button { background:#222c3e; color:var(--ink); border:1px solid var(--line);
-    border-radius:8px; padding:8px 14px; cursor:not-allowed; }
-  .chip { font-size:11px; border-radius:6px; padding:1px 7px; margin-left:6px; }
-  .live { background:#12351f; color:var(--green); } .soon { background:#3a2f10; color:var(--gold); }
-  .fine { color:var(--dim); font-size:12px; padding:8px 14px 16px; }
-  .legend { display:flex; gap:10px; flex-wrap:wrap; font-size:12px; color:var(--dim); margin-top:6px; }
+  .cmdgrid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+  .cmd { background:linear-gradient(#4a5058,#2c3138); border:2px solid var(--gold-dim); border-radius:8px;
+    padding:8px 4px; text-align:center; cursor:not-allowed; opacity:.92; }
+  .cmd .k { display:inline-block; background:#101318; border:1px solid var(--gold-dim); border-radius:4px;
+    padding:0 6px; font-size:11px; color:var(--gold); margin-top:4px; }
+  .cmd small { display:block; color:var(--dim); font-size:10px; }
+  .chat { display:flex; gap:6px; margin-top:6px; }
+  .chat input { flex:1; background:#101318; border:1px solid #3a3f47; border-radius:6px;
+    color:var(--dim); padding:5px 8px; font-family:inherit; }
+  .fine { color:var(--dim); font-size:11px; padding:0 12px 12px; }
+  .legend { display:flex; gap:10px; flex-wrap:wrap; font-size:11px; color:var(--dim); padding:4px 12px 0; }
   a { color:var(--gold); }
 </style>
 </head>
 <body>
-<div class="ribbon">MOCKUP — placeholder art &amp; layout · map/state/events are REAL engine outputs (scenario seed 7)</div>
-<header class="hud">
-  <span class="logo">⚔ AI WARLORDS</span>
-  <span style="color:var(--dim)">Vale of Echoes (concept name)</span>
+<div class="ribbon">MOCKUP · AGE-OF-EMPIRES-STYLE CHROME · MAP/STATE/EVENTS ARE REAL ENGINE OUTPUTS (SEED 7)</div>
+<div class="topbar">
+  <span class="realm display">⚔ Vale of Echoes</span>
+  <div class="resbar" id="res"></div>
+  <span class="age display" title="Ages are ungrounded — concept">🏰 Feudal Age*</span>
   <div class="tickbox">
-    <button id="prev">◀</button><b id="tick">TICK 2</b><button id="next">▶</button>
+    <button class="sbtn" id="prev">◀</button><b id="tick" class="display">TICK 2</b><button class="sbtn" id="next">▶</button>
   </div>
-  <div class="res" id="res"></div>
-  <div class="viewtoggle">
-    <button id="vFog" class="on">Commander (fog)</button><button id="vFull">Strategist (full)</button>
+  <div class="tickbox">
+    <button class="sbtn on" id="vFog">Commander</button><button class="sbtn" id="vFull">Strategist</button>
   </div>
-  <a href="index.html">hub</a> <a href="city.html">city</a> <a href="menu.html">menu</a>
-</header>
-<main>
-  <section class="mapcard">
-    <svg class="map" id="map" viewBox="0 0 560 360" role="img" aria-label="scenario hex map"></svg>
-    <div class="legend"><span>● worker</span><span>■ warrior</span><span>◆ archer</span>
-      <span style="color:var(--blue)">■ you (p1)</span><span style="color:var(--red)">■ foe (p2, fog-gated)</span>
-      <span id="fogNote"></span></div>
-  </section>
-  <aside class="panel">
+  <span class="links"><a href="index.html">hub</a><a href="city.html">city</a><a href="menu.html">menu</a></span>
+</div>
+<div class="mapwrap"><svg class="map" id="map" viewBox="0 0 560 360" role="img" aria-label="scenario hex map"></svg></div>
+<div class="legend"><span>● worker ■ warrior ◆ archer</span><span style="color:#6fa8ff">you (p1)</span>
+  <span style="color:#ff7f7f">foe (p2, fog-gated)</span><span id="fogNote"></span></div>
+<div class="dock">
+  <div class="stone"><h4 class="display">🗺 Minimap</h4><svg id="mini" viewBox="0 0 160 120"></svg>
+    <div style="font-size:11px;color:var(--dim);margin-top:4px" id="pop"></div></div>
+  <div class="stone">
     <div class="tabs">
-      <button data-tab="cell" class="on">Cell</button><button data-tab="build">Build</button>
-      <button data-tab="city">City</button><button data-tab="log">Log</button>
+      <button data-tab="cell" class="on">Selected</button><button data-tab="build">Build</button>
+      <button data-tab="city">City</button><button data-tab="log">Chronicle</button>
     </div>
     <div id="tab-cell"></div><div id="tab-build" hidden></div>
     <div id="tab-city" hidden></div><div id="tab-log" hidden></div>
-    <div class="card"><h4>Minimap</h4><svg id="mini" viewBox="0 0 160 120" style="width:100%"></svg></div>
-  </aside>
-</main>
-<footer class="actions">
-  <button disabled>⛏ Gather <span class="chip live">M017 ✓</span></button>
-  <button disabled>🏠 Build <span class="chip live">M019 ✓</span></button>
-  <button disabled>➤ Move <span class="chip soon">M022 →</span></button>
-  <button disabled>⚔ Attack <span class="chip soon">M023 →</span></button>
-  <span style="color:var(--dim)">Advisor (CONCEPT): “Tower completes in 2 ticks — train an archer next (M025).”</span>
-</footer>
+  </div>
+  <div class="stone"><h4 class="display">⚒ Commands</h4>
+    <div class="cmdgrid">
+      <div class="cmd">⛏ Gather<br><span class="k">G</span><small>M017 ✓ engine</small></div>
+      <div class="cmd">🏠 Build<br><span class="k">B</span><small>M019 ✓ engine</small></div>
+      <div class="cmd">➤ Move<br><span class="k">M</span><small>M022 ✓ engine</small></div>
+      <div class="cmd">⚔ Attack<br><span class="k">A</span><small>M023 →</small></div>
+      <div class="cmd">🛡 Defend<br><span class="k">D</span><small>concept</small></div>
+      <div class="cmd">🏳 Retreat<br><span class="k">R</span><small>concept</small></div>
+    </div>
+    <div class="chat"><input value="Advisor (CONCEPT): tower in 2 ticks — train archers (M025)." disabled></div>
+  </div>
+</div>
 <div class="fine" id="fine"></div>
 <script>const SCENARIO = {
  "meta": {
@@ -3049,10 +3068,12 @@
     const st = snap(), map = st.map, svg = $('map');
     $('tick').textContent = 'TICK ' + st.tick;
     const piles = (st.stockpiles && st.stockpiles.stockpiles.p1) || {};
+    const myUnits = (st.units ? st.units.units : []).filter((u) => u.owner === 'p1').length;
     $('res').innerHTML = ['food', 'wood', 'stone', 'gold'].map((k) =>
       `<span>${RES[k]} <b>${piles[k] ?? 0}</b></span>`).join('') +
-      `<span>🏠 <b>${st.buildings ? st.buildings.buildings.p1.house : 0}</b> houses</span>`;
-    $('fogNote').textContent = fog ? 'fog: real visibility (range 2, final tick)' : 'full state (not a player view)';
+      `<span title="real unit count; cap ungrounded">⚔ <b>${myUnits}</b>/200*</span>`;
+    $('pop').textContent = `Population ${myUnits} (cap 200: concept) · Houses: ${st.buildings ? st.buildings.buildings.p1.house : 0}`;
+    $('fogNote').textContent = fog ? '· fog: real visibility (range 2, final tick)' : '· full state (not a player view)';
     let h = '';
     for (const cell of map.cells) {
       const i = idx(cell.col, cell.row), [x, y] = center(cell.col, cell.row);
@@ -3093,25 +3114,25 @@
     const c = st.map.cells[sel], piles = (st.stockpiles && st.stockpiles.stockpiles.p1) || {};
     const here = (st.units ? st.units.units : []).filter((u) => idx(u.col, u.row) === sel)
       .filter((u) => !fog || u.owner === 'p1' || vis.has(sel));
-    $('tab-cell').innerHTML = `<div class="card"><h4>Cell ${sel} (${c.col},${c.row}) — ${c.terrain}</h4>` +
+    $('tab-cell').innerHTML = `<div class="card"><h5>Cell ${sel} (${c.col},${c.row}) — ${c.terrain}</h5>` +
       (c.resource ? `<div>Node: ${RES[c.resource.type]} ${c.resource.type} × <b>${c.resource.amount}</b></div>` : '<div>No node here.</div>') +
-      (here.length ? here.map((u) => `<div>${UICON[u.type]} <b>${u.id}</b> ${u.type} · ${u.owner} · HP ${u.hp}/${S.configs.unitsScenario[u.type].maxHp}</div>`).join('') : '<div>No units here.</div>') + '</div>' +
-      `<div class="card"><h4>Orders (real dispatches)</h4>` +
+      (here.length ? here.map((u) => `<div>${UICON[u.type]} <b>${u.id}</b> ${u.type} · ${u.owner} · HP ${u.hp}/${S.configs.unitsScenario[u.type].maxHp} · ⚔${S.configs.unitsScenario[u.type].damage}</div>`).join('') : '<div>No units here.</div>') + '</div>' +
+      `<div class="card"><h5>Orders (real dispatches)</h5>` +
       S.outcomes.map((o, k) => `<div class="brow"><span>#${k + 1} ${esc(o.summary || o.reason || o.status)}</span><span class="cost">${o.status}</span></div>`).join('') + '</div>';
     const bcfg = S.configs.buildings;
-    $('tab-build').innerHTML = `<div class="card"><h4>Build (real costs)</h4>` +
+    $('tab-build').innerHTML = `<div class="card"><h5>Build (real costs)</h5>` +
       ['town-center', 'house', 'storage', 'barracks', 'wall', 'tower'].map((b) =>
         `<div class="brow"><span>${BICON[b]} ${b} <span class="cost">${costText(bcfg[b].cost)} · ${bcfg[b].buildTime}t</span></span>` +
         `<span><span class="${afford(bcfg[b].cost, piles) ? 'afford' : 'poor'}">${afford(bcfg[b].cost, piles) ? '✓' : '✗'}</span> <button class="mockbtn">queue</button></span></div>`).join('') + '</div>';
     const city = st.cities && st.cities.cities.p1;
-    $('tab-city').innerHTML = city ? `<div class="card"><h4>Your city — level ${city.level}</h4>` +
+    $('tab-city').innerHTML = city ? `<div class="card"><h5>Thy city — level ${city.level}</h5>` +
       (city.queue.length ? city.queue.map((q) => {
         const total = bcfg[q.type].buildTime || 1;
         const done = 100 * (1 - q.remaining / total);
         return `<div>${BICON[q.type]} ${q.type} — ${q.remaining}t left<div class="qbar"><i style="width:${done}%"></i></div></div>`;
       }).join('') : '<div>Queue idle.</div>') + `<div style="margin-top:6px"><a href="city.html">open city view →</a></div></div>` : '<div class="card">No city.</div>';
     const evs = S.events.filter((e) => e.tick <= st.tick);
-    $('tab-log').innerHTML = `<div class="card log"><h4>Event log (real, ≤ tick ${st.tick})</h4>` +
+    $('tab-log').innerHTML = `<div class="card log"><h5>Chronicle (real, ≤ tick ${st.tick})</h5>` +
       evs.map((e) => `<div><span class="t">#${e.seq} t${e.tick}</span> <b>${e.type}</b> ${esc(JSON.stringify(e.payload))}</div>`).join('') + '</div>';
   }
 
@@ -3141,7 +3162,7 @@
   $('vFull').addEventListener('click', () => { fog = false; $('vFull').classList.add('on'); $('vFog').classList.remove('on'); render(); });
   $('fine').textContent = 'Provenance: ' + S.meta.generatedBy + ' · ruleset standard v1 · ' +
     S.events.length + ' events · snapshots t0–t' + S.snapshots[S.snapshots.length - 1].tick +
-    ' · fog/visibility/explored/perception computed by the real engine.';
+    ' · fog/visibility/explored/perception computed by the real engine. * = concept (ages, pop cap).';
   render();
 })();
 </script>
