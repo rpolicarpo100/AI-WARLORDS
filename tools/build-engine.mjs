@@ -8,6 +8,7 @@ const result = await build({
   entryPoints: [new URL('./browser-engine.ts', import.meta.url).pathname],
   bundle: true,
   format: 'iife',
+  target: 'es2019',
   globalName: 'AIWLEngine',
   minify: true,
   alias: { 'node:crypto': shim },
