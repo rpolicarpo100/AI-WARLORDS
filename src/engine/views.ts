@@ -1,4 +1,5 @@
 import { freezeState, type PlayerId } from './authority.js';
+import { countsOf, type BuildingCounts } from './buildings.js';
 import { isCellIndex } from './explored.js';
 import type { TerrainId } from './map.js';
 import { stockpileOf, type StockpileAmounts } from './stockpiles.js';
@@ -40,6 +41,11 @@ export interface PerceivedState {
    * out — enemy intel is fail-closed until an owning module (M028+).
    */
   readonly stockpile: StockpileAmounts;
+  /**
+   * Own building counts (M018; zeros when absent). Other holders'
+   * buildings stay out — fail-closed until an owning module (M028+).
+   */
+  readonly buildings: BuildingCounts;
   /** Absent when the world is mapless (no map context ⇒ no cells). */
   readonly map?: PerceivedMap;
 }
@@ -125,6 +131,7 @@ export function perceive(
     visibleCells,
     exploredCells: [...memory],
     stockpile: stockpileOf(state.stockpiles, viewer),
+    buildings: countsOf(state.buildings, viewer),
     ...(map === undefined
       ? {}
       : { map: { width: map.width, height: map.height, visible, explored } }),

@@ -218,3 +218,40 @@
   selo intacto previsto). Sem workers (L-32), sem validação (M020).
 - IMPLEMENTATION: `economy.ts` + `match.ts` + `validation.ts` (M017).
 - ESTADO: `ACCEPTED`.
+
+## D-011 — Edifícios: dados+config+mecânica; caps derivados; L-31 decide (M018 pré-análise)
+
+- DECISION: `buildings.ts` L0 (6 ids fechados #16 + BuildingsData
+  counts-por-holder + guard + `countsOf` fail-soft) + `economy.ts` L2
+  (BuildingsConfig por-tipo `{cost, buildTime}` + `caps` + `costOf`/
+  `buildTimeOf`/`payCost`/`addBuilding`/`capOf`) + `WorldState.
+buildings?` + percepção own-only. L-31 DECIDIDA: caps DERIVADOS
+  (base + storages×per; default uncap base=MAX/per=0; enforcement
+  →M020). Sem transições/Match/eventos (BUILD_* → M019); sem regra
+  (M020 owns, composição 5).
+- MOTIVE: mestre #16 (6 nomes, modular) + #20 (BUILD_* futuros) + #83
+  (BUILD TIME configurável) + L-31 decide-by + M016 custos-mecânica.
+  Defaults NEUTROS (custos {}, time 0, uncap — preservam status quo;
+  tuning → playtesting). M009 força split L0 + dup holder-mirror
+  (L0↛L0). Data-lenient/config-strict (padrão M016).
+- ALTERNATIVES: instâncias {id,owner,type} (rejeitado: id/posição/hp
+  ungrounded — counts chegam p/ caps+custos); caps guardados por
+  holder (rejeitado: derivado single-source, sem sync-bugs);
+  defaults afinados ≠0 (rejeitado: tuning inventado — doutrina
+  M011/M016); caps 4-set por-recurso (rejeitado: flat chega, split
+  ungrounded); transição build já (rejeitado: TIME+STARTED/COMPLETED
+  implicam queue async — M019 c/ cidade); House pop-cap (rejeitado:
+  ungrounded — população é HUD); percepção full-table (rejeitado:
+  inimigo fail-closed → M028+).
+- ADVANTAGES: simétrico M016 (leaf+ops; config-sem-consumidores
+  D-006); L-31 fechada com mecânica+testes (não punt); payCost
+  atómico (sem estados parciais); 4.º espelho id-shape.
+- DISADVANTAGES: 2 ficheiros + espelhos (forçado M009); Storage
+  default bonifica 0 (mecânica provada via customs); gather ignora
+  caps até M020 (gap declarado).
+- RISKS: baixo-médio — primeira semântica cap-derivado (mitigado:
+  goldens custom + overflow loud + M020 enforcement). Sem
+  transições (M019), sem validação (M020).
+- IMPLEMENTATION: `buildings.ts` L0 (novo) + `economy.ts` L2
+  (extensão) + world-state/views (M018).
+- ESTADO: `ACCEPTED`.

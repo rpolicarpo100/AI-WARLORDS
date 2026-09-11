@@ -1,4 +1,5 @@
 import { isPlayerId, type PlayerId, type TransitionHandler } from './authority.js';
+import { isBuildingsData, type BuildingsData } from './buildings.js';
 import { isExploredData, type ExploredData } from './explored.js';
 import { isMapData, type MapData } from './map.js';
 import { isStockpilesData, type StockpilesData } from './stockpiles.js';
@@ -35,6 +36,12 @@ export interface WorldState {
    * doctrine; non-roster holders stay invisible, fail-closed).
    */
   readonly stockpiles?: StockpilesData;
+  /**
+   * Per-holder building counts (M018, optional compatible extension).
+   * Map-independent; holders shape-checked only (M014 doctrine).
+   * Counts are static data until M019 construction transitions.
+   */
+  readonly buildings?: BuildingsData;
 }
 
 export interface WorldStateInit {
@@ -43,6 +50,7 @@ export interface WorldStateInit {
   readonly map?: MapData;
   readonly explored?: ExploredData;
   readonly stockpiles?: StockpilesData;
+  readonly buildings?: BuildingsData;
 }
 
 /**
@@ -101,6 +109,10 @@ export function isWorldState(value: unknown): value is WorldState {
   if (stockpiles !== undefined && !isStockpilesData(stockpiles)) {
     return false;
   }
+  const buildings = fields['buildings'];
+  if (buildings !== undefined && !isBuildingsData(buildings)) {
+    return false;
+  }
   return true;
 }
 
@@ -112,6 +124,7 @@ export function createWorldState(init: WorldStateInit): WorldState {
     ...(init.map === undefined ? {} : { map: init.map }),
     ...(init.explored === undefined ? {} : { explored: init.explored }),
     ...(init.stockpiles === undefined ? {} : { stockpiles: init.stockpiles }),
+    ...(init.buildings === undefined ? {} : { buildings: init.buildings }),
   };
   if (!isWorldState(candidate)) {
     throw new Error('createWorldState: invalid initial world.');

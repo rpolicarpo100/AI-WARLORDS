@@ -427,6 +427,7 @@ describe('determinism hygiene (static security review)', () => {
   it('locks the engine module census (no silently skipped files)', () => {
     expect(engineSources()).toEqual([
       'authority.ts',
+      'buildings.ts',
       'economy.ts',
       'events.ts',
       'exploration.ts',
@@ -501,6 +502,7 @@ describe('architecture boundary (static review)', () => {
     rng: 0,
     explored: 0,
     stockpiles: 0,
+    buildings: 0,
     'world-state': 1,
     economy: 2,
     exploration: 2,

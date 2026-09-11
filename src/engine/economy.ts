@@ -1,7 +1,7 @@
 /**
  * M016 — Resource economy: server configuration + pure stockpile ops.
  *
- * LAYER L2 (imports authority/map/rng/stockpiles, all downward). Config
+ * LAYER L2 (imports authority/buildings/map/rng/stockpiles, all downward). Config
  * lives OUTSIDE canonical state (mestre #84, M011 seam): validated here,
  * consumed by M017 (gatherYield) and future score (value, L-17). Ops are
  * exact: overflow and overdraft throw loud (never silent saturation —
@@ -9,6 +9,15 @@
  */
 
 import { freezeState, type PlayerId, type TransitionHandler } from './authority.js';
+import {
+  BUILDING_IDS,
+  BUILDINGS_SCHEMA_VERSION,
+  countsOf,
+  isBuildingId,
+  isBuildingsData,
+  type BuildingId,
+  type BuildingsData,
+} from './buildings.js';
 import { cellAt, isResourceType, RESOURCE_TYPES, type ResourceType } from './map.js';
 import { MAX_UINT32 } from './rng.js';
 import {
@@ -287,4 +296,190 @@ export function gatherProducer(input: {
       },
     },
   ];
+}
+
+/**
+ * M018 — Buildings: configuration + cost/cap mechanics (building data
+ * lives in buildings.js L0; config lives OUTSIDE canonical state like
+ * EconomyConfig). Costs are partial (absent = zero); caps are derived
+ * (base + storages x per — L-31); payments are atomic (payCost debits
+ * all-or-nothing loud). No consumers yet (D-006 pattern): M019 build
+ * transitions consume costOf/buildTimeOf/payCost/addBuilding; M020
+ * enforces capOf.
+ */
+
+export interface BuildingTypeConfig {
+  readonly cost: Cost;
+  readonly buildTime: number;
+}
+
+export interface CapsConfig {
+  readonly base: number;
+  readonly perStorage: number;
+}
+
+export type BuildingsConfig = { readonly [type in BuildingId]: BuildingTypeConfig } & {
+  readonly caps: CapsConfig;
+};
+
+function isCost(value: unknown): value is Cost {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  for (const [key, amount] of Object.entries(value)) {
+    if (!isResourceType(key) || !isUint32(amount)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function isBuildingTypeConfig(value: unknown): value is BuildingTypeConfig {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const fields = value as Record<string, unknown>;
+  return isCost(fields['cost']) && isUint32(fields['buildTime']);
+}
+
+function isCapsConfig(value: unknown): value is CapsConfig {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const fields = value as Record<string, unknown>;
+  return isUint32(fields['base']) && isUint32(fields['perStorage']);
+}
+
+export function isBuildingsConfig(value: unknown): value is BuildingsConfig {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const entries = Object.entries(value);
+  if (entries.length !== BUILDING_IDS.length + 1) {
+    return false;
+  }
+  for (const [key, entry] of entries) {
+    if (key === 'caps') {
+      if (!isCapsConfig(entry)) {
+        return false;
+      }
+    } else if (!isBuildingId(key) || !isBuildingTypeConfig(entry)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Neutral default (M011/M016 analogy: mechanics exist, values untuned —
+ * tuning belongs to playtesting). Costs empty (free), buildTime 0
+ * (instant), caps uncapped (status quo preserved). Frozen.
+ */
+export const DEFAULT_BUILDINGS_CONFIG: BuildingsConfig = freezeState({
+  'town-center': { cost: {}, buildTime: 0 },
+  house: { cost: {}, buildTime: 0 },
+  storage: { cost: {}, buildTime: 0 },
+  barracks: { cost: {}, buildTime: 0 },
+  wall: { cost: {}, buildTime: 0 },
+  tower: { cost: {}, buildTime: 0 },
+  caps: { base: MAX_UINT32, perStorage: 0 },
+});
+
+export function costOf(config: BuildingsConfig, type: BuildingId): Cost {
+  if (!isBuildingsConfig(config)) {
+    throw new Error('costOf: invalid buildings config.');
+  }
+  if (!isBuildingId(type)) {
+    throw new Error('costOf: invalid building type.');
+  }
+  return readCost(config[type].cost, 'costOf');
+}
+
+export function buildTimeOf(config: BuildingsConfig, type: BuildingId): number {
+  if (!isBuildingsConfig(config)) {
+    throw new Error('buildTimeOf: invalid buildings config.');
+  }
+  if (!isBuildingId(type)) {
+    throw new Error('buildTimeOf: invalid building type.');
+  }
+  return config[type].buildTime;
+}
+
+/** Resource kinds in debit order (first-short type names the failure). */
+const COST_KINDS: readonly ResourceType[] = ['food', 'wood', 'stone', 'gold'];
+
+export function payCost(data: StockpilesData, holder: PlayerId, cost: Cost): StockpilesData {
+  if (!isStockpilesData(data)) {
+    throw new Error('payCost: invalid stockpiles data.');
+  }
+  const price = readCost(cost, 'payCost');
+  const held = stockpileOf(data, holder);
+  for (const kind of COST_KINDS) {
+    if (held[kind] < price[kind]) {
+      throw new Error(`payCost: insufficient ${kind}.`);
+    }
+  }
+  return freezeState({
+    schemaVersion: STOCKPILES_SCHEMA_VERSION,
+    stockpiles: {
+      ...data.stockpiles,
+      [holder]: {
+        food: held.food - price.food,
+        wood: held.wood - price.wood,
+        stone: held.stone - price.stone,
+        gold: held.gold - price.gold,
+      },
+    },
+  });
+}
+
+function withCount(
+  data: BuildingsData,
+  holder: PlayerId,
+  type: BuildingId,
+  next: number,
+): BuildingsData {
+  const held = countsOf(data, holder);
+  const updated: { [kind in BuildingId]: number } = { ...held, [type]: next };
+  return freezeState({
+    schemaVersion: BUILDINGS_SCHEMA_VERSION,
+    buildings: { ...data.buildings, [holder]: updated },
+  });
+}
+
+export function addBuilding(
+  data: BuildingsData,
+  holder: PlayerId,
+  type: BuildingId,
+): BuildingsData {
+  if (!isBuildingsData(data)) {
+    throw new Error('addBuilding: invalid buildings data.');
+  }
+  if (!isBuildingId(type)) {
+    throw new Error('addBuilding: invalid building type.');
+  }
+  const next = countsOf(data, holder)[type] + 1;
+  if (next > MAX_UINT32) {
+    throw new Error('addBuilding: overflow.');
+  }
+  return withCount(data, holder, type, next);
+}
+
+export function capOf(
+  data: BuildingsData | undefined,
+  holder: PlayerId,
+  config: BuildingsConfig,
+): number {
+  if (data !== undefined && !isBuildingsData(data)) {
+    throw new Error('capOf: invalid buildings data.');
+  }
+  if (!isBuildingsConfig(config)) {
+    throw new Error('capOf: invalid buildings config.');
+  }
+  const storages = countsOf(data, holder).storage;
+  const cap = config.caps.base + storages * config.caps.perStorage;
+  if (!isUint32(cap)) {
+    throw new Error('capOf: overflow.');
+  }
+  return cap;
 }

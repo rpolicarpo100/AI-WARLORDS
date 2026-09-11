@@ -80,6 +80,7 @@ describe('perceive (integration: knowledge assembly)', () => {
       visibleCells: [4, 8],
       exploredCells: [0, 4],
       stockpile: { food: 0, wood: 0, stone: 0, gold: 0 },
+      buildings: { 'town-center': 0, house: 0, storage: 0, barracks: 0, wall: 0, tower: 0 },
       map: { width: 3, height: 3, visible: { 4: 'forest', 8: 'mountain' }, explored: [0] },
     });
   });
@@ -130,6 +131,7 @@ describe('perceive (integration: knowledge assembly)', () => {
       visibleCells: [],
       exploredCells: [],
       stockpile: { food: 0, wood: 0, stone: 0, gold: 0 },
+      buildings: { 'town-center': 0, house: 0, storage: 0, barracks: 0, wall: 0, tower: 0 },
     });
     expect('map' in known).toBe(false);
   });
@@ -202,6 +204,7 @@ describe('F-09 key tripwire (updated M015: perception keys)', () => {
   it('locks the exact perceived keys (new knowledge fields update perceive)', () => {
     const state = makeState();
     expect(Object.keys(perceive(state, P1, { p1: [4] })).sort()).toEqual([
+      'buildings',
       'exploredCells',
       'map',
       'players',
@@ -212,6 +215,7 @@ describe('F-09 key tripwire (updated M015: perception keys)', () => {
     ]);
     const mapless = createWorldState({ players: [P1, P2] });
     expect(Object.keys(perceive(mapless, P1)).sort()).toEqual([
+      'buildings',
       'exploredCells',
       'players',
       'stockpile',

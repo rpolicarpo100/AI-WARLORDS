@@ -4,16 +4,25 @@
  */
 import { describe, expect, it } from 'vitest';
 import { markUntrusted, type ClientRequest, type PlayerId, type Untrusted } from './authority.js';
+import type { BuildingsData } from './buildings.js';
 import {
+  addBuilding,
+  buildTimeOf,
   canAfford,
+  capOf,
+  costOf,
   createGatherHandler,
   credit,
   debit,
+  DEFAULT_BUILDINGS_CONFIG,
   DEFAULT_ECONOMY_CONFIG,
   gatherParamsRule,
   gatherProducer,
   GATHER_TRANSITION,
+  isBuildingsConfig,
   isEconomyConfig,
+  payCost,
+  type BuildingsConfig,
   type EconomyConfig,
 } from './economy.js';
 import { isMapData, type MapData } from './map.js';
@@ -92,6 +101,27 @@ function gatherMatch(config?: EconomyConfig): Match {
     initialState: createWorldState({ players: [P1, P2], map: nodeMap() }),
     ...(config === undefined ? {} : { economyConfig: config }),
   });
+}
+
+function customBuildings(): BuildingsConfig {
+  return {
+    'town-center': { cost: { food: 10 }, buildTime: 3 },
+    house: { cost: { wood: 5 }, buildTime: 2 },
+    storage: { cost: { wood: 8 }, buildTime: 2 },
+    barracks: { cost: { wood: 20, stone: 10 }, buildTime: 5 },
+    wall: { cost: { stone: 15 }, buildTime: 4 },
+    tower: { cost: { wood: 2, stone: 1 }, buildTime: 1 },
+    caps: { base: 100, perStorage: 50 },
+  };
+}
+
+function housed(): BuildingsData {
+  return {
+    schemaVersion: 1,
+    buildings: {
+      p1: { 'town-center': 1, house: 2, storage: 1, barracks: 0, wall: 0, tower: 0 },
+    },
+  };
 }
 
 describe('isEconomyConfig (unit)', () => {
@@ -770,5 +800,350 @@ describe('gatherProducer (unit: direct)', () => {
         after: noNodeAfter,
       }),
     ).toThrow(/node missing/);
+  });
+});
+
+describe('isBuildingsConfig (unit)', () => {
+  it('accepts a complete custom config (7/7)', () => {
+    expect(isBuildingsConfig(customBuildings())).toBe(true);
+    expect(isBuildingsConfig(DEFAULT_BUILDINGS_CONFIG)).toBe(true);
+  });
+
+  it.each([[null], [[]], ['x']] as Array<[unknown]>)('rejects non-object %j', (value) => {
+    expect(isBuildingsConfig(value)).toBe(false);
+  });
+
+  it('rejects partial and oversized tables (7/7, no more no less)', () => {
+    const full = customBuildings() as unknown as Record<string, unknown>;
+    const six = {
+      'town-center': full['town-center'],
+      house: full['house'],
+      storage: full['storage'],
+      barracks: full['barracks'],
+      wall: full['wall'],
+      caps: full['caps'],
+    };
+    expect(isBuildingsConfig(six)).toBe(false);
+    expect(isBuildingsConfig({ ...full, oil: { cost: {}, buildTime: 0 } })).toBe(false);
+  });
+
+  it('rejects unknown keys and malformed type configs', () => {
+    const full = customBuildings() as unknown as Record<string, unknown>;
+    expect(isBuildingsConfig({ ...full, wall: undefined, lava: full['wall'] })).toBe(false);
+    expect(isBuildingsConfig({ ...full, wall: null })).toBe(false);
+    expect(isBuildingsConfig({ ...full, wall: [] as unknown })).toBe(false);
+  });
+
+  it('rejects a length-preserved unknown key (key check, not length)', () => {
+    const full = customBuildings() as unknown as Record<string, unknown>;
+    const swapped = {
+      'town-center': full['town-center'],
+      house: full['house'],
+      storage: full['storage'],
+      barracks: full['barracks'],
+      lava: full['wall'],
+      tower: full['tower'],
+      caps: full['caps'],
+    };
+    expect(isBuildingsConfig(swapped)).toBe(false);
+  });
+
+  it('rejects bad costs (bad key, bad values, non-object)', () => {
+    const full = customBuildings() as unknown as Record<string, unknown>;
+    const wall = full['wall'] as Record<string, unknown>;
+    expect(isBuildingsConfig({ ...full, wall: { ...wall, cost: { lava: 5 } } })).toBe(false);
+    expect(isBuildingsConfig({ ...full, wall: { ...wall, cost: { stone: -1 } } })).toBe(false);
+    expect(isBuildingsConfig({ ...full, wall: { ...wall, cost: { stone: 1.5 } } })).toBe(false);
+    expect(isBuildingsConfig({ ...full, wall: { ...wall, cost: { stone: 4294967296 } } })).toBe(
+      false,
+    );
+    expect(isBuildingsConfig({ ...full, wall: { ...wall, cost: null } })).toBe(false);
+  });
+
+  it.each([[-1], [1.5], [4294967296], ['x']] as Array<[unknown]>)(
+    'rejects bad buildTime %j',
+    (buildTime) => {
+      const full = customBuildings() as unknown as Record<string, unknown>;
+      const wall = full['wall'] as Record<string, unknown>;
+      expect(isBuildingsConfig({ ...full, wall: { ...wall, buildTime } })).toBe(false);
+    },
+  );
+
+  it('rejects bad caps (base, perStorage, non-object)', () => {
+    const full = customBuildings() as unknown as Record<string, unknown>;
+    expect(isBuildingsConfig({ ...full, caps: { base: -1, perStorage: 0 } })).toBe(false);
+    expect(isBuildingsConfig({ ...full, caps: { base: 0, perStorage: 1.5 } })).toBe(false);
+    expect(isBuildingsConfig({ ...full, caps: null })).toBe(false);
+  });
+});
+
+describe('DEFAULT_BUILDINGS_CONFIG (unit)', () => {
+  it('is exactly neutral (free, instant, uncapped)', () => {
+    const free = { cost: {}, buildTime: 0 };
+    expect(DEFAULT_BUILDINGS_CONFIG).toEqual({
+      'town-center': free,
+      house: free,
+      storage: free,
+      barracks: free,
+      wall: free,
+      tower: free,
+      caps: { base: 4294967295, perStorage: 0 },
+    });
+    expect(isBuildingsConfig(DEFAULT_BUILDINGS_CONFIG)).toBe(true);
+  });
+
+  it('is deep-frozen', () => {
+    expect(Object.isFrozen(DEFAULT_BUILDINGS_CONFIG)).toBe(true);
+    expect(Object.isFrozen(DEFAULT_BUILDINGS_CONFIG.storage)).toBe(true);
+    expect(Object.isFrozen(DEFAULT_BUILDINGS_CONFIG.caps)).toBe(true);
+    expect(() => {
+      (DEFAULT_BUILDINGS_CONFIG.caps as { base: number }).base = 9;
+    }).toThrow(TypeError);
+  });
+});
+
+describe('costOf (unit)', () => {
+  it('completes partial costs into a fresh copy', () => {
+    expect(costOf(customBuildings(), 'storage')).toEqual({ food: 0, wood: 8, stone: 0, gold: 0 });
+    const got = costOf(customBuildings(), 'barracks');
+    expect(got).toEqual({ food: 0, wood: 20, stone: 10, gold: 0 });
+    (got as Record<string, number>)['wood'] = 0;
+    expect(costOf(customBuildings(), 'barracks')).toEqual({
+      food: 0,
+      wood: 20,
+      stone: 10,
+      gold: 0,
+    });
+  });
+
+  it('zeros for the neutral default', () => {
+    expect(costOf(DEFAULT_BUILDINGS_CONFIG, 'tower')).toEqual({
+      food: 0,
+      wood: 0,
+      stone: 0,
+      gold: 0,
+    });
+  });
+
+  it('rejects invalid configs and types loud', () => {
+    expect(() => costOf({} as BuildingsConfig, 'tower')).toThrow(/invalid buildings config/);
+    expect(() => costOf(customBuildings(), 'lava' as never)).toThrow(/invalid building type/);
+  });
+});
+
+describe('buildTimeOf (unit)', () => {
+  it('reads times golden', () => {
+    expect(buildTimeOf(customBuildings(), 'barracks')).toBe(5);
+    expect(buildTimeOf(DEFAULT_BUILDINGS_CONFIG, 'barracks')).toBe(0);
+  });
+
+  it('rejects invalid configs and types loud', () => {
+    expect(() => buildTimeOf({} as BuildingsConfig, 'tower')).toThrow(/invalid buildings config/);
+    expect(() => buildTimeOf(customBuildings(), 'lava' as never)).toThrow(/invalid building type/);
+  });
+});
+
+describe('payCost (integration)', () => {
+  it('pays multi-resource costs atomically (golden)', () => {
+    const paid = payCost(held(), P1, { food: 2, wood: 3, gold: 1 });
+    expect(paid).toEqual({
+      schemaVersion: 1,
+      stockpiles: { p1: { food: 3, wood: 0, stone: 0, gold: 0 } },
+    });
+    expect(Object.isFrozen(paid)).toBe(true);
+    expect(held()).toEqual({
+      schemaVersion: 1,
+      stockpiles: { p1: { food: 5, wood: 3, stone: 0, gold: 1 } },
+    });
+  });
+
+  it('treats absent as zero; empty cost returns an equal copy', () => {
+    const paid = payCost(held(), P1, { gold: 1 });
+    expect(paid.stockpiles['p1']).toEqual({ food: 5, wood: 3, stone: 0, gold: 0 });
+    const before = held();
+    const same = payCost(before, P1, {});
+    expect(same).toEqual(before);
+    expect(same).not.toBe(before);
+  });
+
+  it('drains exact balances to zero', () => {
+    const paid = payCost(held(), P1, { food: 5, wood: 3, gold: 1 });
+    expect(paid.stockpiles['p1']).toEqual({ food: 0, wood: 0, stone: 0, gold: 0 });
+  });
+
+  it('names the first short kind in debit order (deterministic)', () => {
+    expect(() => payCost(held(), P1, { food: 9, wood: 9, stone: 9, gold: 9 })).toThrow(
+      /insufficient food/,
+    );
+    expect(() => payCost(held(), P1, { wood: 9, stone: 9, gold: 9 })).toThrow(/insufficient wood/);
+    expect(() => payCost(held(), P1, { stone: 9, gold: 9 })).toThrow(/insufficient stone/);
+    expect(() => payCost(held(), P1, { gold: 9 })).toThrow(/insufficient gold/);
+  });
+
+  it('rejects invalid data and costs loud', () => {
+    expect(() => payCost({} as StockpilesData, P1, { food: 1 })).toThrow(/invalid stockpiles data/);
+    expect(() => payCost(held(), P1, 'x' as never)).toThrow(/invalid cost/);
+    expect(() => payCost(held(), P1, { food: -1 })).toThrow(/invalid cost/);
+  });
+});
+
+describe('addBuilding (integration)', () => {
+  const EMPTY_BUILDINGS: BuildingsData = { schemaVersion: 1, buildings: {} };
+
+  it('adds the first building golden (frozen)', () => {
+    const added = addBuilding(EMPTY_BUILDINGS, P1, 'town-center');
+    expect(added).toEqual({
+      schemaVersion: 1,
+      buildings: {
+        p1: { 'town-center': 1, house: 0, storage: 0, barracks: 0, wall: 0, tower: 0 },
+      },
+    });
+    expect(Object.isFrozen(added)).toBe(true);
+  });
+
+  it('accumulates onto existing counts', () => {
+    const added = addBuilding(housed(), P1, 'house');
+    expect(added.buildings['p1']).toEqual({
+      'town-center': 1,
+      house: 3,
+      storage: 1,
+      barracks: 0,
+      wall: 0,
+      tower: 0,
+    });
+  });
+
+  it('rejects invalid data and types loud; overflow loud', () => {
+    expect(() => addBuilding({} as BuildingsData, P1, 'house')).toThrow(/invalid buildings data/);
+    expect(() => addBuilding(EMPTY_BUILDINGS, P1, 'lava' as never)).toThrow(
+      /invalid building type/,
+    );
+    const full: BuildingsData = {
+      schemaVersion: 1,
+      buildings: {
+        p1: { 'town-center': 0, house: 4294967295, storage: 0, barracks: 0, wall: 0, tower: 0 },
+      },
+    };
+    expect(() => addBuilding(full, P1, 'house')).toThrow(/overflow/);
+  });
+});
+
+describe('capOf (unit)', () => {
+  it('returns base with no storages (golden)', () => {
+    expect(capOf(housed(), P2, customBuildings())).toBe(100);
+  });
+
+  it('adds per-storage bonus (golden)', () => {
+    expect(capOf(housed(), P1, customBuildings())).toBe(150);
+  });
+
+  it('neutral default never binds (uncapped status quo)', () => {
+    expect(capOf(housed(), P1, DEFAULT_BUILDINGS_CONFIG)).toBe(4294967295);
+  });
+
+  it('absent data means base (fail-soft); garbage stays loud', () => {
+    expect(capOf(undefined, P1, customBuildings())).toBe(100);
+    expect(() => capOf({} as BuildingsData, P1, customBuildings())).toThrow(
+      /invalid buildings data/,
+    );
+  });
+
+  it('invalid config and overflow stay loud', () => {
+    expect(() => capOf(housed(), P1, {} as BuildingsConfig)).toThrow(/invalid buildings config/);
+    expect(() =>
+      capOf(housed(), P1, {
+        ...customBuildings(),
+        caps: { base: 4294967295, perStorage: 1 },
+      }),
+    ).toThrow(/overflow/);
+  });
+});
+
+describe('cost mechanics flow (integration)', () => {
+  it('afford → pay → add composes golden (the M018 contract)', () => {
+    const config = customBuildings();
+    const cost = costOf(config, 'tower');
+    expect(cost).toEqual({ food: 0, wood: 2, stone: 1, gold: 0 });
+    const funds: StockpilesData = {
+      schemaVersion: 1,
+      stockpiles: { p1: { food: 5, wood: 3, stone: 2, gold: 1 } },
+    };
+    expect(canAfford(funds, P1, cost)).toBe(true);
+    const paid = payCost(funds, P1, cost);
+    expect(paid.stockpiles['p1']).toEqual({ food: 5, wood: 1, stone: 1, gold: 1 });
+    const raised = addBuilding(housed(), P1, 'tower');
+    expect(raised.buildings['p1']).toEqual({
+      'town-center': 1,
+      house: 2,
+      storage: 1,
+      barracks: 0,
+      wall: 0,
+      tower: 1,
+    });
+  });
+});
+
+describe('WorldState extension: buildings (integration)', () => {
+  it('accepts buildings without a map (economy is map-independent)', () => {
+    const world = createWorldState({ players: [P1, P2], buildings: housed() });
+    expect(world.buildings).toEqual(housed());
+  });
+
+  it('rejects malformed buildings', () => {
+    expect(() => createWorldState({ players: [P1, P2], buildings: {} as BuildingsData })).toThrow(
+      /invalid initial world/,
+    );
+    const world = createWorldState({ players: [P1, P2] });
+    expect(isWorldState({ ...world, buildings: { schemaVersion: 1, buildings: {} } })).toBe(true);
+    expect(isWorldState({ ...world, buildings: { schemaVersion: 2, buildings: {} } })).toBe(false);
+  });
+
+  it('omits buildings when absent (bytes intact)', () => {
+    const world = createWorldState({ players: [P1, P2] });
+    expect('buildings' in world).toBe(false);
+  });
+});
+
+describe('perception carry: buildings (integration)', () => {
+  it('perceive carries the counts alongside knowledge (golden)', () => {
+    const world = createWorldState({ players: [P1, P2], buildings: housed() });
+    const known = perceive(world, P1);
+    expect(known.buildings).toEqual({
+      'town-center': 1,
+      house: 2,
+      storage: 1,
+      barracks: 0,
+      wall: 0,
+      tower: 0,
+    });
+    expect(known.exploredCells).toEqual([]);
+  });
+
+  it('zeros when absent; others buildings stay out (fail-closed)', () => {
+    const world = createWorldState({ players: [P1, P2] });
+    expect(perceive(world, P1).buildings).toEqual({
+      'town-center': 0,
+      house: 0,
+      storage: 0,
+      barracks: 0,
+      wall: 0,
+      tower: 0,
+    });
+    const crowded: BuildingsData = {
+      schemaVersion: 1,
+      buildings: {
+        p1: { 'town-center': 1, house: 0, storage: 0, barracks: 0, wall: 0, tower: 0 },
+        zx: { 'town-center': 9, house: 9, storage: 9, barracks: 9, wall: 9, tower: 9 },
+      },
+    };
+    const known = perceive(createWorldState({ players: [P1, P2], buildings: crowded }), P1);
+    expect(known.buildings).toEqual({
+      'town-center': 1,
+      house: 0,
+      storage: 0,
+      barracks: 0,
+      wall: 0,
+      tower: 0,
+    });
   });
 });

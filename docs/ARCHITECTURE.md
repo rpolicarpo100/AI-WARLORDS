@@ -15,7 +15,8 @@
 > Perception system: `EXISTS` (M015 — VERIFIED)
 > Resource engine: `EXISTS` (M016 — VERIFIED)
 > Gathering: `EXISTS` (M017 — VERIFIED; primeiro produtor)
-> Domínio do jogo (economia, militar, AI): `NONE` (M018+; mapa+terreno+recursos+fog+explored+perception+stockpiles+gather EXISTS)
+> Buildings: `EXISTS` (M018 — VERIFIED; dados+config+custos)
+> Domínio do jogo (economia, militar, AI): `NONE` (M019+; mapa+terreno+recursos+fog+explored+perception+stockpiles+gather+buildings EXISTS)
 > Arquitectura-alvo: `PLANNED` (transcrita do documento-mestre)
 > Data: 2026-09-11
 
@@ -78,6 +79,7 @@ memória explored — acumulação monótona por viewer, tri-state (M014);
 percepção por viewer — saber compatível com fog, secrets morto (M015);
 motor de recursos — stockpiles + config + ops exactas (M016);
 gathering — primeiro produtor, depleção nó→stockpile (M017);
+edifícios — 6 tipos, counts+config+custos+caps (M018);
 chain nunca substitui o engine (M101); dinheiro só após gate Fase 28.
 
 ## 3. Mapa de fases → camadas (PLANNED)
@@ -87,7 +89,7 @@ chain nunca substitui o engine (M101); dinheiro só após gate Fase 28.
 | 0       | Foundation                  | M001–M002 (VERIFIED)             |
 | 1       | Game Engine                 | M003–M009 (VERIFIED)             |
 | 2       | World                       | M010–M015 (VERIFIED)             |
-| 3–4     | Economy + Military          | M016–M017 (VERIFIED) → M018–M026 |
+| 3–4     | Economy + Military          | M016–M018 (VERIFIED) → M019–M026 |
 | 5–8     | AI Foundation → Commands    | M027–M045                        |
 | 9–16    | Refutation → AI Arena       | M046–M068                        |
 | 17–20   | Multiplayer → Observability | M069–M093                        |
@@ -123,12 +125,13 @@ chain nunca substitui o engine (M101); dinheiro só após gate Fase 28.
 - [x] Percepção por viewer (M015: perceive+membership — VERIFIED)
 - [x] Motor de recursos (M016: stockpiles+config+ops — VERIFIED)
 - [x] Gathering (M017: handler+producer+depleção — VERIFIED)
+- [x] Edifícios (M018: dados+config+custos+caps — VERIFIED)
 
-## 5. Repo layout (actual, M017)
+## 5. Repo layout (actual, M018)
 
 ```text
 ai-warlords/
-  package.json / package-lock.json  scripts + deps pinned (intocados M003–M017)
+  package.json / package-lock.json  scripts + deps pinned (intocados M003–M018)
   tsconfig.json / tsconfig.build.json
   vitest.config.ts / eslint.config.js / .prettierrc.json
   src/
@@ -151,13 +154,14 @@ ai-warlords/
       explored.ts       memória explored + guard (VERIFIED, load-bearing)
       exploration.ts    acumulação + tri-state (VERIFIED, load-bearing)
       stockpiles.ts     armazéns + guard (VERIFIED, load-bearing)
-      economy.ts        config + ops + gather (VERIFIED, load-bearing)
+      economy.ts        config + ops + gather + buildings (VERIFIED, load-bearing)
+      buildings.ts      dados + guard (VERIFIED, load-bearing)
       phase1-gate.test.ts  selo transversal M009 (14 testes, prova)
-      *.test.ts         737 testes colocados
+      *.test.ts         817 testes colocados
     *.test.ts           28 testes M002 (regressão)
   dist/              build (gitignored)
   docs/              audit, stack, riscos, status, tools, testes, decisões, processo
-  docs/modules/      registos por módulo (M002.md … M017.md)
+  docs/modules/      registos por módulo (M002.md … M018.md)
 ```
 
 AVISOS: `src/dev-server.ts` (M002) e `src/engine/harness.ts` (M003) são
@@ -189,3 +193,4 @@ stockpiles, economy.
 | 2026-09-11 | M015      | Percepção EXISTS; secrets morto; selo re-locked; 623 testes    |
 | 2026-09-11 | M016      | Motor EXISTS; stockpiles+config+ops; 689 testes engine         |
 | 2026-09-11 | M017      | Gather EXISTS; depleção+facto; map-preserved cede; 737 testes  |
+| 2026-09-11 | M018      | Edifícios EXISTS; counts+config+custos+caps; 817 testes        |
