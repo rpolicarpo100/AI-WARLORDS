@@ -27,6 +27,30 @@ describe('stableStringify', () => {
       expect(() => stableStringify(value)).toThrow(/unserializable/);
     },
   );
+
+  it.each([[NaN], [Infinity], [-Infinity]] as Array<[number]>)(
+    'throws for non-finite number: %j (FIX-AUDIT)',
+    (value) => {
+      expect(() => stableStringify(value)).toThrow(/unserializable/);
+      expect(() => stableStringify({ nested: [value] })).toThrow(/unserializable/);
+    },
+  );
+
+  it('throws for circular structures (FIX-AUDIT)', () => {
+    const self: Record<string, unknown> = {};
+    self['self'] = self;
+    expect(() => stableStringify(self)).toThrow(/unserializable/);
+    const arr: unknown[] = [];
+    arr.push(arr);
+    expect(() => stableStringify(arr)).toThrow(/unserializable/);
+  });
+
+  it('accepts shared references: DAGs are not cycles', () => {
+    const shared = { x: 1 };
+    expect(stableStringify({ left: shared, right: shared })).toBe(
+      '{"left":{"x":1},"right":{"x":1}}',
+    );
+  });
 });
 
 describe('hashState', () => {

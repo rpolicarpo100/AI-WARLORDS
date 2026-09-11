@@ -253,6 +253,11 @@ export class Match {
     return this.kernel.join(playerId);
   }
 
+  /**
+   * Runs one request through the kernel + producers + victory check.
+   * @throws on engine faults (victory evaluation) — fail-stop loud.
+   * Transport (M069) must treat throws as faults, never as outcomes.
+   */
   dispatch(session: SessionHandle, raw: Untrusted<ClientRequest>): MatchDispatchOutcome {
     if (this.getVerdict().status === 'finished') {
       return { status: 'error', code: 'MATCH_FINISHED' };

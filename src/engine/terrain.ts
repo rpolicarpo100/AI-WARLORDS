@@ -72,7 +72,10 @@ const defaultTerrainConfig: TerrainConfig = {
   city: { move: 1, defense: 0, stealth: 0, ranged: 0 },
 };
 
-export const DEFAULT_TERRAIN_CONFIG: TerrainConfig = freezeState(defaultTerrainConfig);
+// D-001: river Infinity (impassable) is rules-config, never canonical state.
+export const DEFAULT_TERRAIN_CONFIG: TerrainConfig = freezeState(defaultTerrainConfig, {
+  allowNonFinite: true,
+});
 
 /** Fail-stop: unknown terrain throws (never invent defaults). */
 export function modifiersFor(config: TerrainConfig, terrain: TerrainId): TerrainModifiers {

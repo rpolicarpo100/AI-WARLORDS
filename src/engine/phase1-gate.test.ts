@@ -445,9 +445,14 @@ describe('determinism hygiene (static security review)', () => {
       'Date(',
       'Date.parse',
       'randomBytes',
+      'randomInt',
+      'randomFill',
       'getRandomValues',
       'performance.now(',
       'process.hrtime',
+      'process.uptime',
+      'import(',
+      'require(',
     ];
     for (const file of engineSources()) {
       const text = readSource(file);

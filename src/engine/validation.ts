@@ -36,8 +36,9 @@ export type PreRule = (caller: PlayerId, params: unknown, state: WorldState) => 
 export type PostRule = (before: WorldState, after: WorldState) => Violation | null;
 
 /**
- * Provisional per-write cap (bytes of canonical JSON). A safety bound, not
- * a tuned budget: M088 measures real state sizes (L-12).
+ * Provisional per-write cap (length of canonical JSON in UTF-16 units, not
+ * bytes). A safety bound, not a tuned budget: M088 measures real state
+ * sizes (L-12).
  */
 export const MAX_STATE_BYTES = 1000000;
 

@@ -549,4 +549,50 @@ describe('freezeState (direct unit tests, M005)', () => {
     expect(() => freezeState({ u: undefined })).toThrow(/plain JSON-style data/);
     expect(() => freezeState([1n])).toThrow(/plain JSON-style data/);
   });
+
+  it.each([[NaN], [Infinity], [-Infinity]] as Array<[number]>)(
+    'rejects non-finite numbers: %j (FIX-AUDIT F-03)',
+    (value) => {
+      expect(() => freezeState(value)).toThrow(/non-finite/);
+      expect(() => freezeState({ nested: [value] })).toThrow(/non-finite/);
+    },
+  );
+
+  it('accepts non-finite config values only with allowNonFinite (D-001)', () => {
+    const config = { move: Infinity };
+    expect(freezeState(config, { allowNonFinite: true })).toBe(config);
+    expect(Object.isFrozen(config)).toBe(true);
+    expect(() => freezeState({ move: Infinity })).toThrow(/non-finite/);
+    expect(() => freezeState({ v: NaN }, { allowNonFinite: true })).toThrow(/non-finite/);
+  });
+
+  it('rejects circular structures with a clean error (FIX-AUDIT F-05)', () => {
+    const self: Record<string, unknown> = {};
+    self['self'] = self;
+    expect(() => freezeState(self)).toThrow(/circular/);
+    const a: Record<string, unknown> = {};
+    const b: Record<string, unknown> = { a };
+    a['b'] = b;
+    expect(() => freezeState(a)).toThrow(/circular/);
+    const arr: unknown[] = [];
+    arr.push(arr);
+    expect(() => freezeState(arr)).toThrow(/circular/);
+  });
+
+  it('rejects pre-frozen junk: frozen-ness is not validity (FIX-AUDIT F-03b)', () => {
+    expect(() => freezeState(Object.freeze({ m: new Map() }))).toThrow(/plain JSON-style/);
+    expect(() => freezeState(Object.freeze({ fn: () => 0 }))).toThrow(/plain JSON-style/);
+  });
+
+  it('trusts its own validated output (fast path, same reference)', () => {
+    const value = freezeState({ a: [1, { b: 'x' }] });
+    expect(freezeState(value)).toBe(value);
+  });
+
+  it('accepts shared references: DAGs are not cycles', () => {
+    const shared = { x: 1 };
+    const frozen = freezeState({ left: shared, right: shared });
+    expect(Object.isFrozen(shared)).toBe(true);
+    expect(frozen.left).toBe(shared);
+  });
 });

@@ -46,8 +46,10 @@ export class SeededRng {
 }
 
 /**
- * Derives an independent per-dispatch stream seed from (match seed, log
- * sequence). Deterministic mixing (NOT cryptographic: streams need
+ * Derives an independent per-dispatch stream seed from (match seed,
+ * wrapper-invocation ordinal — pre-rejections consume ordinals without
+ * logging, so this is NOT the kernel log seq). Deterministic mixing (NOT
+ * cryptographic: streams need
  * separation, not secrecy — anti-cheat secrecy is a future module's job).
  * Any dispatch's randomness is reconstructible from (seed, seq) alone.
  */

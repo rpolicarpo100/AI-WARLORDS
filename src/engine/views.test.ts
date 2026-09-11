@@ -111,3 +111,27 @@ describe('toAiPerception (M004: known == player-visible)', () => {
     expect(toAiPerception(state, P1).kind).toBe('ai-perception');
   });
 });
+
+describe('redacted key-set tripwire (FIX-AUDIT F-09)', () => {
+  it('locks the exact redacted state keys (new WorldState fields must update redactFor)', () => {
+    const state = makeState();
+    expect(Object.keys(toClientView(state, P1).state).sort()).toEqual([
+      'players',
+      'schemaVersion',
+      'secrets',
+      'tick',
+    ]);
+    expect(Object.keys(toAiPerception(state, P1).known).sort()).toEqual([
+      'players',
+      'schemaVersion',
+      'secrets',
+      'tick',
+    ]);
+  });
+
+  it('locks the view envelope keys', () => {
+    const state = makeState();
+    expect(Object.keys(toClientView(state, P1)).sort()).toEqual(['forPlayer', 'kind', 'state']);
+    expect(Object.keys(toAiPerception(state, P1)).sort()).toEqual(['forPlayer', 'kind', 'known']);
+  });
+});

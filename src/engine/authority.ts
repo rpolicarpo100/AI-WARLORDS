@@ -28,6 +28,7 @@ export type SessionId = string & { readonly [sessionBrand]: 'session' };
 
 export const MAX_ID_LENGTH = 64;
 export const MAX_TYPE_LENGTH = 64;
+/** Payload cap measured in UTF-16 units (provisional; M088 measures real sizes). */
 export const MAX_PAYLOAD_BYTES = 65536;
 
 export function isPlayerId(value: unknown): value is PlayerId {
@@ -146,36 +147,74 @@ export interface SessionHandle {
 
 // ─── Deep freeze (plain data only) ───────────────────────────────────────
 
+/** Options for `freezeState`. Canonical state always uses strict defaults. */
+export interface FreezeOptions {
+  /**
+   * Rules configs (never canonical state) may hold ±Infinity with motive
+   * (e.g. terrain impassable, D-001). NaN stays rejected everywhere.
+   */
+  readonly allowNonFinite?: boolean;
+}
+
+const NOT_PLAIN =
+  'AuthorityKernel state must be plain JSON-style data (objects, arrays, primitives).';
+const NON_FINITE = 'freezeState: non-finite number (state must be exactly serializable).';
+const CIRCULAR = 'freezeState: circular structure (state must be a tree).';
+
 /**
- * Deeply freezes plain JSON-style data (objects, arrays, strings, numbers,
- * booleans, null). Rejects class instances, Maps, Sets, functions, symbols,
- * bigints and undefined loudly: canonical state must be structurally
- * freezable AND serializable, never silently half-frozen or unhashable.
+ * Objects validated by freezeState: fast-path trust is transitive (we froze
+ * the whole subtree, so it cannot have changed). Pre-frozen-but-unseen
+ * objects are fully validated — frozen-ness alone is not validity.
  */
-export function freezeState<T>(value: T): T {
+const validatedFrozen = new WeakSet<object>();
+
+/**
+ * Deeply freezes plain JSON-style data (objects, arrays, strings, finite
+ * numbers, booleans, null). Rejects class instances, Maps, Sets, functions,
+ * symbols, bigints, undefined, non-finite numbers, cycles and pre-frozen
+ * junk loudly: canonical state must be structurally freezable AND exactly
+ * serializable, never silently half-frozen, unhashable or hash-ambiguous.
+ */
+export function freezeState<T>(value: T, options?: FreezeOptions): T {
+  return freezeValue(value, options?.allowNonFinite === true, new Set()) as T;
+}
+
+function freezeValue(value: unknown, allowNonFinite: boolean, active: Set<object>): unknown {
   const kind = typeof value;
-  if (value === null || kind === 'string' || kind === 'number' || kind === 'boolean') {
+  if (value === null || kind === 'string' || kind === 'boolean') {
+    return value;
+  }
+  if (kind === 'number') {
+    if (Number.isNaN(value)) {
+      throw new Error(NON_FINITE);
+    }
+    if (!allowNonFinite && !Number.isFinite(value)) {
+      throw new Error(NON_FINITE);
+    }
     return value;
   }
   if (kind !== 'object') {
-    throw new Error(
-      'AuthorityKernel state must be plain JSON-style data (objects, arrays, primitives).',
-    );
+    throw new Error(NOT_PLAIN);
   }
-  const proto: unknown = Object.getPrototypeOf(value);
-  if (proto !== Object.prototype && proto !== null && !Array.isArray(value)) {
-    throw new Error(
-      'AuthorityKernel state must be plain JSON-style data (objects, arrays, primitives).',
-    );
+  const target = value as object;
+  const proto: unknown = Object.getPrototypeOf(target);
+  if (proto !== Object.prototype && proto !== null && !Array.isArray(target)) {
+    throw new Error(NOT_PLAIN);
   }
-  if (Object.isFrozen(value)) {
-    return value;
+  if (validatedFrozen.has(target)) {
+    return target;
   }
-  for (const key of Reflect.ownKeys(value as object)) {
-    freezeState((value as Record<PropertyKey, unknown>)[key]);
+  if (active.has(target)) {
+    throw new Error(CIRCULAR);
   }
-  Object.freeze(value);
-  return value;
+  active.add(target);
+  for (const key of Reflect.ownKeys(target)) {
+    freezeValue((target as Record<PropertyKey, unknown>)[key], allowNonFinite, active);
+  }
+  active.delete(target);
+  Object.freeze(target);
+  validatedFrozen.add(target);
+  return target;
 }
 
 // ─── Kernel ──────────────────────────────────────────────────────────────
