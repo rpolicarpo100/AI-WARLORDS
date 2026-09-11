@@ -1,0 +1,13 @@
+# Render Blueprint: serves the self-contained game mockups as a static site.
+# Build re-derives state.json + inlined pages from source (never ships stale artifacts).
+services:
+  - type: web
+    name: ai-warlords
+    runtime: static
+    branch: main
+    buildCommand: npm ci && npm run mockups
+    staticPublishPath: mockups
+    routes:
+      - type: rewrite
+        source: /
+        destination: /match.html
