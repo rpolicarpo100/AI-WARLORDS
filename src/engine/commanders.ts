@@ -10,6 +10,9 @@
  * the uint32 ceiling mirror stockpiles.js / rng.js (L0↛L0: deliberately
  * not imported); the test cross-checks the mirrors (divergence fails loud).
  * M031 embeds optional DNA (DnaTraits mirror — dna.ts canonical, L0↛L0).
+ * M032 embeds optional personality label (union mirror — personalities.ts
+ * canonical, L0↛L0). Presets are NOT mirrored (lookup lives in
+ * personalities.ts; the record carries only the label).
  */
 
 export const COMMANDERS_SCHEMA_VERSION = 1;
@@ -28,11 +31,16 @@ export interface CommanderDna {
   readonly adaptability: number;
 }
 
+/** M032 mirror of PersonalityId (personalities.ts canonical; L0↛L0: deliberately not imported). */
+export type CommanderPersonality =
+  'conqueror' | 'strategist' | 'defender' | 'manipulator' | 'emperor';
+
 export interface CommanderRecord {
   readonly id: string;
   readonly owner: string;
   readonly active: boolean;
   readonly dna?: CommanderDna;
+  readonly personality?: CommanderPersonality;
 }
 
 export interface CommandersData {
@@ -89,6 +97,20 @@ function isMirroredTraitValue(value: unknown): value is number {
   );
 }
 
+/** Mirrors PERSONALITY_IDS (personalities.ts). Leaf: deliberately not imported. */
+const MIRRORED_PERSONALITY_IDS: readonly string[] = [
+  'conqueror',
+  'strategist',
+  'defender',
+  'manipulator',
+  'emperor',
+];
+
+/** Mirrors isPersonalityId (personalities.ts). */
+function isMirroredPersonality(value: unknown): value is CommanderPersonality {
+  return typeof value === 'string' && MIRRORED_PERSONALITY_IDS.includes(value);
+}
+
 /** Mirrors isDnaTraits (dna.ts): total DNA check, extras ignored (M015). */
 function isMirroredDna(value: unknown): value is CommanderDna {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
@@ -112,7 +134,8 @@ export function isCommanderRecord(value: unknown): value is CommanderRecord {
     isCommanderId(fields['id']) &&
     isHolderId(fields['owner']) &&
     typeof fields['active'] === 'boolean' &&
-    (fields['dna'] === undefined || isMirroredDna(fields['dna']))
+    (fields['dna'] === undefined || isMirroredDna(fields['dna'])) &&
+    (fields['personality'] === undefined || isMirroredPersonality(fields['personality']))
   );
 }
 

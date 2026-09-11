@@ -852,3 +852,49 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
   (battery) + `views.test.ts` (1 pin) + phase1-gate
   (2 pins) (M031).
 - ESTADO: `ACCEPTED`.
+
+## D-026 — Personalities data-first: rótulo + presets DNA votados (M032 pré-análise + voto)
+
+- DECISION: `personalities.ts` NOVO (LEAF L0, zero imports):
+  PERSONALITY_IDS (5, ordem #23, lowercase), PersonalityId,
+  isPersonalityId, PersonalityDna (shape estrutural 10
+  números — mirror de DnaTraits, L0↛L0),
+  PERSONALITY_DNA_PRESETS (matriz 5×10 VOTADA 2026-09-11;
+  base 50, primário ±30–35, múltiplos de 5) +
+  dnaPresetOf (cópia fresca; id desconhecido→undefined
+  fail-soft, molde commanderById). Teste-pino: presets
+  satisfazem isDnaTraits ∀5 (import dna em teste ✓).
+  `CommanderRecord.personality?` (embed votado; union
+  mirror + isMirroredPersonalityId; battery cross-check —
+  M016). Precedência VOTADA p/ futuros consumidores:
+  record-DNA ganha ao preset (especificidade; #22).
+  Sem slot novo; views/Match/validation zero churn
+  (F-09 top-level); commission sem personality (M029);
+  sem writer (init-placed); sem behavior (M033+/M035+).
+- MOTIVE: 5 votos explícitos do utilizador 2026-09-11
+  (data-first; presets; extend; matriz; record-wins) +
+  #23 (5 nomes+epítetos; "Inicialmente"→extensível c/
+  rationale), #25 (≠SKILL), #22 (influencia≠determina),
+  M031 (molde data-first + mirror + forward-placed),
+  M016 (espelhos), M027 (init-placed), constraints.
+- ALTERNATIVES: só-rótulo (preterido pelo user —
+  presets votados); presets inventados sem voto
+  (rejeitado: metodologia — matriz proposta e
+  APROVADA); secção standalone (rejeitada); preset-wins
+  (rejeitado); writer/behavior em M032 (rejeitado);
+  DNA-imposto (rejeitado: #22 + record-wins);
+  desconhecido→throw (rejeitado: lookup fail-soft).
+- ADVANTAGES: vocabulário fechado + defaults
+  canónicos votados; record retro-compat; zero churn
+  motor; consumers futuros com lookup pronto.
+- DISADVANTAGES: 2.º mirror em commanders.ts; folha
+  sem importadores prod até M033+; matriz tuning
+  humano (#92).
+- RISKS: baixo — dados puros; residual: drift matriz
+  vs tuning real (#92); "Inicialmente" = extensão
+  futura quebra goldens (declarado).
+- IMPLEMENTATION: `personalities.ts` +
+  `personalities.test.ts` + `commanders.ts`
+  (embed+mirror) + `commanders.test.ts` (battery) +
+  phase1-gate (2 pins) (M032).
+- ESTADO: `ACCEPTED`.

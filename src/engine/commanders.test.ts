@@ -17,6 +17,7 @@ import {
   type CommandersData,
 } from './commanders.js';
 import { isDnaTraits, TRAIT_IDS } from './dna.js';
+import { isPersonalityId, PERSONALITY_IDS } from './personalities.js';
 import { perceive } from './views.js';
 import { createWorldState, isWorldState } from './world-state.js';
 
@@ -405,6 +406,64 @@ describe('DNA mirror cross-check (M031)', () => {
     for (const bad of [7, 'x', [], null]) {
       expect(isDnaTraits(bad)).toBe(false);
       expect(isCommanderRecord(recordOf(bad))).toBe(false);
+    }
+  });
+});
+
+describe('personality embed (M032)', () => {
+  it('record without personality stays valid (backward compatible)', () => {
+    expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true })).toBe(true);
+  });
+
+  it.each([...PERSONALITY_IDS])('record with personality %s validates', (personality) => {
+    expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true, personality })).toBe(true);
+  });
+
+  it('record with unknown personality rejects (fixed-5 vocabulary)', () => {
+    for (const bad of ['turtle', 'CONQUEROR', '', 7, null, [], {}]) {
+      expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true, personality: bad })).toBe(
+        false,
+      );
+    }
+  });
+
+  it('WorldState slot round-trips personality alongside dna', () => {
+    const state = createWorldState({
+      players: [P1, P2],
+      commanders: {
+        schemaVersion: 1,
+        nextId: 1,
+        commanders: [{ id: 'c0', owner: 'p1', active: true, personality: 'defender' }],
+      },
+    });
+    expect(state.commanders?.commanders[0]).toEqual({
+      id: 'c0',
+      owner: 'p1',
+      active: true,
+      personality: 'defender',
+    });
+    expect(perceive(state, P1).commanders).toEqual([
+      { id: 'c0', owner: 'p1', active: true, personality: 'defender' },
+    ]);
+  });
+});
+
+describe('personality mirror cross-check (M032)', () => {
+  it('mirror agrees with canonical on the five + abuse battery', () => {
+    for (const id of PERSONALITY_IDS) {
+      expect(isPersonalityId(id)).toBe(true);
+      expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true, personality: id })).toBe(
+        true,
+      );
+    }
+    for (const bad of ['turtle', 'CONQUEROR', '', 7, null, undefined, [], {}]) {
+      const record =
+        bad === undefined
+          ? { id: 'c0', owner: 'p1', active: true }
+          : { id: 'c0', owner: 'p1', active: true, personality: bad };
+      // Absent label is valid (optional); every other abuse agrees both sides.
+      const expected = bad === undefined ? true : isPersonalityId(bad);
+      expect(isCommanderRecord(record)).toBe(expected);
     }
   });
 });
