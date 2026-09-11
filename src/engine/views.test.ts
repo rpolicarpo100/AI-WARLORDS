@@ -82,6 +82,7 @@ describe('perceive (integration: knowledge assembly)', () => {
       stockpile: { food: 0, wood: 0, stone: 0, gold: 0 },
       buildings: { 'town-center': 0, house: 0, storage: 0, barracks: 0, wall: 0, tower: 0 },
       city: { level: 1, queue: [] },
+      units: [],
       map: { width: 3, height: 3, visible: { 4: 'forest', 8: 'mountain' }, explored: [0] },
     });
   });
@@ -134,6 +135,7 @@ describe('perceive (integration: knowledge assembly)', () => {
       stockpile: { food: 0, wood: 0, stone: 0, gold: 0 },
       buildings: { 'town-center': 0, house: 0, storage: 0, barracks: 0, wall: 0, tower: 0 },
       city: { level: 1, queue: [] },
+      units: [],
     });
     expect('map' in known).toBe(false);
   });
@@ -213,6 +215,7 @@ describe('F-09 key tripwire (updated M015: perception keys)', () => {
       'players',
       'stockpile',
       'tick',
+      'units',
       'viewer',
       'visibleCells',
     ]);
@@ -224,6 +227,7 @@ describe('F-09 key tripwire (updated M015: perception keys)', () => {
       'players',
       'stockpile',
       'tick',
+      'units',
       'viewer',
       'visibleCells',
     ]);

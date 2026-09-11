@@ -4,6 +4,7 @@ import { isCitiesData, type CitiesData } from './city.js';
 import { isExploredData, type ExploredData } from './explored.js';
 import { isMapData, type MapData } from './map.js';
 import { isStockpilesData, type StockpilesData } from './stockpiles.js';
+import { isUnitsData, type UnitsData } from './units.js';
 
 export const WORLD_SCHEMA_VERSION = 1;
 
@@ -49,6 +50,13 @@ export interface WorldState {
    * Cities materialize on first build/upgrade; init-placed allowed.
    */
   readonly cities?: CitiesData;
+  /**
+   * Positioned unit instances (M021, optional compatible extension).
+   * Map-independent (abstract matches may hold units); owners
+   * shape-checked only (M014 doctrine). Init-placed until M025
+   * creation transitions; M022 movement bounds-checks cells.
+   */
+  readonly units?: UnitsData;
 }
 
 export interface WorldStateInit {
@@ -59,6 +67,7 @@ export interface WorldStateInit {
   readonly stockpiles?: StockpilesData;
   readonly buildings?: BuildingsData;
   readonly cities?: CitiesData;
+  readonly units?: UnitsData;
 }
 
 /**
@@ -125,6 +134,10 @@ export function isWorldState(value: unknown): value is WorldState {
   if (cities !== undefined && !isCitiesData(cities)) {
     return false;
   }
+  const units = fields['units'];
+  if (units !== undefined && !isUnitsData(units)) {
+    return false;
+  }
   return true;
 }
 
@@ -138,6 +151,7 @@ export function createWorldState(init: WorldStateInit): WorldState {
     ...(init.stockpiles === undefined ? {} : { stockpiles: init.stockpiles }),
     ...(init.buildings === undefined ? {} : { buildings: init.buildings }),
     ...(init.cities === undefined ? {} : { cities: init.cities }),
+    ...(init.units === undefined ? {} : { units: init.units }),
   };
   if (!isWorldState(candidate)) {
     throw new Error('createWorldState: invalid initial world.');

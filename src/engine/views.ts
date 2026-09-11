@@ -4,6 +4,7 @@ import { cityOf, type CityState } from './city.js';
 import { isCellIndex } from './explored.js';
 import type { TerrainId } from './map.js';
 import { stockpileOf, type StockpileAmounts } from './stockpiles.js';
+import { unitsOf, type UnitInstance } from './units.js';
 import type { WorldPlayer, WorldState } from './world-state.js';
 
 /** Full canonical state. SERVER-ONLY — never crosses the trust boundary. */
@@ -52,6 +53,11 @@ export interface PerceivedState {
    * cities stay out — fail-closed until an owning module (M028+).
    */
   readonly city: CityState;
+  /**
+   * Own units (M021; [] when absent). Other holders' units stay out —
+   * fail-closed until an owning module (M028+; enemy scout is vision).
+   */
+  readonly units: readonly UnitInstance[];
   /** Absent when the world is mapless (no map context ⇒ no cells). */
   readonly map?: PerceivedMap;
 }
@@ -139,6 +145,7 @@ export function perceive(
     stockpile: stockpileOf(state.stockpiles, viewer),
     buildings: countsOf(state.buildings, viewer),
     city: cityOf(state.cities, viewer),
+    units: unitsOf(state.units, viewer),
     ...(map === undefined
       ? {}
       : { map: { width: map.width, height: map.height, visible, explored } }),

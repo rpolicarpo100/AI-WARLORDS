@@ -442,9 +442,11 @@ describe('determinism hygiene (static security review)', () => {
       'rng.ts',
       'stockpiles.ts',
       'terrain.ts',
+      'units.ts',
       'validation.ts',
       'victory.ts',
       'views.ts',
+      'warfare.ts',
       'world-state.ts',
     ]);
   });
@@ -505,6 +507,7 @@ describe('architecture boundary (static review)', () => {
     stockpiles: 0,
     buildings: 0,
     city: 0,
+    units: 0,
     'world-state': 1,
     economy: 2,
     exploration: 2,
@@ -515,6 +518,7 @@ describe('architecture boundary (static review)', () => {
     validation: 2,
     victory: 2,
     views: 2,
+    warfare: 2,
     events: 3,
     match: 4,
   };

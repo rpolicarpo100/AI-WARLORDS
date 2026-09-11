@@ -334,3 +334,44 @@ buildings?` + percepção own-only. L-31 DECIDIDA: caps DERIVADOS
   directos+dispatch; writers TEST MOCK provam FAULT).
 - IMPLEMENTATION: `economy.ts` L2 + `match.ts` (M020).
 - ESTADO: `ACCEPTED`.
+
+## D-014 — Unidades: dados+config+mecânica; sem transições; L-32→M022 (M021 pré-análise)
+
+- DECISION: `units.ts` L0 (3 tipos fechados #15 worker/warrior/
+  archer + UnitInstance `{id, owner, type, hp, col, row}` + UnitsData
+  `{nextId, units[]}` + guards + `unitsOf`/`unitById` fail-soft com
+  cópia) + `warfare.ts` L2 (UnitsConfig por-tipo `{cost, maxHp,
+damage}` #83 + strict-guard + DEFAULT neutro + `unitCostOf`/
+  `maxHpOf`/`unitDamageOf` + `spawnUnit` puro full-hp, id `u${nextId}`,
+  colisão→throw) + `WorldState.units?` + percepção own-only `units`
+  (F-09 10/9). L-32 REPOINT→M022 (gate worker-at-node precisa
+  movimento; M021 dá unidades+posições). Sem transições/Match/
+  factos (UNIT_CREATED c/ criação→M025 presumível; reavalia);
+  sem regra (shape cobre; composição 5+1); sem bounds no spawn
+  (uints; M022 owns on-map); sem cura/dano (M024 owns).
+- MOTIVE: mestre #15 (3 MVP + papéis; resto "Não implementar
+  ainda") + #83 (UNIT COST/HP/DAMAGE) + #5 (HP/criação =
+  engine-owned) + percepção-units (#~332) + L-32 + M018 (shape
+  dados+config-sem-transições). nextId-determinístico (replay-safe;
+  randomUUID proibido). Custo ESTRUTURAL (L2↛L2; payCost no seam
+  M025). Copy-out (precedente cityOf). maxHp≥1 strict (0=stillborn).
+- ALTERNATIVES: counts-por-holder (rejeitado: unidades são
+  indivíduos posicionados); id random (rejeitado: banned +
+  nondeterminismo); id derivado owner-type-n (rejeitado: instável
+  sob remoção M024); config em economy.ts (rejeitado: domínio
+  errado); gate worker já (rejeitado: sem movimento, quebra
+  gather E2E — churn + emenda fora de âmbito); percepção
+  inimiga (rejeitado: fail-closed →M028+, precedente D-011);
+  cura/dano (rejeitado: M024 owns); defaults afinados
+  (rejeitado: tuning inventado — 1/0/{} neutros).
+- ADVANTAGES: simétrico M016/M018 (leaf+domain); spawn puro
+  testável; init-placed alimenta M022 (precedente cities);
+  percepção pronta p/ #332.
+- DISADVANTAGES: 2 ficheiros + 3.ª cópia isUint32 (forçado M009);
+  config-sem-consumidores (D-006, aceite); nextId sem cross-check
+  c/ ids init-placed (colisão→loud).
+- RISKS: baixo — dados puros, sem dispatch, sem regra; residual:
+  posições off-map lenient até M022.
+- IMPLEMENTATION: `units.ts` L0 (novo) + `warfare.ts` L2 (novo)
+  - world-state/views (M021).
+- ESTADO: `ACCEPTED`.

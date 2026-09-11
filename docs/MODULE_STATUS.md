@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 20 (M001–M020)  |
-| `PLANNED`  | 145 (M021–M165) |
+| `VERIFIED` | 21 (M001–M021)  |
+| `PLANNED`  | 144 (M022–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -73,6 +73,10 @@ Checkpoints `VERIFIED`:
   caps+conservação; gather rejeita cheio); 955/955 testes, 100×4,
   Fase 3 CLOSED (M016–M020 VERIFIED).
   Registo em `docs/modules/M020.md`. L-31 enforcement LANDED.
+- **M021 @ 2026-09-11** — unidades (3 tipos #15 + instâncias
+  posicionadas + config #83 + spawn puro; sem transições);
+  1035/1035 testes, 100×4, Fase 4 aberta.
+  Registo em `docs/modules/M021.md`. L-32 REPOINT→M022.
 
 ---
 
@@ -118,14 +122,14 @@ Checkpoints `VERIFIED`:
 
 ## Fase 4 — Military
 
-| Módulo | Nome              | Estado    |
-| ------ | ----------------- | --------- |
-| M021   | Unit System       | `PLANNED` |
-| M022   | Movement          | `PLANNED` |
-| M023   | Combat            | `PLANNED` |
-| M024   | Damage Resolution | `PLANNED` |
-| M025   | Army Management   | `PLANNED` |
-| M026   | Military Tests    | `PLANNED` |
+| Módulo | Nome              | Estado     |
+| ------ | ----------------- | ---------- |
+| M021   | Unit System       | `VERIFIED` |
+| M022   | Movement          | `PLANNED`  |
+| M023   | Combat            | `PLANNED`  |
+| M024   | Damage Resolution | `PLANNED`  |
+| M025   | Army Management   | `PLANNED`  |
+| M026   | Military Tests    | `PLANNED`  |
 
 ## Fases 5–16 — AI (Foundation → Arena)
 
@@ -205,7 +209,7 @@ Alinhadas por número: 0, 1, 3, 4, 28. Divergentes:
 ## Ordem recomendada (estrita, sem saltos)
 
 ```text
-M001 → M002 → … → M018 → M019 → M020 (VERIFIED) → M021 → … → M165
+M001 → M002 → … → M018 → M019 → M021 (VERIFIED) → M022 → … → M165
 ```
 
 Próximo permitido: **M019 — City System**, apenas após autorização
