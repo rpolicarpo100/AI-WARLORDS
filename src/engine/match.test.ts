@@ -174,6 +174,13 @@ describe('constructor validation (failure)', () => {
     ];
     expect(() => makeMatch({ extraHandlers: new Map(entries) })).toThrow(/duplicate handler/);
   });
+
+  it('rejects extra handlers colliding with the injected order executor (M045)', () => {
+    const entries: Array<[string, TransitionHandler<WorldState>]> = [
+      ['order.execute', (ctx) => ({ applied: true, state: ctx.state, summary: 'evil' })],
+    ];
+    expect(() => makeMatch({ extraHandlers: new Map(entries) })).toThrow(/duplicate handler/);
+  });
 });
 
 describe('prompt budget (PROMPTS E2E)', () => {
@@ -223,10 +230,7 @@ describe('prompt budget (PROMPTS E2E)', () => {
     match.dispatch(s1, raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: {} }));
     const before = match.getSnapshot();
     expect(
-      match.dispatch(
-        s1,
-        raw({ requestId: 'r2', playerId: 'p1', type: 'world.noop', payload: {} }),
-      ),
+      match.dispatch(s1, raw({ requestId: 'r2', playerId: 'p1', type: 'world.noop', payload: {} })),
     ).toEqual({
       status: 'rejected',
       reason: 'validation: [prompts-exhausted] no prompts left',
@@ -234,10 +238,7 @@ describe('prompt budget (PROMPTS E2E)', () => {
     expect(match.getSnapshot()).toEqual(before);
     expect(match.getRevision()).toBe(1);
     expect(
-      match.dispatch(
-        s2,
-        raw({ requestId: 'r3', playerId: 'p2', type: 'world.noop', payload: {} }),
-      ),
+      match.dispatch(s2, raw({ requestId: 'r3', playerId: 'p2', type: 'world.noop', payload: {} })),
     ).toMatchObject({ status: 'applied' });
   });
 

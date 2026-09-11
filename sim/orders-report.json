@@ -1,0 +1,348 @@
+{
+ "meta": {
+  "kind": "orders-drill",
+  "games": 20,
+  "stepsPerGame": 60,
+  "seeds": [
+   2000,
+   2001,
+   2002,
+   2003,
+   2004,
+   2005,
+   2006,
+   2007,
+   2008,
+   2009,
+   2010,
+   2011,
+   2012,
+   2013,
+   2014,
+   2015,
+   2016,
+   2017,
+   2018,
+   2019
+  ],
+  "ms": 596,
+  "note": "Order queues (issue/cancel/execute) checked against live Matches every dispatch. Deterministic per seed."
+ },
+ "totals": {
+  "applied": 1200,
+  "rejected": 155,
+  "violations": 0,
+  "issued": 728,
+  "executed": 57,
+  "canceled": 110,
+  "appliedByType": {
+   "order.issue": 728,
+   "order.execute": 57,
+   "world.noop": 161,
+   "commander.commission": 144,
+   "order.cancel": 110
+  }
+ },
+ "violations": [],
+ "games": [
+  {
+   "seed": 2000,
+   "applied": 60,
+   "rejected": 6,
+   "appliedByType": {
+    "order.issue": 37,
+    "order.execute": 6,
+    "world.noop": 3,
+    "commander.commission": 9,
+    "order.cancel": 5
+   },
+   "issued": 37,
+   "executed": 6,
+   "canceled": 5
+  },
+  {
+   "seed": 2001,
+   "applied": 60,
+   "rejected": 6,
+   "appliedByType": {
+    "order.issue": 39,
+    "commander.commission": 7,
+    "order.cancel": 8,
+    "world.noop": 4,
+    "order.execute": 2
+   },
+   "issued": 39,
+   "executed": 2,
+   "canceled": 8
+  },
+  {
+   "seed": 2002,
+   "applied": 60,
+   "rejected": 5,
+   "appliedByType": {
+    "commander.commission": 10,
+    "world.noop": 8,
+    "order.issue": 38,
+    "order.cancel": 2,
+    "order.execute": 2
+   },
+   "issued": 38,
+   "executed": 2,
+   "canceled": 2
+  },
+  {
+   "seed": 2003,
+   "applied": 60,
+   "rejected": 11,
+   "appliedByType": {
+    "world.noop": 7,
+    "order.issue": 37,
+    "order.cancel": 5,
+    "commander.commission": 9,
+    "order.execute": 2
+   },
+   "issued": 37,
+   "executed": 2,
+   "canceled": 5
+  },
+  {
+   "seed": 2004,
+   "applied": 60,
+   "rejected": 14,
+   "appliedByType": {
+    "order.issue": 35,
+    "order.cancel": 5,
+    "commander.commission": 11,
+    "order.execute": 2,
+    "world.noop": 7
+   },
+   "issued": 35,
+   "executed": 2,
+   "canceled": 5
+  },
+  {
+   "seed": 2005,
+   "applied": 60,
+   "rejected": 8,
+   "appliedByType": {
+    "order.issue": 43,
+    "order.cancel": 5,
+    "order.execute": 1,
+    "world.noop": 4,
+    "commander.commission": 7
+   },
+   "issued": 43,
+   "executed": 1,
+   "canceled": 5
+  },
+  {
+   "seed": 2006,
+   "applied": 60,
+   "rejected": 9,
+   "appliedByType": {
+    "order.issue": 35,
+    "world.noop": 10,
+    "order.execute": 3,
+    "order.cancel": 4,
+    "commander.commission": 8
+   },
+   "issued": 35,
+   "executed": 3,
+   "canceled": 4
+  },
+  {
+   "seed": 2007,
+   "applied": 60,
+   "rejected": 8,
+   "appliedByType": {
+    "order.issue": 28,
+    "commander.commission": 9,
+    "order.cancel": 8,
+    "world.noop": 10,
+    "order.execute": 5
+   },
+   "issued": 28,
+   "executed": 5,
+   "canceled": 8
+  },
+  {
+   "seed": 2008,
+   "applied": 60,
+   "rejected": 8,
+   "appliedByType": {
+    "order.issue": 35,
+    "commander.commission": 6,
+    "order.execute": 4,
+    "world.noop": 10,
+    "order.cancel": 5
+   },
+   "issued": 35,
+   "executed": 4,
+   "canceled": 5
+  },
+  {
+   "seed": 2009,
+   "applied": 60,
+   "rejected": 14,
+   "appliedByType": {
+    "world.noop": 8,
+    "order.issue": 35,
+    "order.cancel": 9,
+    "commander.commission": 6,
+    "order.execute": 2
+   },
+   "issued": 35,
+   "executed": 2,
+   "canceled": 9
+  },
+  {
+   "seed": 2010,
+   "applied": 60,
+   "rejected": 8,
+   "appliedByType": {
+    "world.noop": 9,
+    "order.issue": 38,
+    "order.execute": 2,
+    "commander.commission": 4,
+    "order.cancel": 7
+   },
+   "issued": 38,
+   "executed": 2,
+   "canceled": 7
+  },
+  {
+   "seed": 2011,
+   "applied": 60,
+   "rejected": 5,
+   "appliedByType": {
+    "order.issue": 38,
+    "order.cancel": 7,
+    "world.noop": 6,
+    "commander.commission": 7,
+    "order.execute": 2
+   },
+   "issued": 38,
+   "executed": 2,
+   "canceled": 7
+  },
+  {
+   "seed": 2012,
+   "applied": 60,
+   "rejected": 2,
+   "appliedByType": {
+    "order.issue": 35,
+    "world.noop": 11,
+    "commander.commission": 5,
+    "order.cancel": 9
+   },
+   "issued": 35,
+   "executed": 0,
+   "canceled": 9
+  },
+  {
+   "seed": 2013,
+   "applied": 60,
+   "rejected": 6,
+   "appliedByType": {
+    "order.issue": 33,
+    "world.noop": 10,
+    "order.execute": 7,
+    "commander.commission": 8,
+    "order.cancel": 2
+   },
+   "issued": 33,
+   "executed": 7,
+   "canceled": 2
+  },
+  {
+   "seed": 2014,
+   "applied": 60,
+   "rejected": 10,
+   "appliedByType": {
+    "order.issue": 33,
+    "order.execute": 1,
+    "world.noop": 11,
+    "commander.commission": 10,
+    "order.cancel": 5
+   },
+   "issued": 33,
+   "executed": 1,
+   "canceled": 5
+  },
+  {
+   "seed": 2015,
+   "applied": 60,
+   "rejected": 12,
+   "appliedByType": {
+    "order.issue": 37,
+    "world.noop": 10,
+    "order.cancel": 4,
+    "order.execute": 4,
+    "commander.commission": 5
+   },
+   "issued": 37,
+   "executed": 4,
+   "canceled": 4
+  },
+  {
+   "seed": 2016,
+   "applied": 60,
+   "rejected": 6,
+   "appliedByType": {
+    "order.issue": 36,
+    "commander.commission": 8,
+    "order.cancel": 7,
+    "order.execute": 2,
+    "world.noop": 7
+   },
+   "issued": 36,
+   "executed": 2,
+   "canceled": 7
+  },
+  {
+   "seed": 2017,
+   "applied": 60,
+   "rejected": 5,
+   "appliedByType": {
+    "order.issue": 42,
+    "world.noop": 4,
+    "order.cancel": 4,
+    "commander.commission": 6,
+    "order.execute": 4
+   },
+   "issued": 42,
+   "executed": 4,
+   "canceled": 4
+  },
+  {
+   "seed": 2018,
+   "applied": 60,
+   "rejected": 7,
+   "appliedByType": {
+    "order.issue": 36,
+    "world.noop": 8,
+    "order.cancel": 6,
+    "commander.commission": 5,
+    "order.execute": 5
+   },
+   "issued": 36,
+   "executed": 5,
+   "canceled": 6
+  },
+  {
+   "seed": 2019,
+   "applied": 60,
+   "rejected": 5,
+   "appliedByType": {
+    "order.issue": 38,
+    "order.execute": 1,
+    "world.noop": 14,
+    "commander.commission": 4,
+    "order.cancel": 3
+   },
+   "issued": 38,
+   "executed": 1,
+   "canceled": 3
+  }
+ ]
+}

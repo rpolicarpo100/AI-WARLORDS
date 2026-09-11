@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 44 (M001–M044)  |
-| `PLANNED`  | 121 (M045–M165) |
+| `VERIFIED` | 45 (M001–M045)  |
+| `PLANNED`  | 120 (M046–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -180,6 +180,12 @@ Checkpoints `VERIFIED`:
   owner-only, factos tail-diff); 1491/1491
   testes, 100 global.
   Registo em `docs/modules/M044.md`.
+- **M045 @ 2026-09-11** — Order Execution
+  (execute votado: pop-head + live verbs,
+  factos compostos, drill 1200/0);
+  1520/1520 testes, 100 global.
+  Registo em `docs/modules/M045.md`.
+  Bloco Player → AI Command M043–M045 FECHADO.
 
 ---
 
@@ -256,7 +262,7 @@ Checkpoints `VERIFIED`:
 | M042 | Strategic AI — Transversal | `VERIFIED` |
 | M043 | Player → AI Command — Orders Data | `VERIFIED` |
 | M044 | Player → AI Command — Queue Transitions | `VERIFIED` |
-| M045 | Player → AI Command | `PLANNED` |
+| M045 | Player → AI Command — Order Execution | `VERIFIED` |
 | M046–M047 | AI Refutation + Override                                            | `PLANNED` |
 | M048      | Confidence Engine                                                   | `PLANNED` |
 | M049–M050 | Counterfactual AI                                                   | `PLANNED` |

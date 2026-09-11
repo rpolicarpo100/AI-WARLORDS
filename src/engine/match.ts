@@ -80,6 +80,12 @@ import {
   orderHandlers,
   orderIssuedProducer,
 } from './order-state.js';
+import {
+  createOrderExecutedProducer,
+  EXECUTE_TRANSITION,
+  orderExecutionHandlers,
+  type OrderSubProducer,
+} from './order-execution.js';
 import type { TerrainId } from './map.js';
 import { DEFAULT_TERRAIN_CONFIG, isTerrainConfig, modifiersFor } from './terrain.js';
 import {
@@ -313,7 +319,20 @@ export class Match {
       [DEACTIVATE_TRANSITION, commanderIdParamsRule],
       [ISSUE_TRANSITION, issueParamsRule],
       [CANCEL_TRANSITION, commanderIdParamsRule],
+      [EXECUTE_TRANSITION, commanderIdParamsRule],
     ]);
+    // M045: execute runs heads through the live verb maps (treasury
+    // precedent — the L2 executor cannot import them, so Match injects).
+    const execution = orderExecutionHandlers({
+      handlers: new Map([...economy, ...city, ...warfare]),
+      rules: paramRules,
+    });
+    for (const [name, handler] of execution) {
+      if (merged.has(name)) {
+        throw new Error('Match: duplicate handler names.');
+      }
+      merged.set(name, handler);
+    }
     let dispatchCount = 0;
     const nextSeq = (): number => {
       dispatchCount += 1;
@@ -367,6 +386,18 @@ export class Match {
       );
     }
     const producers = new Map<string, readonly EventProducer[]>(matchProducers());
+    // M045: execute replays the verb's own domain facts behind its
+    // acknowledgment (static map — the riders loop must not double-run).
+    const orderSubProducers: ReadonlyMap<string, OrderSubProducer> = new Map<
+      string,
+      OrderSubProducer
+    >([
+      [GATHER_TRANSITION, gatherProducer],
+      [BUILD_TRANSITION, buildStartedProducer],
+      [MOVE_TRANSITION, moveProducer],
+      [ATTACK_TRANSITION, attackProducer],
+      [TRAIN_TRANSITION, trainProducer],
+    ]);
     producers.set(GATHER_TRANSITION, [gatherProducer]);
     producers.set(BUILD_TRANSITION, [buildStartedProducer]);
     producers.set(MOVE_TRANSITION, [moveProducer]);
@@ -378,6 +409,7 @@ export class Match {
     producers.set(DEACTIVATE_TRANSITION, [stateFlipProducer]);
     producers.set(ISSUE_TRANSITION, [orderIssuedProducer]);
     producers.set(CANCEL_TRANSITION, [orderCanceledProducer]);
+    producers.set(EXECUTE_TRANSITION, [createOrderExecutedProducer(orderSubProducers)]);
     // M030: sightings need before/after visibility, computed here (L4 may
     // import fog; the L2 producer cannot — L2↛L2). Either map absent (or
     // the maps differing, impossible live) yields silence, never a fault.

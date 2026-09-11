@@ -1263,3 +1263,38 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
   (M045); cap 8 ungrounded (own bound).
 - RISKS: baixo — mecânica; sem leitor→M045.
 - CUTS: execução (M045); cancel parcial.
+
+## D-039 — Order execution M045 (voto execute-close)
+
+- DECISION: NOVO `order-execution.ts` (L2):
+  `order.execute` {id} (owner-only; REUSA
+  commander-id): head? (vazia→applied:false) →
+  rule REAL injectada (bad→'execute: bad head.')
+  → handler VIVO injectado sobre estado c/ fila
+  já popped (falha→reason verbatim, rejected
+  descarta tudo); summary `executed`. Factos:
+  factory c/ mapa estático dos 5 domain
+  producers (kind+params do head-before) —
+  order.executed PRIMEIRO (mold riders-behind),
+  sub-factos depois. Match injecta handlers RAW
+  (ctx.rng zero nos verbos) + paramRules. Pins
+  census+LAYERS 2. Drill `orders-drill.ts`
+  (M041): bots issue/cancel/execute/commission;
+  7 invariantes (cap, kinds, envelope, issue→1,
+  cancel→1, execute→1+kind==pre-head, faults).
+- MOTIVE: voto execute-close + treasury
+  (injecção) + M040 (riders-behind) + M041/M042
+  (drill + journeys 5 verbos, fecho bloco).
+- ALTERNATIVES: re-dispatch (rejeitado: prompts
+  duplos); mapa vivo producers (rejeitado:
+  duplo-run riders); executed depois (rejeitado:
+  mold); drop head inválido (rejeitado:
+  fail-closed + cancel); extras (rejeitado: seam
+  teste).
+- ADVANTAGES: verbos vivos, facts compostos;
+  fail-closed; fila nunca perde em falha.
+- DISADVANTAGES: 1 prompt/head; extras não
+  viajam no execute.
+- RISKS: baixo-médio — composição; tuning
+  (#92); sem auto-exec (manual/AI).
+- CUTS: auto-exec (M046+); cancel parcial.

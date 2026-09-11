@@ -54,12 +54,7 @@ function joinBoth(match: Match): { readonly s1: SessionHandle; readonly s2: Sess
 }
 
 /** Dispatches one real `world.noop` and asserts exact application. */
-function step(
-  match: Match,
-  session: SessionHandle,
-  requestId: string,
-  playerId: PlayerId,
-): void {
+function step(match: Match, session: SessionHandle, requestId: string, playerId: PlayerId): void {
   const outcome = match.dispatch(
     session,
     raw({ requestId, playerId, type: 'world.noop', payload: {} }),
@@ -390,10 +385,7 @@ describe('finish boundary (M006 x M007 x M008 interplay)', () => {
     const eventsLength = match.getEvents().length;
     const forged = { sessionId: 'nope' as SessionId, playerId: P1 };
     const outcomes = [
-      match.dispatch(
-        s1,
-        raw({ requestId: 'w1', playerId: P1, type: 'world.noop', payload: {} }),
-      ),
+      match.dispatch(s1, raw({ requestId: 'w1', playerId: P1, type: 'world.noop', payload: {} })),
       match.dispatch(s1, raw({})),
       match.dispatch(s2, raw({ requestId: 'w2', playerId: P2, type: 'nope.unknown', payload: {} })),
       match.dispatch(
@@ -445,6 +437,7 @@ describe('determinism hygiene (static security review)', () => {
       'hash.ts',
       'map.ts',
       'match.ts',
+      'order-execution.ts',
       'order-state.ts',
       'orders.ts',
       'personalities.ts',
@@ -532,6 +525,7 @@ describe('architecture boundary (static review)', () => {
     assessment: 2,
     stance: 2,
     'commander-state': 2,
+    'order-execution': 2,
     'order-state': 2,
     economy: 2,
     exploration: 2,
