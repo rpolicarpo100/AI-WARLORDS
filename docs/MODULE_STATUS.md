@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 12 (M001–M012)  |
-| `PLANNED`  | 153 (M013–M165) |
+| `VERIFIED` | 13 (M001–M013)  |
+| `PLANNED`  | 152 (M014–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -47,6 +47,9 @@ Checkpoints `VERIFIED`:
 - **M012 @ 2026-09-11** — recursos (nós + coerência + loader + consultas);
   525/525 testes, 100×4, RISK reparado.
   Registo em `docs/modules/M012.md`.
+- **M013 @ 2026-09-11** — fog of war (fontes + config + flood + consultas);
+  586/586 testes, 100×4, zero emendas de produção.
+  Registo em `docs/modules/M013.md`.
 
 ---
 
@@ -76,7 +79,7 @@ Checkpoints `VERIFIED`:
 | M010   | Map System        | `VERIFIED` |
 | M011   | Terrain           | `VERIFIED` |
 | M012   | Resources         | `VERIFIED` |
-| M013   | Fog of War        | `PLANNED`  |
+| M013   | Fog of War        | `VERIFIED` |
 | M014   | Exploration       | `PLANNED`  |
 | M015   | Perception System | `PLANNED`  |
 
@@ -179,10 +182,10 @@ Alinhadas por número: 0, 1, 3, 4, 28. Divergentes:
 ## Ordem recomendada (estrita, sem saltos)
 
 ```text
-M001 → M002 → … → M011 → M012 (VERIFIED) → M013 → … → M165
+M001 → M002 → … → M012 → M013 (VERIFIED) → M014 → … → M165
 ```
 
-Próximo permitido: **M013 — Fog of War**, apenas após autorização
+Próximo permitido: **M014 — Exploration**, apenas após autorização
 explícita. Saltos, paralelização ou batch = violação do §35 (recusar).
 
 ---

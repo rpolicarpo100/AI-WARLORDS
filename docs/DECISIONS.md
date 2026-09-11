@@ -60,3 +60,23 @@
 - ALTERNATIVES: validação só nos guards (rejeitado: campos extra escapam).
 - RISKS: baixo — choke point único; suite total verde.
 - IMPLEMENTATION: `authority.ts` + `hash.ts` (FIX-AUDIT). ESTADO: `ACCEPTED`.
+
+## D-006 — Fog = computação pura; bloqueio forest/mountain (M013 pré-análise)
+
+- DECISION: M013 entrega computação pura de visibilidade
+  `(mapa + fontes + config) → conjuntos por viewer`, sem estado, sem vistas,
+  sem memória. Bloqueio por defeito: forest + mountain; resto passa.
+- MOTIVE: mestre exige fog (#4 servidor controla; #10 info compatível com
+  fog; #99 MVP) mas não especifica regras de visão. BFS-por-range com
+  bloqueio binário é o mecanismo mínimo testável; denso/bosque e montanha
+  (sem elevation, L-22) ocluem; célula bloqueadora é visível, não expande.
+  Viewers = `PlayerId` (M015 liga ao roster; M013 não verifica membership —
+  camada pura). Fontes OOB saltadas (soft: posições stale não crasham).
+- ALTERNATIVES: range sem bloqueio (rejeitado: terreno irrelevante);
+  raycast-LOS (rejeitado: complexidade sem consumidor); visibilidade em
+  estado WorldState (rejeitado: memória é M014, enforcement é M015).
+- ADVANTAGES: puro/determinístico/golden-testável; config 9/9 validada
+  (padrão TerrainConfig); enchimento futuro por M021 sem redesign.
+- DISADVANTAGES: sem elevation, montanha é muro (rever se elevation existir).
+- RISKS: baixo — sem consumidores ainda; M014/M015 validam o desenho.
+- IMPLEMENTATION: `fog.ts` L2 (M013). ESTADO: `ACCEPTED`.

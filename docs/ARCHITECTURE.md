@@ -10,7 +10,8 @@
 > Map system: `EXISTS` (M010 — VERIFIED)
 > Terrain: `EXISTS` (M011 — VERIFIED)
 > Resources: `EXISTS` (M012 — VERIFIED)
-> Domínio do jogo (economia, militar, AI): `NONE` (M013+; mapa+terreno+recursos EXISTS)
+> Fog of War: `EXISTS` (M013 — VERIFIED)
+> Domínio do jogo (economia, militar, AI): `NONE` (M014+; mapa+terreno+recursos+fog EXISTS)
 > Arquitectura-alvo: `PLANNED` (transcrita do documento-mestre)
 > Data: 2026-09-11
 
@@ -32,6 +33,7 @@ src/engine/victory.ts      — veredictos lazy + time-limit (VERIFIED)
 src/engine/map.ts          — hex + MapData + loader Tiled (VERIFIED)
 src/engine/terrain.ts      — config 9/9 + consultas (VERIFIED)
 src/engine/resources.ts    — nós + consultas (VERIFIED)
+src/engine/fog.ts          — visibilidade pura (VERIFIED)
 ```
 
 Sem frontend, backend de jogo, database ou serviços. Todo o domínio futuro
@@ -43,7 +45,7 @@ Seed explícita e activa; roster == mundo; eventos reconstruíveis;
 fim-de-jogo terminal; geografia hex validada (loader Tiled estrito);
 semântica de terreno configurável (regras, fora do estado);
 nós de recursos como geografia (coerência dupla, sob map-preserved);
-AI/CLIENT map-blind por construção até fog/percepção (M013/M015).
+AI/CLIENT map-blind por construção até percepção/enforcement (M015).
 
 ## 2. Arquitectura-alvo (PLANNED — fonte: documento-mestre #6)
 
@@ -67,6 +69,7 @@ fase selada transversalmente — gémeos+selo+DAG+higiene (M009);
 geografia validada — loader estrito, fail-closed, sem leaks (M010);
 terreno jogável — valores configuráveis, fail-stop, balanceable (M011);
 recursos como geografia — coerência dupla, amounts uint32 (M012);
+nevoeiro computado — visibilidade determinística por viewer sobre hex (M013);
 chain nunca substitui o engine (M101); dinheiro só após gate Fase 28.
 
 ## 3. Mapa de fases → camadas (PLANNED)
@@ -75,7 +78,7 @@ chain nunca substitui o engine (M101); dinheiro só após gate Fase 28.
 | ------- | --------------------------- | -------------------------------- |
 | 0       | Foundation                  | M001–M002 (VERIFIED)             |
 | 1       | Game Engine                 | M003–M009 (VERIFIED)             |
-| 2       | World                       | M010–M012 (VERIFIED) → M013–M015 |
+| 2       | World                       | M010–M013 (VERIFIED) → M014–M015 |
 | 3–4     | Economy + Military          | M016–M026                        |
 | 5–8     | AI Foundation → Commands    | M027–M045                        |
 | 9–16    | Refutation → AI Arena       | M046–M068                        |
@@ -113,7 +116,7 @@ chain nunca substitui o engine (M101); dinheiro só após gate Fase 28.
 
 ```text
 ai-warlords/
-  package.json / package-lock.json  scripts + deps pinned (intocados M003–M012)
+  package.json / package-lock.json  scripts + deps pinned (intocados M003–M013)
   tsconfig.json / tsconfig.build.json
   vitest.config.ts / eslint.config.js / .prettierrc.json
   src/
@@ -132,19 +135,20 @@ ai-warlords/
       map.ts            sistema de mapas (VERIFIED, load-bearing)
       terrain.ts        semântica de terreno (VERIFIED, load-bearing)
       resources.ts      nós de recursos (VERIFIED, load-bearing)
+      fog.ts            visibilidade pura (VERIFIED, load-bearing)
       phase1-gate.test.ts  selo transversal M009 (14 testes, prova)
-      *.test.ts         497 testes colocados
+      *.test.ts         558 testes colocados
     *.test.ts           28 testes M002 (regressão)
   dist/              build (gitignored)
-  docs/              audit, stack, riscos, status, tools, política de testes
-  docs/modules/      registos por módulo (M002.md … M012.md)
+  docs/              audit, stack, riscos, status, tools, testes, decisões, processo
+  docs/modules/      registos por módulo (M002.md … M013.md)
 ```
 
 AVISOS: `src/dev-server.ts` (M002) e `src/engine/harness.ts` (M003) são
 provas sem contrato. `WorldState.secrets` é placeholder de mecanismo M004
 (morre até M015). Streams RNG wired mas sem consumidor de domínio.
 Load-bearing: authority, world-state, views, match, rng, hash, validation,
-events, victory, map, terrain, resources.
+events, victory, map, terrain, resources, fog.
 
 ## 6. Registo de alterações
 
@@ -163,3 +167,4 @@ events, victory, map, terrain, resources.
 | 2026-09-11 | M011      | Terreno EXISTS; config 9/9; consultas; sem emendas prod        |
 | 2026-09-11 | M012      | Recursos EXISTS; nós+coerência; RISK reparado                  |
 | 2026-09-11 | FIX-AUDIT | Auditoria M001–M012: citações #mestre, pendentes #18/L-24/L-25 |
+| 2026-09-11 | M013      | Fog EXISTS; visibilidade pura; zero emendas prod               |

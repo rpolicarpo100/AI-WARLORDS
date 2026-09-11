@@ -424,6 +424,7 @@ describe('determinism hygiene (static security review)', () => {
     expect(engineSources()).toEqual([
       'authority.ts',
       'events.ts',
+      'fog.ts',
       'harness.ts',
       'hash.ts',
       'map.ts',
@@ -491,6 +492,7 @@ describe('architecture boundary (static review)', () => {
     map: 0,
     rng: 0,
     'world-state': 1,
+    fog: 2,
     harness: 2,
     resources: 2,
     terrain: 2,
