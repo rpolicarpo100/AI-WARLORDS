@@ -1,11 +1,12 @@
-# AI WARLORDS — ARCHITECTURE (M007)
+# AI WARLORDS — ARCHITECTURE (M008)
 
 > Authority kernel: `EXISTS` (M003 — VERIFIED)
 > World state + views: `EXISTS` (M004 — VERIFIED)
 > Deterministic match: `EXISTS` (M005 — VERIFIED)
 > Action validation: `EXISTS` (M006 — VERIFIED)
 > Event system: `EXISTS` (M007 — VERIFIED)
-> Domínio do jogo (mapa, economia, militar, AI): `NONE` (M008+)
+> Victory conditions: `EXISTS` (M008 — VERIFIED)
+> Domínio do jogo (mapa, economia, militar, AI): `NONE` (M009+)
 > Arquitectura-alvo: `PLANNED` (transcrita do documento-mestre)
 > Data: 2026-09-10
 
@@ -23,13 +24,15 @@ src/engine/rng.ts          — SeededRng + streams deriveSeed (VERIFIED)
 src/engine/hash.ts         — stableStringify + sha256 (VERIFIED)
 src/engine/validation.ts   — pré-regras + pós-invariantes + wrap (VERIFIED)
 src/engine/events.ts       — factos de domínio + surrogates (VERIFIED)
+src/engine/victory.ts      — veredictos lazy + time-limit (VERIFIED)
 ```
 
 Sem frontend, backend de jogo, database ou serviços. Todo o domínio futuro
 pluga handlers no kernel via `Match(extraHandlers)` — validados no registo e
 embrulhados (pré-regras, RNG por dispatch, pós-invariantes) — estende
-WorldState via bumps versionados e observa via `Match(extraProducers)`.
-Seed explícita e activa; roster == mundo; eventos reconstruíveis.
+WorldState via bumps versionados, observa via `Match(extraProducers)` e
+decide via `Match(extraConditions)`. Seed explícita e activa; roster == mundo;
+eventos reconstruíveis; fim-de-jogo terminal.
 
 ## 2. Arquitectura-alvo (PLANNED — fonte: documento-mestre §12)
 
@@ -48,43 +51,46 @@ WORLD≠AI≠CLIENT imposta por construção — kinds nominais (M004);
 determinismo end-to-end provado — timeline+hash+goldens (M005);
 output de handlers re-guardado — shape/roster/tick/size (M006);
 factos de domínio emitidos — observação nunca parte execução (M007);
+veredictos terminais lazy — nunca inventados, fail-stop (M008);
 chain nunca substitui o engine (M101); dinheiro só após gate Fase 28.
 
 ## 3. Mapa de fases → camadas (PLANNED)
 
-| Fase(s) | Camada                      | Módulos                          |
-| ------- | --------------------------- | -------------------------------- |
-| 0       | Foundation                  | M001–M002 (VERIFIED)             |
-| 1       | Game Engine                 | M003–M007 (VERIFIED) → M008–M009 |
-| 2       | World                       | M010–M015                        |
-| 3–4     | Economy + Military          | M016–M026                        |
-| 5–8     | AI Foundation → Commands    | M027–M045                        |
-| 9–16    | Refutation → AI Arena       | M046–M068                        |
-| 17–20   | Multiplayer → Observability | M069–M093                        |
-| 21–22   | Economic sim → Free mode    | M094–M097                        |
-| 23–28   | Solana → Rewards            | M098–M124 (+gates)               |
-| 29–36   | Advanced                    | M125–M165                        |
+| Fase(s) | Camada                      | Módulos                     |
+| ------- | --------------------------- | --------------------------- |
+| 0       | Foundation                  | M001–M002 (VERIFIED)        |
+| 1       | Game Engine                 | M003–M008 (VERIFIED) → M009 |
+| 2       | World                       | M010–M015                   |
+| 3–4     | Economy + Military          | M016–M026                   |
+| 5–8     | AI Foundation → Commands    | M027–M045                   |
+| 9–16    | Refutation → AI Arena       | M046–M068                   |
+| 17–20   | Multiplayer → Observability | M069–M093                   |
+| 21–22   | Economic sim → Free mode    | M094–M097                   |
+| 23–28   | Solana → Rewards            | M098–M124 (+gates)          |
+| 29–36   | Advanced                    | M125–M165                   |
 
 ## 4. Decisões pendentes (`UNKNOWN` até ao módulo próprio)
 
 - [ ] Protocolo cliente↔servidor (M003/M069; não assumir WS/REST)
-- [ ] Motor de persistência (M007 in-memory; M062 bounds log/timeline/events — L-09)
+- [ ] Motor de persistência (M008 in-memory; M062 bounds log/timeline/events — L-09)
 - [ ] Monorepo vs single-package (single até justificação — M002)
 - [ ] Formato de mapa autoritativo (M010 gate; shortlist Tiled/LDtk em TOOLS.md)
 - [ ] Match lifecycle (M071) tem de preservar dispatch SERIAL (constraint M003)
 - [ ] Lifecycle (M071) estende o invariante roster (membership) sem o contornar
+- [ ] Score/comparação no time-limit (M016+ estende; L-17)
 - [x] Linguagem/stack base (M002: TypeScript/Node — VERIFIED)
 - [x] Mecanismo de autoridade (M003: kernel — VERIFIED)
 - [x] Estado oficial + separação de vistas (M004: WorldState v1 — VERIFIED)
 - [x] Determinismo end-to-end (M005: timeline+hash+goldens — VERIFIED)
 - [x] Validador de acções (M006: pré+pós+streams — VERIFIED)
 - [x] Sistema de eventos (M007: factos+surrogates — VERIFIED)
+- [x] Condições de vitória (M008: lazy+time-draw — VERIFIED)
 
-## 5. Repo layout (actual, M007)
+## 5. Repo layout (actual, M008)
 
 ```text
 ai-warlords/
-  package.json / package-lock.json  scripts + deps pinned (intocados M003–M007)
+  package.json / package-lock.json  scripts + deps pinned (intocados M003–M008)
   tsconfig.json / tsconfig.build.json
   vitest.config.ts / eslint.config.js / .prettierrc.json
   src/
@@ -99,18 +105,19 @@ ai-warlords/
       hash.ts           serialização estável + sha256 (VERIFIED, load-bearing)
       validation.ts     validador de acções (VERIFIED, load-bearing)
       events.ts         sistema de eventos (VERIFIED, load-bearing)
-      *.test.ts         256 testes colocados
+      victory.ts        condições de vitória (VERIFIED, load-bearing)
+      *.test.ts         285 testes colocados
     *.test.ts           28 testes M002 (regressão)
   dist/              build (gitignored)
   docs/              audit, stack, riscos, status, tools, política de testes
-  docs/modules/      registos por módulo (M002.md … M007.md)
+  docs/modules/      registos por módulo (M002.md … M008.md)
 ```
 
 AVISOS: `src/dev-server.ts` (M002) e `src/engine/harness.ts` (M003) são
 provas sem contrato. `WorldState.secrets` é placeholder de mecanismo M004
 (morre até M015). Streams RNG wired mas sem consumidor de domínio.
 Load-bearing: authority, world-state, views, match, rng, hash, validation,
-events.
+events, victory.
 
 ## 6. Registo de alterações
 
@@ -123,3 +130,4 @@ events.
 | 2026-09-10 | M005   | Match determinístico EXISTS; goldens; seed explícita        |
 | 2026-09-10 | M006   | Validador EXISTS; pós-invariantes; streams; registo detido  |
 | 2026-09-10 | M007   | Eventos EXISTS; geneses+factos+surrogates; restrição prova  |
+| 2026-09-10 | M008   | Veredictos EXISTS; lazy+time-draw; terminalidade; fail-stop |

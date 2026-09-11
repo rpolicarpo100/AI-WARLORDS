@@ -1,4 +1,5 @@
 import { freezeState, MAX_ID_LENGTH, type PlayerId } from './authority.js';
+import type { VerdictOutcome } from './victory.js';
 import type { WorldState } from './world-state.js';
 
 /**
@@ -67,6 +68,23 @@ export function matchStartedEvent(
     type: 'match.started',
     priority: 'normal',
     payload: { seed, players, ruleset },
+  });
+}
+
+export function matchFinishedEvent(
+  outcome: VerdictOutcome,
+  condition: string,
+  tick: number,
+  revision: number,
+  seq: number,
+): GameEvent {
+  return freezeState({
+    seq,
+    tick,
+    revision,
+    type: 'match.finished',
+    priority: 'high',
+    payload: { outcome, condition },
   });
 }
 

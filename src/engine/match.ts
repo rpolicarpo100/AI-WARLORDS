@@ -13,6 +13,7 @@ import {
   type Untrusted,
 } from './authority.js';
 import {
+  matchFinishedEvent,
   matchProducers,
   matchStartedEvent,
   runProducers,
@@ -27,6 +28,12 @@ import {
   wrapWithValidation,
   type RngHandler,
 } from './validation.js';
+import {
+  evaluateVictory,
+  matchConditions,
+  type Verdict,
+  type VictoryCondition,
+} from './victory.js';
 import { isWorldState, worldHandlers, type WorldState } from './world-state.js';
 
 declare const matchBrand: unique symbol;
@@ -98,9 +105,14 @@ export interface MatchInit {
   readonly ruleset: unknown;
   readonly players: readonly PlayerId[];
   readonly initialState: unknown;
+  readonly maxTicks?: unknown;
   readonly extraHandlers?: ReadonlyMap<string, RngHandler<WorldState>>;
   readonly extraProducers?: ReadonlyMap<string, readonly EventProducer[]>;
+  readonly extraConditions?: readonly VictoryCondition[];
 }
+
+export type MatchDispatchOutcome =
+  DispatchOutcome | { readonly status: 'error'; readonly code: 'MATCH_FINISHED' };
 
 /**
  * Deterministic match aggregate: provenance (id/seed/ruleset/players/
@@ -111,6 +123,7 @@ export interface MatchInit {
  * handler runs wrapped (pre-rules, per-dispatch RNG, post-invariants).
  * M007 emits domain facts: genesis on construction, producer facts on
  * applied outcomes (observation never breaks execution).
+ * M008 judges terminal verdicts lazily and blocks post-finish dispatches.
  */
 export class Match {
   readonly id: MatchId;
@@ -121,6 +134,7 @@ export class Match {
   private readonly timeline: TimelineEntry[] = [];
   private readonly producers: ReadonlyMap<string, readonly EventProducer[]>;
   private readonly events: GameEvent[] = [];
+  private readonly conditions: readonly VictoryCondition[];
 
   constructor(init: MatchInit) {
     if (init.matchId === undefined) {
@@ -134,6 +148,14 @@ export class Match {
       throw new Error('Match: invalid seed (expected uint32).');
     }
     this.seed = init.seed;
+    let maxTicks: number | undefined;
+    if (init.maxTicks === undefined) {
+      maxTicks = undefined;
+    } else if (!isSeed(init.maxTicks) || init.maxTicks === 0) {
+      throw new Error('Match: invalid maxTicks (expected positive uint32).');
+    } else {
+      maxTicks = init.maxTicks;
+    }
     const ruleset = init.ruleset;
     if (typeof ruleset !== 'object' || ruleset === null) {
       throw new Error('Match: invalid ruleset (not an object).');
@@ -189,6 +211,8 @@ export class Match {
       producers.set(name, [...(producers.get(name) ?? []), ...extra]);
     }
     this.producers = producers;
+    const extraConditions: readonly VictoryCondition[] = init.extraConditions ?? [];
+    this.conditions = [...extraConditions, ...matchConditions(maxTicks)];
     this.players = freezeState([...init.players]);
     this.kernel = new AuthorityKernel<WorldState>({
       players: init.players,
@@ -198,6 +222,21 @@ export class Match {
     this.events.push(
       matchStartedEvent(this.seed, this.players, this.ruleset, init.initialState.tick),
     );
+    const genesis = evaluateVictory(this.conditions, {
+      state: init.initialState,
+      revision: 0,
+    });
+    if (genesis.status === 'finished') {
+      this.events.push(
+        matchFinishedEvent(
+          genesis.outcome,
+          genesis.condition,
+          init.initialState.tick,
+          0,
+          this.events.length + 1,
+        ),
+      );
+    }
     Object.freeze(this);
   }
 
@@ -205,31 +244,52 @@ export class Match {
     return this.kernel.join(playerId);
   }
 
-  dispatch(session: SessionHandle, raw: Untrusted<ClientRequest>): DispatchOutcome {
+  dispatch(session: SessionHandle, raw: Untrusted<ClientRequest>): MatchDispatchOutcome {
+    if (this.getVerdict().status === 'finished') {
+      return { status: 'error', code: 'MATCH_FINISHED' };
+    }
     const before = this.kernel.getSnapshot();
     const outcome = this.kernel.dispatch(session, raw);
-    if (outcome.status === 'applied') {
-      // Kernel-accepted ⟹ well-formed: type/params below passed envelope
-      // validation inside `kernel.dispatch` (this cast documents the seam).
-      const validated = raw as ClientRequest;
-      const after = this.kernel.getSnapshot();
-      const producers = this.producers.get(validated.type) ?? [];
-      const emitted = runProducers(
-        {
-          type: validated.type,
-          caller: session.playerId,
-          params: validated.payload,
-          before,
-          after,
-        },
-        producers,
-        after.tick,
-        outcome.revision,
-        this.events.length + 1,
-      );
-      this.events.push(...emitted);
+    try {
+      if (outcome.status === 'applied') {
+        // Kernel-accepted ⟹ well-formed: type/params below passed envelope
+        // validation inside `kernel.dispatch` (this cast documents the seam).
+        const validated = raw as ClientRequest;
+        const after = this.kernel.getSnapshot();
+        const producers = this.producers.get(validated.type) ?? [];
+        const emitted = runProducers(
+          {
+            type: validated.type,
+            caller: session.playerId,
+            params: validated.payload,
+            before,
+            after,
+          },
+          producers,
+          after.tick,
+          outcome.revision,
+          this.events.length + 1,
+        );
+        this.events.push(...emitted);
+        const verdict = evaluateVictory(this.conditions, {
+          state: after,
+          revision: outcome.revision,
+        });
+        if (verdict.status === 'finished') {
+          this.events.push(
+            matchFinishedEvent(
+              verdict.outcome,
+              verdict.condition,
+              after.tick,
+              outcome.revision,
+              this.events.length + 1,
+            ),
+          );
+        }
+      }
+    } finally {
+      this.syncTimeline();
     }
-    this.syncTimeline();
     return outcome;
   }
 
@@ -259,6 +319,14 @@ export class Match {
 
   getEvents(): readonly GameEvent[] {
     return [...this.events];
+  }
+
+  getVerdict(): Verdict {
+    const snapshot = this.kernel.getSnapshot();
+    return evaluateVictory(this.conditions, {
+      state: snapshot,
+      revision: this.kernel.getRevision(),
+    });
   }
 
   private syncTimeline(): void {
