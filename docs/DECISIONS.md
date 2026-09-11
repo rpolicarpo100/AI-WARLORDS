@@ -942,3 +942,36 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
   `commanders.ts` (embed+mirror) + `commanders.test.ts`
   (battery) + phase1-gate (2 pins) (M033).
 - ESTADO: `ACCEPTED`.
+
+## D-028 — Personality harness: drill sim + suite transversal (M034 voto)
+
+- DECISION: `sim/personality-drill.ts` NOVO (toolchain,
+  fora do coverage — M026): Matches reais × seed;
+  init c0/c1 triples distintos; bots commission+flips+
+  noop (oráculo=engine); 7 invariantes pós-applied
+  (guard live, canonical agreement, triple-estável,
+  minted-sem-triple, ids/nextId, JSON round-trip,
+  perceção sem-leak/sem-loss); report próprio
+  (determinístico exceto ms; exit 1 se violations);
+  script `sim:personality`. Suite nova
+  `src/engine/personality.test.ts` (2, molde
+  military.test.ts): journey 6 applied + gémeos.
+  Zero prod; bundle byte-idêntico; selo intacto.
+- MOTIVE: voto harness 2026-09-11 + fecho bloco
+  M031–M034 + M026 (molde módulo-testes) + TESTING
+  §1B + D-023 (commission-sem-params) + D-027
+  (composição→M035+).
+- ALTERNATIVES: estender playtest.ts (rejeitado:
+  golden 1200/500/0 intacto); executar composição
+  no drill (rejeitado: D-027 reserva M035+); 3.º
+  teste rejects (rejeitado: commander-state.test
+  cobre; M026 cortou); thresholds (rejeitado: sem
+  âncora — M026).
+- ADVANTAGES: bloco provado end-to-end; dados vivos
+  sob dispatch real; regressão futura fail-loud.
+- DISADVANTAGES: report com `ms` honesto (diff
+  exclui ms); drill não typecheckado (tsc só src —
+  rede: eslint + execução, M026).
+- RISKS: baixo — só testes; residual: bots maus
+  estrategas (irrelevante — invariantes contam);
+  ms instável (mitiga: prova sans-ms).

@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 33 (M001–M033)  |
-| `PLANNED`  | 132 (M034–M165) |
+| `VERIFIED` | 34 (M001–M034)  |
+| `PLANNED`  | 131 (M035–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -129,6 +129,11 @@ Checkpoints `VERIFIED`:
   (fixo-6 + deltas DNA votados + rótulo record;
   5 votos); 1364/1364 testes, 100 global.
   Registo em `docs/modules/M033.md`.
+- **M034 @ 2026-09-11** — Personalidade Testing
+  (harness votado: drill sim + suite transversal;
+  zero prod); 1366/1366 testes, 100 global.
+  Registo em `docs/modules/M034.md`.
+  Bloco Personalidade M031–M034 CLOSED.
 
 ---
 
@@ -194,7 +199,7 @@ Checkpoints `VERIFIED`:
 | M031 | Personalidade — AI DNA | `VERIFIED` |
 | M032 | Personalidade — AI Personalities | `VERIFIED` |
 | M033 | Personalidade — Unit Doctrines | `VERIFIED` |
-| M034 | Personalidade — Testing | `PLANNED` |
+| M034 | Personalidade — Testing | `VERIFIED` |
 | M035–M042 | Strategic AI                                                        | `PLANNED` |
 | M043–M045 | Player → AI Command                                                 | `PLANNED` |
 | M046–M047 | AI Refutation + Override                                            | `PLANNED` |

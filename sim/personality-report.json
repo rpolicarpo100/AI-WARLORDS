@@ -1,0 +1,327 @@
+{
+ "meta": {
+  "kind": "ai-personality-drill",
+  "games": 20,
+  "stepsPerGame": 60,
+  "seeds": [
+   1000,
+   1001,
+   1002,
+   1003,
+   1004,
+   1005,
+   1006,
+   1007,
+   1008,
+   1009,
+   1010,
+   1011,
+   1012,
+   1013,
+   1014,
+   1015,
+   1016,
+   1017,
+   1018,
+   1019
+  ],
+  "ms": 348,
+  "note": "Commanders with personality triples play real Matches; legality from genuine engine outcomes. Deterministic per seed."
+ },
+ "totals": {
+  "applied": 1200,
+  "rejected": 240,
+  "violations": 0,
+  "commissions": 315,
+  "flips": 556,
+  "appliedByType": {
+   "commander.deactivate": 338,
+   "world.noop": 329,
+   "commander.activate": 218,
+   "commander.commission": 315
+  }
+ },
+ "violations": [],
+ "games": [
+  {
+   "seed": 1000,
+   "applied": 60,
+   "rejected": 13,
+   "appliedByType": {
+    "commander.deactivate": 14,
+    "world.noop": 24,
+    "commander.activate": 12,
+    "commander.commission": 10
+   },
+   "commissions": 10,
+   "flips": 26,
+   "commandersFinal": 12
+  },
+  {
+   "seed": 1001,
+   "applied": 60,
+   "rejected": 16,
+   "appliedByType": {
+    "world.noop": 15,
+    "commander.commission": 17,
+    "commander.deactivate": 17,
+    "commander.activate": 11
+   },
+   "commissions": 17,
+   "flips": 28,
+   "commandersFinal": 19
+  },
+  {
+   "seed": 1002,
+   "applied": 60,
+   "rejected": 10,
+   "appliedByType": {
+    "commander.commission": 14,
+    "commander.deactivate": 18,
+    "commander.activate": 10,
+    "world.noop": 18
+   },
+   "commissions": 14,
+   "flips": 28,
+   "commandersFinal": 16
+  },
+  {
+   "seed": 1003,
+   "applied": 60,
+   "rejected": 14,
+   "appliedByType": {
+    "commander.commission": 17,
+    "commander.deactivate": 14,
+    "world.noop": 20,
+    "commander.activate": 9
+   },
+   "commissions": 17,
+   "flips": 23,
+   "commandersFinal": 19
+  },
+  {
+   "seed": 1004,
+   "applied": 60,
+   "rejected": 11,
+   "appliedByType": {
+    "commander.commission": 15,
+    "commander.deactivate": 18,
+    "commander.activate": 12,
+    "world.noop": 15
+   },
+   "commissions": 15,
+   "flips": 30,
+   "commandersFinal": 17
+  },
+  {
+   "seed": 1005,
+   "applied": 60,
+   "rejected": 13,
+   "appliedByType": {
+    "commander.deactivate": 19,
+    "commander.commission": 16,
+    "commander.activate": 13,
+    "world.noop": 12
+   },
+   "commissions": 16,
+   "flips": 32,
+   "commandersFinal": 18
+  },
+  {
+   "seed": 1006,
+   "applied": 60,
+   "rejected": 11,
+   "appliedByType": {
+    "commander.commission": 21,
+    "commander.deactivate": 14,
+    "commander.activate": 8,
+    "world.noop": 17
+   },
+   "commissions": 21,
+   "flips": 22,
+   "commandersFinal": 23
+  },
+  {
+   "seed": 1007,
+   "applied": 60,
+   "rejected": 19,
+   "appliedByType": {
+    "commander.deactivate": 18,
+    "commander.commission": 15,
+    "world.noop": 17,
+    "commander.activate": 10
+   },
+   "commissions": 15,
+   "flips": 28,
+   "commandersFinal": 17
+  },
+  {
+   "seed": 1008,
+   "applied": 60,
+   "rejected": 10,
+   "appliedByType": {
+    "commander.commission": 17,
+    "commander.deactivate": 17,
+    "world.noop": 17,
+    "commander.activate": 9
+   },
+   "commissions": 17,
+   "flips": 26,
+   "commandersFinal": 19
+  },
+  {
+   "seed": 1009,
+   "applied": 60,
+   "rejected": 12,
+   "appliedByType": {
+    "commander.commission": 15,
+    "world.noop": 19,
+    "commander.deactivate": 17,
+    "commander.activate": 9
+   },
+   "commissions": 15,
+   "flips": 26,
+   "commandersFinal": 17
+  },
+  {
+   "seed": 1010,
+   "applied": 60,
+   "rejected": 14,
+   "appliedByType": {
+    "commander.deactivate": 18,
+    "commander.commission": 16,
+    "commander.activate": 11,
+    "world.noop": 15
+   },
+   "commissions": 16,
+   "flips": 29,
+   "commandersFinal": 18
+  },
+  {
+   "seed": 1011,
+   "applied": 60,
+   "rejected": 7,
+   "appliedByType": {
+    "commander.deactivate": 16,
+    "commander.commission": 14,
+    "commander.activate": 11,
+    "world.noop": 19
+   },
+   "commissions": 14,
+   "flips": 27,
+   "commandersFinal": 16
+  },
+  {
+   "seed": 1012,
+   "applied": 60,
+   "rejected": 17,
+   "appliedByType": {
+    "commander.deactivate": 18,
+    "commander.activate": 12,
+    "world.noop": 10,
+    "commander.commission": 20
+   },
+   "commissions": 20,
+   "flips": 30,
+   "commandersFinal": 22
+  },
+  {
+   "seed": 1013,
+   "applied": 60,
+   "rejected": 6,
+   "appliedByType": {
+    "commander.deactivate": 15,
+    "commander.commission": 17,
+    "commander.activate": 9,
+    "world.noop": 19
+   },
+   "commissions": 17,
+   "flips": 24,
+   "commandersFinal": 19
+  },
+  {
+   "seed": 1014,
+   "applied": 60,
+   "rejected": 11,
+   "appliedByType": {
+    "commander.commission": 17,
+    "commander.deactivate": 15,
+    "commander.activate": 9,
+    "world.noop": 19
+   },
+   "commissions": 17,
+   "flips": 24,
+   "commandersFinal": 19
+  },
+  {
+   "seed": 1015,
+   "applied": 60,
+   "rejected": 12,
+   "appliedByType": {
+    "commander.deactivate": 17,
+    "commander.activate": 14,
+    "commander.commission": 13,
+    "world.noop": 16
+   },
+   "commissions": 13,
+   "flips": 31,
+   "commandersFinal": 15
+  },
+  {
+   "seed": 1016,
+   "applied": 60,
+   "rejected": 11,
+   "appliedByType": {
+    "commander.deactivate": 19,
+    "commander.activate": 8,
+    "world.noop": 13,
+    "commander.commission": 20
+   },
+   "commissions": 20,
+   "flips": 27,
+   "commandersFinal": 22
+  },
+  {
+   "seed": 1017,
+   "applied": 60,
+   "rejected": 12,
+   "appliedByType": {
+    "world.noop": 19,
+    "commander.deactivate": 15,
+    "commander.activate": 13,
+    "commander.commission": 13
+   },
+   "commissions": 13,
+   "flips": 28,
+   "commandersFinal": 15
+  },
+  {
+   "seed": 1018,
+   "applied": 60,
+   "rejected": 12,
+   "appliedByType": {
+    "commander.commission": 16,
+    "world.noop": 11,
+    "commander.deactivate": 20,
+    "commander.activate": 13
+   },
+   "commissions": 16,
+   "flips": 33,
+   "commandersFinal": 18
+  },
+  {
+   "seed": 1019,
+   "applied": 60,
+   "rejected": 9,
+   "appliedByType": {
+    "commander.deactivate": 19,
+    "commander.activate": 15,
+    "world.noop": 14,
+    "commander.commission": 12
+   },
+   "commissions": 12,
+   "flips": 34,
+   "commandersFinal": 14
+  }
+ ]
+}
