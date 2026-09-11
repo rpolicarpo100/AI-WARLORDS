@@ -59,10 +59,9 @@ const blob = state.replace(/<\//g, '<\\/');
 const sfxDir = new URL('../assets/sfx/', import.meta.url);
 const sfxBlob = JSON.stringify(
   Object.fromEntries(
-    ['click', 'coin', 'step', 'hammer', 'whoosh', 'fanfare', 'wind'].map((name) => [
-      name,
-      readFileSync(new URL(`./${name}.wav`, sfxDir)).toString('base64'),
-    ]),
+    ['click', 'coin', 'step', 'hammer', 'whoosh', 'fanfare', 'wind', 'clash', 'twang', 'horn'].map(
+      (name) => [name, readFileSync(new URL(`./${name}.wav`, sfxDir)).toString('base64')],
+    ),
   ),
 );
 for (const page of ['index.html', 'menu.html', 'match.html', 'city.html']) {

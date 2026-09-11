@@ -2,7 +2,8 @@
 """Synthesize the Vale of Echoes SFX pack (Audacity-style output, zero deps).
 
 Generates 22050 Hz 8-bit mono WAVs: click, coin (gather), step (move),
-hammer (build), whoosh (advance), fanfare (upgrade/victory).
+hammer (build), whoosh (advance), fanfare (upgrade/victory), wind (ambience),
+clash (melee), twang (bow), horn (killing blow).
 Run: python3 assets/sfx.py  ->  assets/sfx/*.wav
 """
 import math
@@ -93,6 +94,32 @@ def main():
         at(tone(2700, 0.12, vol=0.24, slide=0.3, decay=0.9), 2.0),
     )
     save("wind", mix(swell, chirps))
+    save(
+        "clash",
+        mix(
+            noise(0.14, vol=0.8, lowpass=0.55, attack=0.005, decay=0.9),
+            tone(2093, 0.16, vol=0.4, decay=0.92),
+            tone(1567, 0.14, vol=0.35, decay=0.92),
+            tone(2873, 0.1, vol=0.25, decay=0.95),
+        ),
+    )
+    save(
+        "twang",
+        mix(
+            tone(190, 0.12, vol=0.7, slide=-0.35, decay=0.9),
+            tone(540, 0.09, vol=0.4, slide=-0.55, decay=0.9),
+            noise(0.03, vol=0.5, lowpass=0.6, decay=0.95),
+        ),
+    )
+    saw = lambda ph: 2 * ((ph / (2 * math.pi)) % 1.0) - 1.0
+    save(
+        "horn",
+        mix(
+            tone(98, 0.7, vol=0.55, wave_fn=saw, attack=0.12, decay=0.35),
+            tone(147, 0.7, vol=0.35, wave_fn=saw, attack=0.14, decay=0.3),
+            tone(196, 0.5, vol=0.2, attack=0.15, decay=0.4),
+        ),
+    )
     save(
         "fanfare",
         mix(

@@ -23,6 +23,7 @@
     "godot:sync": "node tools/sync-godot-data.mjs",
     "engine": "node tools/build-engine.mjs",
     "smoke": "node tools/smoke-match.mjs",
+    "smoke:attack": "ATTACK_TEST=1 node tools/smoke-match.mjs",
     "verify:bundle": "node tools/verify-bundle.mjs"
   },
   "devDependencies": {

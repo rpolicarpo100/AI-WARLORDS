@@ -10,3 +10,7 @@ export { createWorldState, WORLD_SCHEMA_VERSION } from '../src/engine/world-stat
 export { markUntrusted } from '../src/engine/authority.js';
 export { computeVisibility } from '../src/engine/fog.js';
 export { markExplored } from '../src/engine/exploration.js';
+// Genuine rules reuse for page overlays (FASE B): adjacency, passability.
+// The page never re-implements engine rules — it calls them (guarded).
+export { neighborsOf } from '../src/engine/map.js';
+export { DEFAULT_TERRAIN_CONFIG, modifiersFor } from '../src/engine/terrain.js';

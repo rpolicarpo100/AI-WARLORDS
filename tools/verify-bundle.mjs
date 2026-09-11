@@ -30,6 +30,7 @@ const sandbox = {
   midText: JSON.stringify(state.snapshots[8]),
   economyText: JSON.stringify(state.configs.economy),
   buildingsText: JSON.stringify(state.configs.buildings),
+  unitsText: JSON.stringify(state.configs.unitsScenario),
 };
 vm.createContext(sandbox);
 // Realm-local test globals (real browsers provide these natively).
@@ -88,7 +89,7 @@ const resultText = vm.runInContext(
     const match = new E.Match({ seed: 7, ruleset: E.STANDARD_RULESET, players: ['p1', 'p2'],
       initialState: E.createWorldState({ players: ['p1', 'p2'], tick: init.tick, map: init.map,
         stockpiles: init.stockpiles, buildings: init.buildings, cities: init.cities, units: init.units }),
-      economyConfig: JSON.parse(economyText), buildingsConfig: JSON.parse(buildingsText) });
+      economyConfig: JSON.parse(economyText), buildingsConfig: JSON.parse(buildingsText), unitsConfig: JSON.parse(unitsText) });
     return { match, s1: match.join('p1'), s2: match.join('p2') };
   };
   // Stage 1: full replay from snapshot 0.
@@ -108,15 +109,35 @@ const resultText = vm.runInContext(
   const fsnap = fork.match.getSnapshot();
   const seen = E.computeVisibility(fsnap.map, (fsnap.units.units || []).filter((u) => u.owner === 'p1')
     .map((u) => ({ viewer: 'p1', col: u.col, row: u.row, range: 2 })));
+  // Stage 3: battle fork (FASE B) — march into range, REAL unit.attack, REAL overlay rules.
+  const bat = mk(initText);
+  const initMap = JSON.parse(initText).map;
+  const nb33 = E.neighborsOf(initMap, 3, 3).map((c) => c.col + ',' + c.row);
+  const riverMove = E.modifiersFor(E.DEFAULT_TERRAIN_CONFIG, 'river').move;
+  const march = bat.match.dispatch(bat.s1, E.markUntrusted({ requestId: 'b0', playerId: 'p1', type: 'unit.move', payload: { id: 'u1', col: 4, row: 3 } }));
+  const atk = bat.match.dispatch(bat.s1, E.markUntrusted({ requestId: 'b1', playerId: 'p1', type: 'unit.attack', payload: { id: 'u1', target: 'u4' } }));
+  const bsnap = bat.match.getSnapshot();
+  const bu4 = (bsnap.units.units || []).find((u) => u.id === 'u4');
+  const battEvents = bat.match.getEvents();
+  const lastBattle = battEvents[battEvents.length - 1] || {};
   return JSON.stringify({ exports: Object.keys(E), snaps, outcomes, events: match.getEvents(), badMove,
-    fork: { advStatus: adv.status, frejStatus: frej.status, frejReason: frej.reason, seenN: (seen.p1 || []).length } });
+    fork: { advStatus: adv.status, frejStatus: frej.status, frejReason: frej.reason, seenN: (seen.p1 || []).length },
+    battle: { nb: nb33, riverMove: String(riverMove), marchStatus: march.status, atkStatus: atk.status,
+      atkReason: atk.reason || '', u4hp: bu4 && bu4.hp, lastType: lastBattle.type,
+      lastDmg: (lastBattle.payload || {}).damage } });
 })()`,
   sandbox,
 );
 
 const r = JSON.parse(resultText);
 const fails = [];
-if (!r.exports.includes('Match') || !r.exports.includes('computeVisibility'))
+if (
+  !r.exports.includes('Match') ||
+  !r.exports.includes('computeVisibility') ||
+  !r.exports.includes('neighborsOf') ||
+  !r.exports.includes('modifiersFor') ||
+  !r.exports.includes('DEFAULT_TERRAIN_CONFIG')
+)
   fails.push('missing exports: ' + r.exports.join(','));
 for (let k = 1; k < r.snaps.length; k += 1) {
   if (canon(r.snaps[k]) !== canon(state.snapshots[k])) fails.push(`snapshot ${k} differs`);
@@ -137,6 +158,17 @@ if (r.fork.advStatus !== 'applied') fails.push('fork advance not applied: ' + r.
 if (r.fork.frejStatus !== 'rejected' || !r.fork.frejReason)
   fails.push('fork illegal move not rejected: ' + JSON.stringify(r.fork));
 if (!(r.fork.seenN > 0)) fails.push('fork fog empty');
+if (!r.battle.nb.includes('4,3') || r.battle.nb.length !== 6)
+  fails.push('battle neighbors wrong: ' + JSON.stringify(r.battle.nb));
+if (r.battle.riverMove !== 'Infinity')
+  fails.push('battle river not blocked: ' + r.battle.riverMove);
+if (r.battle.marchStatus !== 'applied')
+  fails.push('battle march not applied: ' + r.battle.marchStatus);
+if (r.battle.atkStatus !== 'applied')
+  fails.push('battle attack not applied: ' + JSON.stringify(r.battle));
+if (r.battle.u4hp !== 8) fails.push('battle u4 hp: ' + r.battle.u4hp);
+if (r.battle.lastType !== 'unit.attacked' || r.battle.lastDmg !== 4)
+  fails.push('battle event: ' + JSON.stringify(r.battle));
 
 if (fails.length > 0) {
   console.error('BUNDLE VERIFY FAILED:\n- ' + fails.join('\n- '));
@@ -147,5 +179,8 @@ console.log(
 );
 console.log(
   `fork test: advance=${r.fork.advStatus}, illegal=${r.fork.frejStatus} ("${r.fork.frejReason}"), fog cells=${r.fork.seenN}`,
+);
+console.log(
+  `battle test: march=${r.battle.marchStatus}, attack=${r.battle.atkStatus}, u4hp=${r.battle.u4hp}, event=${r.battle.lastType} dmg=${r.battle.lastDmg}, river=${r.battle.riverMove}`,
 );
 console.log('BUNDLE VERIFY PASS');

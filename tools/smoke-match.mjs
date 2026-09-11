@@ -47,6 +47,9 @@ function mkEl(tag) {
       const i = this.children.indexOf(c);
       if (i >= 0) this.children.splice(i, 1);
     },
+    get firstChild() {
+      return this.children[0] || null;
+    },
     remove() {},
     getBoundingClientRect: () => ({ width: 1200, height: 700, left: 0, top: 0 }),
     getContext: () => mkCtx(),
@@ -91,6 +94,43 @@ const blocks = [...html.matchAll(/<script>(.*?)<\/script>/gs)].map((x) => x[1]);
 const iife = blocks[blocks.length - 1];
 const SCENARIO = JSON.parse(m[1].replace(/<\\\//g, '</'));
 console.log('snapshots:', SCENARIO.snapshots.length, 'events:', SCENARIO.events.length);
+const heraldSeen = [];
+if (process.env.ATTACK_TEST) {
+  // ATTACK_TEST=1: loads the REAL engine bundle (like a browser would — no TEST MOCK)
+  // and injects synthetic unit.attacked events (crash-path only, authored for the harness).
+  const bundleText = readFileSync(new URL('./engine.bundle.js', import.meta.url), 'utf8');
+  globalThis.AIWLEngine = new Function(`${bundleText};return AIWLEngine;`)();
+  const h = mkEl('#herald');
+  let cur = '';
+  Object.defineProperty(h, 'textContent', {
+    set(v) {
+      cur = String(v);
+      heraldSeen.push(cur);
+    },
+    get() {
+      return cur;
+    },
+  });
+  byId['herald'] = h;
+  SCENARIO.events.push(
+    {
+      revision: 5,
+      type: 'unit.attacked',
+      payload: { player: 'p1', unit: 'u1', target: 'u3', damage: 4 },
+    },
+    {
+      revision: 6,
+      type: 'unit.attacked',
+      payload: { player: 'p1', unit: 'u2', target: 'u4', damage: 3 },
+    },
+  );
+  SCENARIO.snapshots.forEach((s, k) => {
+    const u = (s.units.units || []).find((x) => x.id === 'u4');
+    if (u && k === 5) u.hp = 3;
+    if (u && k > 5) u.hp = 0;
+  });
+  console.log('attack injection armed (revs 5/6, u4 DOWN from rev 6)');
+}
 
 const run = new Function(
   'SCENARIO',
@@ -139,6 +179,7 @@ fire('speed', 'change', { target: { value: '2' } });
 fire('vFog', 'click');
 fire('vFull', 'click');
 fire('vFog', 'click');
+fire('vHeat', 'click');
 fire('tCmd', 'click');
 for (const id of ['cmdGather', 'cmdHouse', 'cmdTower', 'cmdStorage', 'cmdAdvance', 'cmdUpgrade'])
   fire(id, 'click');
@@ -154,10 +195,18 @@ fire('mini', 'click', { clientX: 100, clientY: 50 });
 fire('prog', 'click', { clientX: 600 });
 fire('iso', 'click', { clientX: 600, clientY: 350 });
 fire('iso', 'mousemove', { clientX: 100, clientY: 100 });
+fire('iso', 'mousemove', { clientX: 400, clientY: 300 });
 fire('iso', 'mouseleave', {});
 for (let i = 0; i < 30; i++) {
   nowMs += 100;
   rafCb(nowMs);
 }
 console.log('controls OK');
+if (process.env.ATTACK_TEST) {
+  const saw = (s) => heraldSeen.some((t) => t.includes(s));
+  if (!saw('u1 struck u3 for 4'))
+    throw new Error('attack feedback missing: ' + JSON.stringify(heraldSeen.slice(-4)));
+  if (!saw('u2 struck u4 for 3! DOWN!')) throw new Error('killing-blow feedback missing');
+  console.log('attack feedback OK (clash + twang + horn + DOWN heralded)');
+}
 console.log('HARNESS PASS');
