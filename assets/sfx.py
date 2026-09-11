@@ -1,0 +1,98 @@
+#!/usr/bin/env python3
+"""Synthesize the Vale of Echoes SFX pack (Audacity-style output, zero deps).
+
+Generates 22050 Hz 8-bit mono WAVs: click, coin (gather), step (move),
+hammer (build), whoosh (advance), fanfare (upgrade/victory).
+Run: python3 assets/sfx.py  ->  assets/sfx/*.wav
+"""
+import math
+import random
+import struct
+import wave
+from pathlib import Path
+
+RATE = 22050
+OUT = Path(__file__).parent / "sfx"
+
+
+def env(i, n, attack=0.05, decay=0.4):
+    t = i / n
+    a = min(1.0, t / attack) if attack > 0 else 1.0
+    d = max(0.0, 1.0 - (t / decay)) if decay > 0 else 1.0
+    return min(a, d)
+
+
+def tone(freq, dur, vol=0.7, slide=0.0, wave_fn=math.sin, attack=0.05, decay=0.5):
+    n = int(RATE * dur)
+    out = []
+    for i in range(n):
+        f = freq * (1.0 + slide * (i / n))
+        v = wave_fn(2 * math.pi * f * i / RATE) * vol * env(i, n, attack, decay)
+        out.append(v)
+    return out
+
+
+def noise(dur, vol=0.5, lowpass=0.2, attack=0.02, decay=0.5):
+    n = int(RATE * dur)
+    out, last = [], 0.0
+    for i in range(n):
+        last = last * (1 - lowpass) + random.uniform(-1, 1) * lowpass
+        out.append(last * vol * env(i, n, attack, decay))
+    return out
+
+
+def mix(*tracks):
+    n = max(len(t) for t in tracks)
+    out = [0.0] * n
+    for t in tracks:
+        for i, v in enumerate(t):
+            out[i] += v
+    peak = max(1.0, max(abs(v) for v in out))
+    return [v / peak for v in out]
+
+
+def at(track, offset_sec):
+    return [0.0] * int(RATE * offset_sec) + track
+
+
+def save(name, samples):
+    OUT.mkdir(exist_ok=True)
+    pcm = struct.pack(
+        f"{len(samples)}B",
+        *(max(0, min(255, int(128 + v * 120))) for v in samples),
+    )
+    with wave.open(str(OUT / f"{name}.wav"), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(1)
+        w.setframerate(RATE)
+        w.writeframes(pcm)
+    print(f"{name}.wav: {len(samples)/RATE:.2f}s, {len(pcm)} bytes")
+
+
+def main():
+    random.seed(7)
+    save("click", tone(880, 0.06, vol=0.5, slide=-0.4, decay=0.9))
+    save("coin", mix(tone(1320, 0.09, decay=0.9), at(tone(1760, 0.16, decay=0.7), 0.08)))
+    save("step", mix(noise(0.1, vol=0.8, lowpass=0.12), tone(140, 0.1, vol=0.5, slide=-0.5)))
+    save(
+        "hammer",
+        mix(
+            at(mix(noise(0.06, vol=0.9, lowpass=0.3), tone(220, 0.08, slide=-0.3)), 0.0),
+            at(mix(noise(0.06, vol=0.9, lowpass=0.3), tone(196, 0.1, slide=-0.3)), 0.16),
+        ),
+    )
+    save(
+        "whoosh",
+        [v * math.sin(math.pi * i / int(RATE * 0.35)) for i, v in enumerate(noise(0.35, vol=0.9, lowpass=0.06, attack=1.0, decay=1.0))],
+    )
+    save(
+        "fanfare",
+        mix(
+            *[at(tone(f, 0.22, vol=0.6, decay=0.6), i * 0.13) for i, f in enumerate([523, 659, 784, 1047])],
+            at(tone(1319, 0.4, vol=0.5, decay=0.4), 0.52),
+        ),
+    )
+
+
+if __name__ == "__main__":
+    main()

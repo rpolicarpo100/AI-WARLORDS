@@ -1,0 +1,22 @@
+; Engine configuration file.
+; AI Warlords — Vale of Echoes chronicle replay (Godot 4.x).
+; Open this folder in Godot 4.3+ and press F5.
+
+config_version=5
+
+[application]
+
+config/name="AI Warlords — Vale Replay"
+config/description="Replays the genuine 15-dispatch engine chronicle (mockups/state.json) with Kenney art + synthesized SFX."
+run/main_scene="res://main.tscn"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=800
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"

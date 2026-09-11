@@ -1,0 +1,220 @@
+{
+ "compressionlevel": -1,
+ "editorsettings": {
+  "export": {
+   "format": "",
+   "target": ""
+  }
+ },
+ "height": 6,
+ "infinite": false,
+ "layers": [
+  {
+   "data": [2, 1, 1, 3, 3, 1, 2, 1,
+            1, 5, 5, 5, 6, 4, 1, 2,
+            1, 5, 8, 9, 9, 4, 7, 1,
+            1, 5, 1, 9, 1, 4, 1, 3,
+            2, 1, 1, 5, 5, 6, 4, 1,
+            1, 2, 9, 1, 3, 1, 2, 1],
+   "height": 6,
+   "id": 1,
+   "name": "Terrain",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 8,
+   "x": 0,
+   "y": 0
+  },
+  {
+   "draworder": "topdown",
+   "id": 2,
+   "name": "Resources",
+   "objects": [
+    {
+     "height": 0, "id": 1, "name": "gold-mine", "point": true,
+     "properties": [
+      {"name": "col", "type": "int", "value": 3},
+      {"name": "row", "type": "int", "value": 2},
+      {"name": "amount", "type": "int", "value": 30},
+      {"name": "resource", "type": "string", "value": "gold"}],
+     "rotation": 0, "type": "resource", "visible": true, "width": 0, "x": 196, "y": 160
+    },
+    {
+     "height": 0, "id": 2, "name": "logging-camp", "point": true,
+     "properties": [
+      {"name": "col", "type": "int", "value": 4},
+      {"name": "row", "type": "int", "value": 2},
+      {"name": "amount", "type": "int", "value": 25},
+      {"name": "resource", "type": "string", "value": "wood"}],
+     "rotation": 0, "type": "resource", "visible": true, "width": 0, "x": 252, "y": 160
+    },
+    {
+     "height": 0, "id": 3, "name": "quarry", "point": true,
+     "properties": [
+      {"name": "col", "type": "int", "value": 3},
+      {"name": "row", "type": "int", "value": 3},
+      {"name": "amount", "type": "int", "value": 20},
+      {"name": "resource", "type": "string", "value": "stone"}],
+     "rotation": 0, "type": "resource", "visible": true, "width": 0, "x": 224, "y": 224
+    },
+    {
+     "height": 0, "id": 4, "name": "wheat-farm", "point": true,
+     "properties": [
+      {"name": "col", "type": "int", "value": 2},
+      {"name": "row", "type": "int", "value": 5},
+      {"name": "amount", "type": "int", "value": 40},
+      {"name": "resource", "type": "string", "value": "food"}],
+     "rotation": 0, "type": "resource", "visible": true, "width": 0, "x": 140, "y": 352
+    }
+   ],
+   "opacity": 1,
+   "type": "objectgroup",
+   "visible": true,
+   "x": 0,
+   "y": 0
+  },
+  {
+   "draworder": "topdown",
+   "id": 3,
+   "name": "Spawns",
+   "objects": [
+    {
+     "height": 0, "id": 5, "name": "spawn-p1", "point": true,
+     "properties": [
+      {"name": "col", "type": "int", "value": 1},
+      {"name": "row", "type": "int", "value": 2},
+      {"name": "playerIndex", "type": "int", "value": 0}],
+     "rotation": 0, "type": "spawn", "visible": true, "width": 0, "x": 84, "y": 160
+    },
+    {
+     "height": 0, "id": 6, "name": "spawn-p2", "point": true,
+     "properties": [
+      {"name": "col", "type": "int", "value": 6},
+      {"name": "row", "type": "int", "value": 3},
+      {"name": "playerIndex", "type": "int", "value": 1}],
+     "rotation": 0, "type": "spawn", "visible": true, "width": 0, "x": 392, "y": 224
+    }
+   ],
+   "opacity": 1,
+   "type": "objectgroup",
+   "visible": true,
+   "x": 0,
+   "y": 0
+  },
+  {
+   "draworder": "topdown",
+   "id": 4,
+   "name": "Units",
+   "objects": [
+    {
+     "height": 0, "id": 7, "name": "u0", "point": true,
+     "properties": [
+      {"name": "col", "type": "int", "value": 2},
+      {"name": "row", "type": "int", "value": 2},
+      {"name": "hp", "type": "int", "value": 5},
+      {"name": "owner", "type": "string", "value": "p1"},
+      {"name": "unitType", "type": "string", "value": "worker"}],
+     "rotation": 0, "type": "unit", "visible": true, "width": 0, "x": 140, "y": 160
+    },
+    {
+     "height": 0, "id": 8, "name": "u5", "point": true,
+     "properties": [
+      {"name": "col", "type": "int", "value": 3},
+      {"name": "row", "type": "int", "value": 2},
+      {"name": "hp", "type": "int", "value": 5},
+      {"name": "owner", "type": "string", "value": "p1"},
+      {"name": "unitType", "type": "string", "value": "worker"}],
+     "rotation": 0, "type": "unit", "visible": true, "width": 0, "x": 196, "y": 160
+    },
+    {
+     "height": 0, "id": 9, "name": "u1", "point": true,
+     "properties": [
+      {"name": "col", "type": "int", "value": 3},
+      {"name": "row", "type": "int", "value": 3},
+      {"name": "hp", "type": "int", "value": 12},
+      {"name": "owner", "type": "string", "value": "p1"},
+      {"name": "unitType", "type": "string", "value": "warrior"}],
+     "rotation": 0, "type": "unit", "visible": true, "width": 0, "x": 224, "y": 224
+    },
+    {
+     "height": 0, "id": 10, "name": "u2", "point": true,
+     "properties": [
+      {"name": "col", "type": "int", "value": 1},
+      {"name": "row", "type": "int", "value": 1},
+      {"name": "hp", "type": "int", "value": 8},
+      {"name": "owner", "type": "string", "value": "p1"},
+      {"name": "unitType", "type": "string", "value": "archer"}],
+     "rotation": 0, "type": "unit", "visible": true, "width": 0, "x": 84, "y": 96
+    },
+    {
+     "height": 0, "id": 11, "name": "u3", "point": true,
+     "properties": [
+      {"name": "col", "type": "int", "value": 6},
+      {"name": "row", "type": "int", "value": 3},
+      {"name": "hp", "type": "int", "value": 5},
+      {"name": "owner", "type": "string", "value": "p2"},
+      {"name": "unitType", "type": "string", "value": "worker"}],
+     "rotation": 0, "type": "unit", "visible": true, "width": 0, "x": 392, "y": 224
+    },
+    {
+     "height": 0, "id": 12, "name": "u4", "point": true,
+     "properties": [
+      {"name": "col", "type": "int", "value": 5},
+      {"name": "row", "type": "int", "value": 2},
+      {"name": "hp", "type": "int", "value": 12},
+      {"name": "owner", "type": "string", "value": "p2"},
+      {"name": "unitType", "type": "string", "value": "warrior"}],
+     "rotation": 0, "type": "unit", "visible": true, "width": 0, "x": 308, "y": 160
+    }
+   ],
+   "opacity": 1,
+   "type": "objectgroup",
+   "visible": true,
+   "x": 0,
+   "y": 0
+  }
+ ],
+ "nextlayerid": 5,
+ "nextobjectid": 13,
+ "orientation": "hexagonal",
+ "renderorder": "right-down",
+ "staggeraxis": "y",
+ "staggerindex": "odd",
+ "tiledversion": "1.10.2",
+ "tileheight": 64,
+ "tilesets": [
+  {
+   "columns": 9,
+   "firstgid": 1,
+   "image": "vale-tiles.svg",
+   "imageheight": 64,
+   "imagewidth": 504,
+   "margin": 0,
+   "name": "vale",
+   "spacing": 0,
+   "tilecount": 9,
+   "tiledversion": "1.10.2",
+   "tileheight": 64,
+   "tiles": [
+    {"id": 0, "properties": [{"name": "terrain", "type": "string", "value": "field"}]},
+    {"id": 1, "properties": [{"name": "terrain", "type": "string", "value": "forest"}]},
+    {"id": 2, "properties": [{"name": "terrain", "type": "string", "value": "mountain"}]},
+    {"id": 3, "properties": [{"name": "terrain", "type": "string", "value": "river"}]},
+    {"id": 4, "properties": [{"name": "terrain", "type": "string", "value": "road"}]},
+    {"id": 5, "properties": [{"name": "terrain", "type": "string", "value": "bridge"}]},
+    {"id": 6, "properties": [{"name": "terrain", "type": "string", "value": "village"}]},
+    {"id": 7, "properties": [{"name": "terrain", "type": "string", "value": "city"}]},
+    {"id": 8, "properties": [{"name": "terrain", "type": "string", "value": "resource"}]}
+   ],
+   "tilewidth": 56,
+   "type": "tileset",
+   "version": "1.10"
+  }
+ ],
+ "tilewidth": 56,
+ "type": "map",
+ "version": "1.10",
+ "hexsidelength": 32,
+ "width": 8
+}

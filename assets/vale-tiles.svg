@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Vale of Echoes tileset — hand-authored SVG, Inkscape-editable.
+     9 pointy-top hex tiles, 56x64 each. Used by assets/vale.tmj (Tiled).
+     In Inkscape: each tile is a labelled group; edit fills freely. -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+     width="504" height="64" viewBox="0 0 504 64">
+  <defs>
+    <g id="hex"><polygon points="28,0 52.7,14 52.7,50 28,64 3.3,50 3.3,14"/></g>
+  </defs>
+  <g id="tile-field" inkscape:label="0 field">
+    <use href="#hex" x="0" y="0" fill="#5d8a41" stroke="#2c4a22" stroke-width="2"/>
+    <path d="M18,40 l3,-12 M26,42 l1,-14 M34,40 l-2,-12" stroke="#3f7038" stroke-width="3" fill="none"/>
+  </g>
+  <g id="tile-forest" inkscape:label="1 forest" transform="translate(56,0)">
+    <use href="#hex" fill="#3f7038" stroke="#1d3a1a" stroke-width="2"/>
+    <polygon points="28,12 16,38 40,38" fill="#24491f"/>
+    <polygon points="28,24 19,42 37,42" fill="#2c5a2e"/>
+    <rect x="25.5" y="42" width="5" height="8" fill="#5a3d22"/>
+  </g>
+  <g id="tile-mountain" inkscape:label="2 mountain" transform="translate(112,0)">
+    <use href="#hex" fill="#6f7a68" stroke="#3c4238" stroke-width="2"/>
+    <polygon points="10,48 26,14 42,48" fill="#7d838e"/>
+    <polygon points="26,14 34,30 26,26 18,30" fill="#eef1f4"/>
+  </g>
+  <g id="tile-river" inkscape:label="3 river" transform="translate(168,0)">
+    <use href="#hex" fill="#2e6f9e" stroke="#173d5c" stroke-width="2"/>
+    <path d="M12,28 q8,-6 16,0 t16,0" stroke="#b4dcf0" stroke-width="3" fill="none"/>
+    <path d="M12,42 q8,-6 16,0 t16,0" stroke="#7fb8d8" stroke-width="3" fill="none"/>
+  </g>
+  <g id="tile-road" inkscape:label="4 road" transform="translate(224,0)">
+    <use href="#hex" fill="#a88954" stroke="#5c4520" stroke-width="2"/>
+    <path d="M6,26 q22,-8 44,0 M6,40 q22,-8 44,0" stroke="#5a4020" stroke-width="3" fill="none"/>
+  </g>
+  <g id="tile-bridge" inkscape:label="5 bridge" transform="translate(280,0)">
+    <use href="#hex" fill="#2e6f9e" stroke="#173d5c" stroke-width="2"/>
+    <rect x="6" y="24" width="44" height="16" fill="#7a5c3a" stroke="#4a3520" stroke-width="2"/>
+    <path d="M14,24 v16 M22,24 v16 M30,24 v16 M38,24 v16" stroke="#4a3520" stroke-width="2"/>
+  </g>
+  <g id="tile-village" inkscape:label="6 village" transform="translate(336,0)">
+    <use href="#hex" fill="#6da054" stroke="#33591f" stroke-width="2"/>
+    <rect x="16" y="30" width="24" height="16" fill="#d9c49a" stroke="#6b4a26" stroke-width="2"/>
+    <polygon points="12,30 28,14 44,30" fill="#a97e3f" stroke="#7d5a26" stroke-width="2"/>
+  </g>
+  <g id="tile-city" inkscape:label="7 city" transform="translate(392,0)">
+    <use href="#hex" fill="#8f8a76" stroke="#4c4838" stroke-width="2"/>
+    <rect x="17" y="22" width="22" height="26" fill="#b9b2a0" stroke="#55524a" stroke-width="2"/>
+    <path d="M17,22 v-6 h5 v6 M25.5,22 v-6 h5 v6 M34,22 v-6 h5 v6" fill="#8d8776"/>
+    <rect x="24" y="36" width="8" height="12" fill="#3a2c18"/>
+  </g>
+  <g id="tile-resource" inkscape:label="8 resource" transform="translate(448,0)">
+    <use href="#hex" fill="#8a6f3c" stroke="#4d3d14" stroke-width="2"/>
+    <polygon points="20,40 28,24 36,40" fill="#f2c230" stroke="#9a7414" stroke-width="2"/>
+    <polygon points="32,44 38,32 44,44" fill="#e8a020" stroke="#9a7414" stroke-width="2"/>
+  </g>
+</svg>

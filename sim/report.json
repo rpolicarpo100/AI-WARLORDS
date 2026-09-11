@@ -1,0 +1,834 @@
+{
+ "meta": {
+  "kind": "ai-playtest-report",
+  "games": 20,
+  "stepsPerGame": 60,
+  "seeds": [
+   1000,
+   1001,
+   1002,
+   1003,
+   1004,
+   1005,
+   1006,
+   1007,
+   1008,
+   1009,
+   1010,
+   1011,
+   1012,
+   1013,
+   1014,
+   1015,
+   1016,
+   1017,
+   1018,
+   1019
+  ],
+  "ms": 620,
+  "note": "Bots play heuristic candidates; legality comes from genuine engine outcomes. Deterministic per seed."
+ },
+ "totals": {
+  "applied": 1200,
+  "rejected": 372,
+  "violations": 0
+ },
+ "balance": {
+  "avgTicks": 6.1,
+  "avgFinalP1": {
+   "food": 60.05,
+   "wood": 45.25,
+   "stone": 30.15,
+   "gold": 26.65
+  },
+  "avgFinalP1Buildings": {
+   "house": 5.25,
+   "tower": 2.35,
+   "storage": 2.95,
+   "barracks": 2
+  }
+ },
+ "violations": [],
+ "games": [
+  {
+   "seed": 1000,
+   "applied": 60,
+   "rejected": 19,
+   "ticks": 8,
+   "finalPiles": {
+    "p1": {
+     "food": 60,
+     "wood": 45,
+     "stone": 30,
+     "gold": 25
+    },
+    "p2": {
+     "food": 40,
+     "wood": 30,
+     "stone": 20,
+     "gold": 15
+    }
+   },
+   "finalBuildings": {
+    "p1": {
+     "town-center": 1,
+     "house": 5,
+     "storage": 3,
+     "barracks": 1,
+     "wall": 2,
+     "tower": 6
+    },
+    "p2": {
+     "town-center": 1,
+     "house": 6,
+     "storage": 2,
+     "barracks": 1,
+     "wall": 4,
+     "tower": 4
+    }
+   },
+   "explored": 38
+  },
+  {
+   "seed": 1001,
+   "applied": 60,
+   "rejected": 21,
+   "ticks": 4,
+   "finalPiles": {
+    "p1": {
+     "food": 60,
+     "wood": 45,
+     "stone": 30,
+     "gold": 25
+    },
+    "p2": {
+     "food": 40,
+     "wood": 30,
+     "stone": 20,
+     "gold": 15
+    }
+   },
+   "finalBuildings": {
+    "p1": {
+     "town-center": 1,
+     "house": 3,
+     "storage": 2,
+     "barracks": 1,
+     "wall": 8,
+     "tower": 3
+    },
+    "p2": {
+     "town-center": 1,
+     "house": 3,
+     "storage": 3,
+     "barracks": 7,
+     "wall": 5,
+     "tower": 3
+    }
+   },
+   "explored": 41
+  },
+  {
+   "seed": 1002,
+   "applied": 60,
+   "rejected": 18,
+   "ticks": 9,
+   "finalPiles": {
+    "p1": {
+     "food": 60,
+     "wood": 45,
+     "stone": 30,
+     "gold": 29
+    },
+    "p2": {
+     "food": 40,
+     "wood": 30,
+     "stone": 20,
+     "gold": 15
+    }
+   },
+   "finalBuildings": {
+    "p1": {
+     "town-center": 1,
+     "house": 4,
+     "storage": 3,
+     "barracks": 4,
+     "wall": 4,
+     "tower": 1
+    },
+    "p2": {
+     "town-center": 1,
+     "house": 2,
+     "storage": 4,
+     "barracks": 4,
+     "wall": 4,
+     "tower": 3
+    }
+   },
+   "explored": 38
+  },
+  {
+   "seed": 1003,
+   "applied": 60,
+   "rejected": 19,
+   "ticks": 5,
+   "finalPiles": {
+    "p1": {
+     "food": 60,
+     "wood": 45,
+     "stone": 30,
+     "gold": 26
+    },
+    "p2": {
+     "food": 40,
+     "wood": 30,
+     "stone": 20,
+     "gold": 15
+    }
+   },
+   "finalBuildings": {
+    "p1": {
+     "town-center": 1,
+     "house": 5,
+     "storage": 2,
+     "barracks": 1,
+     "wall": 1,
+     "tower": 2
+    },
+    "p2": {
+     "town-center": 1,
+     "house": 1,
+     "storage": 2,
+     "barracks": 3,
+     "wall": 1,
+     "tower": 1
+    }
+   },
+   "explored": 34
+  },
+  {
+   "seed": 1004,
+   "applied": 60,
+   "rejected": 13,
+   "ticks": 8,
+   "finalPiles": {
+    "p1": {
+     "food": 60,
+     "wood": 45,
+     "stone": 30,
+     "gold": 26
+    },
+    "p2": {
+     "food": 40,
+     "wood": 30,
+     "stone": 20,
+     "gold": 15
+    }
+   },
+   "finalBuildings": {
+    "p1": {
+     "town-center": 1,
+     "house": 4,
+     "storage": 1,
+     "barracks": 3,
+     "wall": 3,
+     "tower": 5
+    },
+    "p2": {
+     "town-center": 1,
+     "house": 2,
+     "storage": 3,
+     "barracks": 1,
+     "wall": 6,
+     "tower": 4
+    }
+   },
+   "explored": 33
+  },
+  {
+   "seed": 1005,
+   "applied": 60,
+   "rejected": 21,
+   "ticks": 9,
+   "finalPiles": {
+    "p1": {
+     "food": 60,
+     "wood": 45,
+     "stone": 30,
+     "gold": 26
+    },
+    "p2": {
+     "food": 40,
+     "wood": 30,
+     "stone": 20,
+     "gold": 15
+    }
+   },
+   "finalBuildings": {
+    "p1": {
+     "town-center": 1,
+     "house": 5,
+     "storage": 4,
+     "barracks": 1,
+     "wall": 1,
+     "tower": 5
+    },
+    "p2": {
+     "town-center": 1,
+     "house": 4,
+     "storage": 4,
+     "barracks": 0,
+     "wall": 2,
+     "tower": 8
+    }
+   },
+   "explored": 37
+  },
+  {
+   "seed": 1006,
+   "applied": 60,
+   "rejected": 17,
+   "ticks": 9,
+   "finalPiles": {
+    "p1": {
+     "food": 60,
+     "wood": 45,
+     "stone": 30,
+     "gold": 26
+    },
+    "p2": {
+     "food": 40,
+     "wood": 30,
+     "stone": 20,
+     "gold": 15
+    }
+   },
+   "finalBuildings": {
+    "p1": {
+     "town-center": 1,
+     "house": 8,
+     "storage": 5,
+     "barracks": 3,
+     "wall": 2,
+     "tower": 2
+    },
+    "p2": {
+     "town-center": 1,
+     "house": 2,
+     "storage": 4,
+     "barracks": 7,
+     "wall": 3,
+     "tower": 2
+    }
+   },
+   "explored": 33
+  },
+  {
+   "seed": 1007,
+   "applied": 60,
+   "rejected": 17,
+   "ticks": 2,
+   "finalPiles": {
+    "p1": {
+     "food": 60,
+     "wood": 45,
+     "stone": 30,
+     "gold": 29
+    },
+    "p2": {
+     "food": 40,
+     "wood": 30,
+     "stone": 20,
+     "gold": 15
+    }
+   },
+   "finalBuildings": {
+    "p1": {
+     "town-center": 1,
+     "house": 4,
+     "storage": 1,
+     "barracks": 1,
+     "wall": 1,
+     "tower": 2
+    },
+    "p2": {
+     "town-center": 1,
+     "house": 3,
+     "storage": 3,
+     "barracks": 4,
+     "wall": 2,
+     "tower": 0
+    }
+   },
+   "explored": 38
+  },
+  {
+   "seed": 1008,
+   "applied": 60,
+   "rejected": 22,
+   "ticks": 7,
+   "finalPiles": {
+    "p1": {
+     "food": 61,
+     "wood": 45,
+     "stone": 30,
+     "gold": 27
+    },
+    "p2": {
+     "food": 40,
+     "wood": 30,
+     "stone": 20,
+     "gold": 15
+    }
+   },
+   "finalBuildings": {
+    "p1": {
+     "town-center": 1,
+     "house": 5,
+     "storage": 5,
+     "barracks": 4,
+     "wall": 0,
+     "tower": 0
+    },
+    "p2": {
+     "town-center": 1,
+     "house": 7,
+     "storage": 1,
+     "barracks": 5,
+     "wall": 1,
+     "tower": 4
+    }
+   },
+   "explored": 38
+  },
+  {
+   "seed": 1009,
+   "applied": 60,
+   "rejected": 21,
+   "ticks": 6,
+   "finalPiles": {
+    "p1": {
+     "food": 60,
+     "wood": 45,
+     "stone": 30,
+     "gold": 25
+    },
+    "p2": {
+     "food": 40,
+     "wood": 30,
+     "stone": 20,
+     "gold": 15
+    }
+   },
+   "finalBuildings": {
+    "p1": {
+     "town-center": 1,
+     "house": 4,
+     "storage": 3,
+     "barracks": 4,
+     "wall": 2,
+     "tower": 4
+    },
+    "p2": {
+     "town-center": 1,
+     "house": 4,
+     "storage": 6,
+     "barracks": 3,
+     "wall": 3,
+     "tower": 3
+    }
+   },
+   "explored": 35
+  },
+  {
+   "seed": 1010,
+   "applied": 60,
+   "rejected": 19,
+   "ticks": 6,
+   "finalPiles": {
+    "p1": {
+     "food": 60,
+     "wood": 45,
+     "stone": 33,
+     "gold": 25
+    },
+    "p2": {
+     "food": 40,
+     "wood": 30,
+     "stone": 20,
+     "gold": 15
+    }
+   },
+   "finalBuildings": {
+    "p1": {
+     "town-center": 1,
+     "house": 8,
+     "storage": 1,
+     "barracks": 1,
+     "wall": 4,
+     "tower": 3
+    },
+    "p2": {
+     "town-center": 1,
+     "house": 7,
+     "storage": 6,
+     "barracks": 4,
+     "wall": 2,
+     "tower": 0
+    }
+   },
+   "explored": 38
+  },
+  {
+   "seed": 1011,
+   "applied": 60,
+   "rejected": 15,
+   "ticks": 7,
+   "finalPiles": {
+    "p1": {
+     "food": 60,
+     "wood": 45,
+     "stone": 30,
+     "gold": 28
+    },
+    "p2": {
+     "food": 40,
+     "wood": 30,
+     "stone": 20,
+     "gold": 15
+    }
+   },
+   "finalBuildings": {
+    "p1": {
+     "town-center": 1,
+     "house": 4,
+     "storage": 6,
+     "barracks": 1,
+     "wall": 0,
+     "tower": 1
+    },
+    "p2": {
+     "town-center": 1,
+     "house": 2,
+     "storage": 2,
+     "barracks": 3,
+     "wall": 1,
+     "tower": 4
+    }
+   },
+   "explored": 36
+  },
+  {
+   "seed": 1012,
+   "applied": 60,
+   "rejected": 20,
+   "ticks": 5,
+   "finalPiles": {
+    "p1": {
+     "food": 60,
+     "wood": 45,
+     "stone": 30,
+     "gold": 25
+    },
+    "p2": {
+     "food": 40,
+     "wood": 30,
+     "stone": 20,
+     "gold": 15
+    }
+   },
+   "finalBuildings": {
+    "p1": {
+     "town-center": 1,
+     "house": 7,
+     "storage": 5,
+     "barracks": 2,
+     "wall": 4,
+     "tower": 1
+    },
+    "p2": {
+     "town-center": 1,
+     "house": 4,
+     "storage": 6,
+     "barracks": 1,
+     "wall": 3,
+     "tower": 4
+    }
+   },
+   "explored": 38
+  },
+  {
+   "seed": 1013,
+   "applied": 60,
+   "rejected": 19,
+   "ticks": 3,
+   "finalPiles": {
+    "p1": {
+     "food": 60,
+     "wood": 45,
+     "stone": 30,
+     "gold": 25
+    },
+    "p2": {
+     "food": 40,
+     "wood": 30,
+     "stone": 20,
+     "gold": 15
+    }
+   },
+   "finalBuildings": {
+    "p1": {
+     "town-center": 1,
+     "house": 7,
+     "storage": 4,
+     "barracks": 0,
+     "wall": 2,
+     "tower": 0
+    },
+    "p2": {
+     "town-center": 1,
+     "house": 3,
+     "storage": 0,
+     "barracks": 4,
+     "wall": 3,
+     "tower": 2
+    }
+   },
+   "explored": 33
+  },
+  {
+   "seed": 1014,
+   "applied": 60,
+   "rejected": 18,
+   "ticks": 5,
+   "finalPiles": {
+    "p1": {
+     "food": 60,
+     "wood": 45,
+     "stone": 30,
+     "gold": 30
+    },
+    "p2": {
+     "food": 40,
+     "wood": 30,
+     "stone": 20,
+     "gold": 15
+    }
+   },
+   "finalBuildings": {
+    "p1": {
+     "town-center": 1,
+     "house": 3,
+     "storage": 2,
+     "barracks": 2,
+     "wall": 4,
+     "tower": 1
+    },
+    "p2": {
+     "town-center": 1,
+     "house": 7,
+     "storage": 2,
+     "barracks": 2,
+     "wall": 5,
+     "tower": 3
+    }
+   },
+   "explored": 33
+  },
+  {
+   "seed": 1015,
+   "applied": 60,
+   "rejected": 9,
+   "ticks": 6,
+   "finalPiles": {
+    "p1": {
+     "food": 60,
+     "wood": 45,
+     "stone": 30,
+     "gold": 29
+    },
+    "p2": {
+     "food": 40,
+     "wood": 30,
+     "stone": 20,
+     "gold": 15
+    }
+   },
+   "finalBuildings": {
+    "p1": {
+     "town-center": 1,
+     "house": 5,
+     "storage": 1,
+     "barracks": 4,
+     "wall": 1,
+     "tower": 4
+    },
+    "p2": {
+     "town-center": 1,
+     "house": 6,
+     "storage": 4,
+     "barracks": 5,
+     "wall": 5,
+     "tower": 3
+    }
+   },
+   "explored": 33
+  },
+  {
+   "seed": 1016,
+   "applied": 60,
+   "rejected": 23,
+   "ticks": 5,
+   "finalPiles": {
+    "p1": {
+     "food": 60,
+     "wood": 45,
+     "stone": 30,
+     "gold": 28
+    },
+    "p2": {
+     "food": 40,
+     "wood": 30,
+     "stone": 20,
+     "gold": 15
+    }
+   },
+   "finalBuildings": {
+    "p1": {
+     "town-center": 1,
+     "house": 4,
+     "storage": 3,
+     "barracks": 3,
+     "wall": 1,
+     "tower": 2
+    },
+    "p2": {
+     "town-center": 1,
+     "house": 3,
+     "storage": 1,
+     "barracks": 4,
+     "wall": 0,
+     "tower": 6
+    }
+   },
+   "explored": 35
+  },
+  {
+   "seed": 1017,
+   "applied": 60,
+   "rejected": 21,
+   "ticks": 9,
+   "finalPiles": {
+    "p1": {
+     "food": 60,
+     "wood": 47,
+     "stone": 30,
+     "gold": 25
+    },
+    "p2": {
+     "food": 40,
+     "wood": 30,
+     "stone": 20,
+     "gold": 15
+    }
+   },
+   "finalBuildings": {
+    "p1": {
+     "town-center": 1,
+     "house": 7,
+     "storage": 4,
+     "barracks": 0,
+     "wall": 1,
+     "tower": 2
+    },
+    "p2": {
+     "town-center": 1,
+     "house": 4,
+     "storage": 3,
+     "barracks": 4,
+     "wall": 3,
+     "tower": 3
+    }
+   },
+   "explored": 41
+  },
+  {
+   "seed": 1018,
+   "applied": 60,
+   "rejected": 18,
+   "ticks": 4,
+   "finalPiles": {
+    "p1": {
+     "food": 60,
+     "wood": 48,
+     "stone": 30,
+     "gold": 26
+    },
+    "p2": {
+     "food": 40,
+     "wood": 30,
+     "stone": 20,
+     "gold": 15
+    }
+   },
+   "finalBuildings": {
+    "p1": {
+     "town-center": 1,
+     "house": 7,
+     "storage": 2,
+     "barracks": 1,
+     "wall": 1,
+     "tower": 2
+    },
+    "p2": {
+     "town-center": 1,
+     "house": 2,
+     "storage": 2,
+     "barracks": 3,
+     "wall": 1,
+     "tower": 1
+    }
+   },
+   "explored": 38
+  },
+  {
+   "seed": 1019,
+   "applied": 60,
+   "rejected": 22,
+   "ticks": 5,
+   "finalPiles": {
+    "p1": {
+     "food": 60,
+     "wood": 45,
+     "stone": 30,
+     "gold": 28
+    },
+    "p2": {
+     "food": 40,
+     "wood": 30,
+     "stone": 20,
+     "gold": 15
+    }
+   },
+   "finalBuildings": {
+    "p1": {
+     "town-center": 1,
+     "house": 6,
+     "storage": 2,
+     "barracks": 3,
+     "wall": 2,
+     "tower": 1
+    },
+    "p2": {
+     "town-center": 1,
+     "house": 3,
+     "storage": 5,
+     "barracks": 0,
+     "wall": 3,
+     "tower": 1
+    }
+   },
+   "explored": 34
+  }
+ ]
+}

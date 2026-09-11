@@ -19,8 +19,9 @@ import {
 import { computeVisibility } from '../src/engine/fog.js';
 import { markExplored } from '../src/engine/exploration.js';
 import { Match, STANDARD_RULESET } from '../src/engine/match.js';
-import type { MapCell, MapData, ResourceType, TerrainId } from '../src/engine/map.js';
+import type { MapData } from '../src/engine/map.js';
 import type { UnitsData } from '../src/engine/units.js';
+import { loadTiledMap } from '../tools/tiled-map.js';
 import { DEFAULT_UNITS_CONFIG, type UnitsConfig } from '../src/engine/warfare.js';
 import { createWorldState } from '../src/engine/world-state.js';
 import { perceive } from '../src/engine/views.js';
@@ -32,63 +33,12 @@ function raw(value: unknown): Untrusted<ClientRequest> {
   return markUntrusted(value as ClientRequest);
 }
 
-// 8x6 scenario map. F field, T forest, M mountain, R river, D road,
-// B bridge, V village, C city, G/O/W/S resource nodes (gold/food/wood/stone).
-const ROWS = [
-  'TFFMMFTF',
-  'FDDDBRFT',
-  'FDCGWRVF',
-  'FDFSF RFM'.replace(' ', ''),
-  'TFFDDBRF',
-  'FTOFMFTF',
-];
-const NODE_OF: Record<string, { type: ResourceType; amount: number }> = {
-  G: { type: 'gold', amount: 30 },
-  O: { type: 'food', amount: 40 },
-  W: { type: 'wood', amount: 25 },
-  S: { type: 'stone', amount: 20 },
-};
-const TERRAIN_OF: Record<string, TerrainId> = {
-  F: 'field',
-  T: 'forest',
-  M: 'mountain',
-  R: 'river',
-  D: 'road',
-  B: 'bridge',
-  V: 'village',
-  C: 'city',
-  G: 'resource',
-  O: 'resource',
-  W: 'resource',
-  S: 'resource',
-};
+// Scenario map + units come from the Tiled source of truth (assets/vale.tmj).
+// Edit the map in Tiled, re-run this script, done. Strictly validated.
+const TILED_URL = new URL('../assets/vale.tmj', import.meta.url);
 
 function scenarioMap(): MapData {
-  const cells: MapCell[] = [];
-  for (let row = 0; row < 6; row += 1) {
-    for (let col = 0; col < 8; col += 1) {
-      const glyph = ROWS[row]![col]!;
-      const terrain = TERRAIN_OF[glyph]!;
-      const node = NODE_OF[glyph];
-      cells.push(
-        node === undefined
-          ? { col, row, terrain }
-          : { col, row, terrain, resource: { type: node.type, amount: node.amount } },
-      );
-    }
-  }
-  return {
-    schemaVersion: 1,
-    id: 'mockup-vale' as MapData['id'],
-    width: 8,
-    height: 6,
-    stagger: 'odd',
-    cells,
-    spawns: [
-      { playerIndex: 0, col: 1, row: 2 },
-      { playerIndex: 1, col: 6, row: 3 },
-    ],
-  };
+  return loadTiledMap(TILED_URL).map;
 }
 
 function scenarioBuildings(): BuildingsConfig {
@@ -121,19 +71,7 @@ function scenarioUnitStats(): UnitsConfig {
 }
 
 function scenarioUnits(): UnitsData {
-  return {
-    schemaVersion: 1,
-    nextId: 6,
-    units: [
-      { id: 'u0', owner: 'p1', type: 'worker', hp: 5, col: 2, row: 2 },
-      // M022 L-32: the scripted gather at (3,2) needs a worker on the node.
-      { id: 'u5', owner: 'p1', type: 'worker', hp: 5, col: 3, row: 2 },
-      { id: 'u1', owner: 'p1', type: 'warrior', hp: 12, col: 3, row: 3 },
-      { id: 'u2', owner: 'p1', type: 'archer', hp: 8, col: 1, row: 1 },
-      { id: 'u3', owner: 'p2', type: 'worker', hp: 5, col: 6, row: 3 },
-      { id: 'u4', owner: 'p2', type: 'warrior', hp: 12, col: 5, row: 2 },
-    ],
-  };
+  return loadTiledMap(TILED_URL).units;
 }
 
 function main(): void {
