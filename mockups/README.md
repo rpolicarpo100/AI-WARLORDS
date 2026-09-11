@@ -9,6 +9,11 @@ the engine is untouched (M021 sealed).
   `state.json`. Run: `npx tsx mockups/generate-state.ts`.
 - `build.mjs` — embeds `state.json` into each page (offline-safe).
 - Pages: `index.html` (hub), `menu.html`, `match.html`, `city.html`.
+- `match.html` is a LIVE animated chronicle: 16 genuine keyframes
+  (15 dispatches) interpolated in-page — gliding units, tweened
+  counters, real per-keyframe fog/memory, streaming chronicle,
+  transport controls (play/pause/speed/scrub). Motion illustrates;
+  every stop is a true engine snapshot.
 
 What's real: map/state/events/fog/costs/stats. What's placeholder: art,
 layout, names, AI personas/advisor, all buttons (inert).

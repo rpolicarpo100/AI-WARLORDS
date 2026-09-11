@@ -104,7 +104,11 @@ function scenarioBuildings(): BuildingsConfig {
 }
 
 function scenarioEconomy(): EconomyConfig {
-  return { ...DEFAULT_ECONOMY_CONFIG, gold: { value: 5, gatherYield: 3 } };
+  return {
+    ...DEFAULT_ECONOMY_CONFIG,
+    wood: { value: 1, gatherYield: 2 },
+    gold: { value: 5, gatherYield: 3 },
+  };
 }
 
 /** Scenario fixture (NOT engine default): stats matching placed HP. */
@@ -170,26 +174,61 @@ function main(): void {
   const snapshots = [match.getSnapshot()];
   const outcomes = [];
   const s1 = match.join(P1);
-  const script: Array<[string, string, unknown]> = [
-    ['r1', 'economy.gather', { col: 3, row: 2 }],
-    ['r2', 'city.build', { type: 'house' }],
-    ['r3', 'match.advance', {}],
-    ['r4', 'city.build', { type: 'tower' }],
-    ['r5', 'match.advance', {}],
+  const s2 = match.join(P2);
+  const sessions = { p1: s1, p2: s2 };
+  // Animated-chronicle script (all dispatches must stay engine-legal).
+  const script: Array<[string, 'p1' | 'p2', string, unknown]> = [
+    ['r1', 'p1', 'economy.gather', { col: 3, row: 2 }],
+    ['r2', 'p1', 'unit.move', { id: 'u0', col: 3, row: 2 }],
+    ['r3', 'p1', 'unit.move', { id: 'u0', col: 4, row: 2 }],
+    ['r4', 'p1', 'economy.gather', { col: 4, row: 2 }],
+    ['r5', 'p1', 'city.build', { type: 'house' }],
+    ['r6', 'p1', 'match.advance', {}],
+    ['r7', 'p1', 'unit.move', { id: 'u1', col: 4, row: 3 }],
+    ['r8', 'p1', 'city.build', { type: 'tower' }],
+    ['r9', 'p1', 'match.advance', {}],
+    ['r10', 'p2', 'unit.move', { id: 'u3', col: 7, row: 3 }],
+    ['r11', 'p1', 'unit.move', { id: 'u2', col: 2, row: 1 }],
+    ['r12', 'p1', 'match.advance', {}],
+    ['r13', 'p1', 'city.upgrade', {}],
+    ['r14', 'p1', 'match.advance', {}],
+    ['r15', 'p1', 'economy.gather', { col: 3, row: 2 }],
   ];
-  for (const [rid, type, payload] of script) {
-    outcomes.push(match.dispatch(s1, raw({ requestId: rid, playerId: 'p1', type, payload })));
+  for (const [rid, who, type, payload] of script) {
+    outcomes.push(
+      match.dispatch(sessions[who], raw({ requestId: rid, playerId: who, type, payload })),
+    );
     snapshots.push(match.getSnapshot());
+  }
+  for (const [index, outcome] of outcomes.entries()) {
+    if (outcome.status !== 'applied') {
+      throw new Error(`scenario script broke at r${index + 1}: ${JSON.stringify(outcome)}`);
+    }
+  }
+
+  // Real fog + memory per keyframe (units roam, so sight changes genuinely).
+  const visibilityBySnap: number[][] = [];
+  const exploredBySnap: number[][] = [];
+  let memory = { schemaVersion: 1 as const, viewers: {} as Record<string, number[]> };
+  for (const snap of snapshots) {
+    const seen = computeVisibility(
+      snap.map!,
+      (snap.units?.units ?? [])
+        .filter((u) => u.owner === 'p1')
+        .map((u) => ({ viewer: P1, col: u.col, row: u.row, range: 2 })),
+    );
+    memory = markExplored(memory, seen) as typeof memory;
+    visibilityBySnap.push([...(seen['p1'] ?? [])]);
+    exploredBySnap.push([...(memory.viewers['p1'] ?? [])]);
   }
 
   const final = match.getSnapshot();
-  const p1Units = (final.units?.units ?? []).filter((u) => u.owner === 'p1');
-  const visibility = computeVisibility(
-    final.map!,
-    p1Units.map((u) => ({ viewer: P1, col: u.col, row: u.row, range: 2 })),
-  );
-  const explored = markExplored({ schemaVersion: 1, viewers: {} }, visibility);
-  const perception = perceive(final, P1, { p1: visibility['p1'] ?? [] });
+  const visibility = { p1: visibilityBySnap[visibilityBySnap.length - 1]! };
+  const explored = {
+    schemaVersion: 1,
+    viewers: { p1: exploredBySnap[exploredBySnap.length - 1]! },
+  };
+  const perception = perceive(final, P1, { p1: visibility.p1 });
 
   const out = {
     meta: {
@@ -211,6 +250,8 @@ function main(): void {
     timeline: match.getTimeline(),
     visibility,
     explored,
+    visibilityBySnap,
+    exploredBySnap,
     perception,
   };
   writeFileSync(new URL('./state.json', import.meta.url), JSON.stringify(out, null, 1));
