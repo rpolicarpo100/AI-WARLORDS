@@ -426,6 +426,7 @@ function readSource(file: string): string {
 describe('determinism hygiene (static security review)', () => {
   it('locks the engine module census (no silently skipped files)', () => {
     expect(engineSources()).toEqual([
+      'assessment.ts',
       'authority.ts',
       'buildings.ts',
       'city.ts',
@@ -522,6 +523,7 @@ describe('architecture boundary (static review)', () => {
     prompts: 0,
     'world-state': 1,
     'effective-dna': 1,
+    assessment: 2,
     'commander-state': 2,
     economy: 2,
     exploration: 2,

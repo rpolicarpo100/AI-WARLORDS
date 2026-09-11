@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 35 (M001–M035)  |
-| `PLANNED`  | 130 (M036–M165) |
+| `VERIFIED` | 36 (M001–M036)  |
+| `PLANNED`  | 129 (M037–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -139,6 +139,10 @@ Checkpoints `VERIFIED`:
   1379/1379 testes, 100 global.
   Registo em `docs/modules/M035.md`.
   Bloco Strategic AI M035–M042 ABERTO.
+- **M036 @ 2026-09-11** — Player Assessment (1.º
+  tijolo STRATEGIC ENGINE votado: pura L2, médias
+  exactas, zero wiring); 1386/1386 testes, 100.
+  Registo em `docs/modules/M036.md`.
 
 ---
 
@@ -206,7 +210,8 @@ Checkpoints `VERIFIED`:
 | M033 | Personalidade — Unit Doctrines | `VERIFIED` |
 | M034 | Personalidade — Testing | `VERIFIED` |
 | M035 | Strategic AI — Effective DNA | `VERIFIED` |
-| M036–M042 | Strategic AI                                                        | `PLANNED` |
+| M036 | Strategic AI — Player Assessment | `VERIFIED` |
+| M037–M042 | Strategic AI                                                        | `PLANNED` |
 | M043–M045 | Player → AI Command                                                 | `PLANNED` |
 | M046–M047 | AI Refutation + Override                                            | `PLANNED` |
 | M048      | Confidence Engine                                                   | `PLANNED` |

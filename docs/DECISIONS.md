@@ -1004,3 +1004,35 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
   conformance test vs emperor); folha L1 sem
   importadores até M036+.
 - RISKS: baixo — pura+total; residual: tuning (#92).
+
+## D-030 — Player assessment pura L2 (M036 voto assessment)
+
+- DECISION: `src/engine/assessment.ts` NOVO (L2 —
+  L0s + effective-dna/world-state-type, downward):
+  assessPlayer(state, holder, statsOf) pura:
+  military {units, totalHp, totalDamage} (statsOf
+  INJECTADO — molde M022; unknown-type dano 0
+  fail-soft); economy {stockpile, buildings,
+  cityLevel} (getters fail-soft reuse: stockpileOf,
+  countsOf, cityOf); commanders {count, active,
+  avgEffective} (commandersOf + média EXATA por
+  traço sobre effectiveDnaOf; zero commanders →
+  undefined honesto). AverageDna estrutural floats
+  (NÃO é DnaTraits — bounds-battery, molde M033).
+  Zero wiring (consumers M037+).
+- MOTIVE: voto assessment 2026-09-11 + #7
+  (ENGINE=FACTS, AI=DECISIONS) + M022 (injecção) +
+  M015 (leniência) + getters L0 + M035 (substrato).
+- ALTERNATIVES: importar warfare p/ damage
+  (rejeitado: L2↛L2 — injecção resolve); scalar
+  strength (rejeitado: pesos sem âncora → FUTURO);
+  rounding da média (rejeitado: floats exatos,
+  consumers decidem); threat/foe-modeling
+  (rejeitado: perception-side, FUTURO); wiring já
+  (rejeitado: sem consumer).
+- ADVANTAGES: 1.º tijolo STRATEGIC ENGINE; só
+  contagens/somas/médias (zero invenção); reuse
+  total getters.
+- DISADVANTAGES: AverageDna duplica shape
+  (molde mirrors); statsOf closure por chamada.
+- RISKS: baixo — pura; residual: tuning (#92).
