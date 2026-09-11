@@ -108,3 +108,4 @@
 | 2026-09-11 | M041      | Strategy drill live (harness votado, 7 invariantes, 1200 applied/0 violações, sans-ms idêntico); 1 módulo p/ fechar bloco |
 | 2026-09-11 | M042      | Transversal live (suite votada, arco IA ponta-a-ponta, 1417/1417); bloco M035–M042 FECHADO |
 | 2026-09-11 | M043      | Orders data live (5 verbos engine, guards totais, espelho, bundle +775); bloco M043–M045 ABERTO; readers→M044+ |
+| 2026-09-11 | M044      | Queue transitions live (amend orders?+cap, issue/cancel owner-only, bundle +3481); semântica por kind→M045 |

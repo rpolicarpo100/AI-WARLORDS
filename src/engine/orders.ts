@@ -11,6 +11,10 @@
  * CUTS (D-037): commander.* (lifecycle meta), city.upgrade (player
  * progression), world.noop (absence of an order IS no order).
  * Zero transitions, zero events, zero readers until M044+.
+ * M044 amends the storage contract: records carry an optional FIFO
+ * `orders` queue (absent means empty) capped at
+ * MAX_ORDERS_PER_COMMANDER; isOrderQueue is the canonical array
+ * guard (commanders.ts mirrors, same L0↛L0 law).
  */
 
 export const ORDER_IDS = [
@@ -46,6 +50,9 @@ export const MAX_ORDER_PARAM_KEY_CHARS = 32;
 
 /** String-value ceiling (symmetric with the commander-id bound). */
 export const MAX_ORDER_PARAM_CHARS = 64;
+
+/** Queue-length ceiling (M044, own bound: headroom, not law). */
+export const MAX_ORDERS_PER_COMMANDER = 8;
 
 export function isOrderKind(value: unknown): value is OrderKind {
   return typeof value === 'string' && (ORDER_IDS as readonly string[]).includes(value);
@@ -93,4 +100,20 @@ export function isCommanderOrder(value: unknown): value is CommanderOrder {
     isOrderKind(fields['kind']) &&
     (fields['params'] === undefined || isOrderParams(fields['params']))
   );
+}
+
+/** Total queue check: array, capped, every element a valid order. */
+export function isOrderQueue(value: unknown): value is CommanderOrder[] {
+  if (!Array.isArray(value)) {
+    return false;
+  }
+  if (value.length > MAX_ORDERS_PER_COMMANDER) {
+    return false;
+  }
+  for (const entry of value) {
+    if (!isCommanderOrder(entry)) {
+      return false;
+    }
+  }
+  return true;
 }

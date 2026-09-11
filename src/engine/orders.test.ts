@@ -14,9 +14,11 @@ import {
   isCommanderOrder,
   isOrderKind,
   isOrderParams,
+  isOrderQueue,
   MAX_ORDER_PARAM_CHARS,
   MAX_ORDER_PARAM_KEY_CHARS,
   MAX_ORDER_PARAMS,
+  MAX_ORDERS_PER_COMMANDER,
   ORDER_IDS,
   type OrderKind,
 } from './orders.js';
@@ -166,10 +168,42 @@ describe('isCommanderOrder (total)', () => {
   });
 });
 
+describe('isOrderQueue (total, M044)', () => {
+  it('accepts empty and populated queues in FIFO order', () => {
+    expect(isOrderQueue([])).toBe(true);
+    expect(
+      isOrderQueue([
+        { kind: 'unit.move', params: { id: 'u1', col: 1, row: 2 } },
+        { kind: 'city.build' },
+      ]),
+    ).toBe(true);
+  });
+
+  it('rejects non-arrays', () => {
+    for (const bad of [null, undefined, {}, 'x', 7, { kind: 'unit.move' }]) {
+      expect(isOrderQueue(bad)).toBe(false);
+    }
+  });
+
+  it('bounds length at eight (boundary pinned)', () => {
+    const move = { kind: 'unit.move' };
+    const full = [move, move, move, move, move, move, move, move];
+    expect(isOrderQueue(full)).toBe(true);
+    expect(isOrderQueue([...full, move])).toBe(false);
+  });
+
+  it('rejects queues with invalid elements', () => {
+    expect(isOrderQueue([{ kind: 'unit.move' }, { kind: 'city.upgrade' }])).toBe(false);
+    expect(isOrderQueue([{ kind: 'unit.move', params: { nested: {} } }])).toBe(false);
+    expect(isOrderQueue([7])).toBe(false);
+  });
+});
+
 describe('order bounds (locked)', () => {
   it('exports the validated ceilings', () => {
     expect(MAX_ORDER_PARAMS).toBe(8);
     expect(MAX_ORDER_PARAM_KEY_CHARS).toBe(32);
     expect(MAX_ORDER_PARAM_CHARS).toBe(64);
+    expect(MAX_ORDERS_PER_COMMANDER).toBe(8);
   });
 });

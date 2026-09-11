@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 43 (M001–M043)  |
-| `PLANNED`  | 122 (M044–M165) |
+| `VERIFIED` | 44 (M001–M044)  |
+| `PLANNED`  | 121 (M045–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -175,6 +175,11 @@ Checkpoints `VERIFIED`:
   testes, 100 global.
   Registo em `docs/modules/M043.md`.
   Bloco Player → AI Command M043–M045 ABERTO.
+- **M044 @ 2026-09-11** — Order Queue Transitions
+  (fila votada: amend orders?+cap, issue/cancel
+  owner-only, factos tail-diff); 1491/1491
+  testes, 100 global.
+  Registo em `docs/modules/M044.md`.
 
 ---
 
@@ -250,7 +255,8 @@ Checkpoints `VERIFIED`:
 | M041 | Strategic AI — Strategy Drill | `VERIFIED` |
 | M042 | Strategic AI — Transversal | `VERIFIED` |
 | M043 | Player → AI Command — Orders Data | `VERIFIED` |
-| M044–M045 | Player → AI Command | `PLANNED` |
+| M044 | Player → AI Command — Queue Transitions | `VERIFIED` |
+| M045 | Player → AI Command | `PLANNED` |
 | M046–M047 | AI Refutation + Override                                            | `PLANNED` |
 | M048      | Confidence Engine                                                   | `PLANNED` |
 | M049–M050 | Counterfactual AI                                                   | `PLANNED` |

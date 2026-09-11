@@ -17,6 +17,9 @@
  * canonical, L0↛L0; deltas NOT mirrored, same rationale).
  * M043 embeds an optional standing order (shape mirror — orders.ts
  * canonical, L0↛L0; per-kind semantics NOT mirrored, M044 owns).
+ * M044 amends storage to an optional FIFO queue (`orders?`, absent
+ * means empty, capped — orders.ts canonical, same L0↛L0 law). A
+ * stale M043 `order` key is ignored, never rejected (back-compat).
  */
 
 export const COMMANDERS_SCHEMA_VERSION = 1;
@@ -58,6 +61,9 @@ export interface CommanderOrder {
   readonly params?: CommanderOrderParams;
 }
 
+/** M044 FIFO queue of standing orders (absent means empty; capped). */
+export type CommanderOrders = readonly CommanderOrder[];
+
 export interface CommanderRecord {
   readonly id: string;
   readonly owner: string;
@@ -65,7 +71,7 @@ export interface CommanderRecord {
   readonly dna?: CommanderDna;
   readonly personality?: CommanderPersonality;
   readonly doctrine?: CommanderDoctrine;
-  readonly order?: CommanderOrder;
+  readonly orders?: CommanderOrders;
 }
 
 export interface CommandersData {
@@ -234,6 +240,25 @@ function isMirroredOrder(value: unknown): value is CommanderOrder {
   );
 }
 
+/** Mirrors MAX_ORDERS_PER_COMMANDER (orders.ts). Leaf: deliberately not imported. */
+const MIRRORED_MAX_ORDERS = 8;
+
+/** Mirrors isOrderQueue (orders.ts): capped array of valid orders. */
+function isMirroredOrders(value: unknown): value is CommanderOrders {
+  if (!Array.isArray(value)) {
+    return false;
+  }
+  if (value.length > MIRRORED_MAX_ORDERS) {
+    return false;
+  }
+  for (const entry of value) {
+    if (!isMirroredOrder(entry)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export function isCommanderRecord(value: unknown): value is CommanderRecord {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     return false;
@@ -246,7 +271,7 @@ export function isCommanderRecord(value: unknown): value is CommanderRecord {
     (fields['dna'] === undefined || isMirroredDna(fields['dna'])) &&
     (fields['personality'] === undefined || isMirroredPersonality(fields['personality'])) &&
     (fields['doctrine'] === undefined || isMirroredDoctrine(fields['doctrine'])) &&
-    (fields['order'] === undefined || isMirroredOrder(fields['order']))
+    (fields['orders'] === undefined || isMirroredOrders(fields['orders']))
   );
 }
 
@@ -295,22 +320,24 @@ export function commandersOf(
     .map((commander) => copyRecord(commander));
 }
 
-/** Fresh copy incl. nested DNA (M031) and order params (M043: spreads alias nested). */
+/** Fresh copy incl. nested DNA (M031) and queued orders (M044: spreads alias nested). */
 function copyRecord(commander: CommanderRecord): CommanderRecord {
   let copy: CommanderRecord = { ...commander };
   if (commander.dna !== undefined) {
     copy = { ...copy, dna: { ...commander.dna } };
   }
-  if (commander.order !== undefined) {
-    copy = {
-      ...copy,
-      order:
-        commander.order.params === undefined
-          ? { ...commander.order }
-          : { ...commander.order, params: { ...commander.order.params } },
-    };
+  if (commander.orders !== undefined) {
+    copy = { ...copy, orders: commander.orders.map((order) => copyOrder(order)) };
   }
   return copy;
+}
+
+/** Fresh order copy incl. params (flat: one spread level suffices, M031 mold). */
+function copyOrder(order: CommanderOrder): CommanderOrder {
+  if (order.params === undefined) {
+    return { ...order };
+  }
+  return { ...order, params: { ...order.params } };
 }
 
 /**

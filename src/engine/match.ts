@@ -72,6 +72,14 @@ import {
   DEACTIVATE_TRANSITION,
   stateFlipProducer,
 } from './commander-state.js';
+import {
+  CANCEL_TRANSITION,
+  ISSUE_TRANSITION,
+  issueParamsRule,
+  orderCanceledProducer,
+  orderHandlers,
+  orderIssuedProducer,
+} from './order-state.js';
 import type { TerrainId } from './map.js';
 import { DEFAULT_TERRAIN_CONFIG, isTerrainConfig, modifiersFor } from './terrain.js';
 import {
@@ -254,6 +262,7 @@ export class Match {
     const economy = economyHandlers(economyConfig, buildingsConfig);
     const city = cityHandlers(buildingsConfig);
     const commanders = commanderHandlers();
+    const orders = orderHandlers();
     // M022: passable = finite move cost (Infinity/NaN block, fail-closed).
     const passable = (terrain: string): boolean =>
       Number.isFinite(modifiersFor(terrainConfig, terrain as TerrainId).move);
@@ -270,12 +279,19 @@ export class Match {
       ...economy,
       ...city,
       ...commanders,
+      ...orders,
       ...warfare,
       ...extra,
     ]);
     if (
       merged.size !==
-      world.size + economy.size + city.size + commanders.size + warfare.size + extra.size
+      world.size +
+        economy.size +
+        city.size +
+        commanders.size +
+        orders.size +
+        warfare.size +
+        extra.size
     ) {
       throw new Error('Match: duplicate handler names.');
     }
@@ -295,6 +311,8 @@ export class Match {
       [TRAIN_TRANSITION, trainParamsRule],
       [ACTIVATE_TRANSITION, commanderIdParamsRule],
       [DEACTIVATE_TRANSITION, commanderIdParamsRule],
+      [ISSUE_TRANSITION, issueParamsRule],
+      [CANCEL_TRANSITION, commanderIdParamsRule],
     ]);
     let dispatchCount = 0;
     const nextSeq = (): number => {
@@ -358,6 +376,8 @@ export class Match {
     producers.set(UPGRADE_TRANSITION, [createAiAssessmentProducer(this.unitsConfig)]);
     producers.set(ACTIVATE_TRANSITION, [stateFlipProducer]);
     producers.set(DEACTIVATE_TRANSITION, [stateFlipProducer]);
+    producers.set(ISSUE_TRANSITION, [orderIssuedProducer]);
+    producers.set(CANCEL_TRANSITION, [orderCanceledProducer]);
     // M030: sightings need before/after visibility, computed here (L4 may
     // import fog; the L2 producer cannot — L2↛L2). Either map absent (or
     // the maps differing, impossible live) yields silence, never a fault.

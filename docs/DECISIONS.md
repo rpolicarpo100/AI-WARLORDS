@@ -1232,3 +1232,34 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
 - CUTS: commander.* (lifecycle meta);
   city.upgrade (progressão player); world.noop
   (=ausência de ordem).
+
+## D-038 — Order queue transitions M044 (voto fifo-queue)
+
+- DECISION: amend M043 (`order?`→`orders?`,
+  absent≡vazia; `order` stale ignorado —
+  back-compat; cap 8 MAX_ORDERS_PER_COMMANDER,
+  orders.ts canonical + espelho). NOVO
+  `order-state.ts` (L2): `order.issue`
+  (owner-only; envelope L0 + cap; append FIFO,
+  duplicados aplicam) + `order.cancel`
+  (owner-only; limpa tudo; vazia→applied:false);
+  pre-rules wire-shape (issue {id,kind,params?};
+  cancel REUSA commander-id); factos
+  order.issued (tail-diff) + order.canceled
+  (cleared n); wiring Match. Semântica por
+  kind→M045 (L2↛L2 barra reuse das rules).
+- MOTIVE: voto fifo-queue + M029 (molde
+  lifecycle/producers) + city-queue (fila) +
+  behavior (locale americano: canceled).
+- ALTERNATIVES: slot-replace (rejeitado: voto);
+  validar por kind (rejeitado: L2↛L2; M045);
+  cancel-head/index (rejeitado: voto=limpa);
+  re-issue applied:false (rejeitado: posição
+  importa); orders required (rejeitado: churn
+  fixtures; absent≡vazia).
+- ADVANTAGES: fila sem invenção; factos exactos;
+  guard ignora stale; cancel reutiliza regra.
+- DISADVANTAGES: envelope admite inexequível
+  (M045); cap 8 ungrounded (own bound).
+- RISKS: baixo — mecânica; sem leitor→M045.
+- CUTS: execução (M045); cancel parcial.
