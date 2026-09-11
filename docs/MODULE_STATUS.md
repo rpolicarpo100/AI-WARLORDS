@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 26 (M001–M026)  |
-| `PLANNED`  | 139 (M027–M165) |
+| `VERIFIED` | 27 (M001–M027)  |
+| `PLANNED`  | 138 (M028–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -97,6 +97,11 @@ Checkpoints `VERIFIED`:
   1125/1125 testes, 100×4, zero produção.
   Fase 4 CLOSED (M021–M026 VERIFIED).
   Registo em `docs/modules/M026.md`.
+- **M027 @ 2026-09-11** — entidade Commander data-first
+  (roster id/owner/active + guards + queries + slot +
+  own-only); 1166/1166 testes, 100×4, sem comportamento.
+  Fase 5 aberta (AI Foundation).
+  Registo em `docs/modules/M027.md`.
 
 ---
 
@@ -155,7 +160,8 @@ Checkpoints `VERIFIED`:
 
 | Módulo(s) | Âmbito                                                              | Estado    |
 | --------- | ------------------------------------------------------------------- | --------- |
-| M027–M030 | AI Foundation (Commander Core, Perception, State, Discovery Engine) | `PLANNED` |
+| M027 | AI Foundation — Commander Core | `VERIFIED` |
+| M028–M030 | AI Foundation (Perception, State, Discovery Engine) | `PLANNED` |
 | M031–M034 | Personalidade (DNA, Personalities, Doctrines, Testing)              | `PLANNED` |
 | M035–M042 | Strategic AI                                                        | `PLANNED` |
 | M043–M045 | Player → AI Command                                                 | `PLANNED` |

@@ -581,3 +581,44 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
   (irrelevante — oráculo é o engine, invariantes é que contam).
 - IMPLEMENTATION: `sim/playtest.ts` + `src/engine/military.test.ts` (M026).
 - ESTADO: `ACCEPTED`.
+
+## D-020 — Commander Core: entidade data-first, sem comportamento (M027 pré-análise + voto)
+
+- DECISION: `commanders.ts` NOVO (LEAF L0, zero imports —
+  molde units.ts): `CommanderRecord {id, owner, active}`
+  (strings holder-id, NÃO PlayerId — L0↛L0; `active`
+  armazenado, semântica→M029+ — precedente M014→M015) +
+  `CommandersData {schemaVersion, nextId, commanders[]}`
+  (array+nextId, precedente units) + guards strictos (id
+  único, version exacta, nextId word) + `commandersOf`/
+  `commanderById` fail-soft com cópia (precedente cityOf).
+  `WorldState.commanders?` + init + guarda (molde units;
+  "Init-placed until M029+ lifecycle"). Percepção own-only
+  `commanders` em views.ts (molde units; inimigo fail-closed
+  →M028+; tripwire F-09 11/10). Suite `commanders.test.ts`
+  nova. Sem commission/transições/config/Match (data-first
+  votado; criação→dono do lifecycle — precedente M018→M019);
+  sem regra (shape cobre — shapeRule→isWorldState); sem sim/
+  página/cenário (init-placed; state.json intocado).
+- MOTIVE: voto explícito do utilizador 2026-09-11 (data-first
+  id/owner/active) + M021 (molde L0 zero-imports + WorldState
+  slot + own-only) + M016 (bounds espelhados, teste
+  cross-check) + M018 (data-sem-criação até M019) + M015
+  (tripwire F-09) + constraints (sem LLM, zero deps AI).
+- ALTERNATIVES: holder-keyed map (preterido — array+nextId
+  honra id/voto + precedente units); campo `name` (rejeitado:
+  conteúdo ungrounded; identidade profunda é M031+);
+  commissionCommander puro (rejeitado: "sem comportamento"
+  votado; mecânica vive L2 — precedente spawnUnit); orders/
+  queue (M043+ own); transições (rejeitado: data-first);
+  wiring Match (rejeitado: nada consome ainda).
+- ADVANTAGES: identidade strict+testada p/ M028+ se
+  agarrarem (sem player-ids soltos no stack AI); fail-closed
+  inimigo por construção; 100×4 por construção.
+- DISADVANTAGES: sem path de criação (init-only — honesto,
+  declarado); `active` sem leitor (forward-storage).
+- RISKS: baixo — dados puros + guards; residual: `active` sem
+  semântica até M029+ (declarado); init-only até lifecycle owner.
+- IMPLEMENTATION: `commanders.ts` + `world-state.ts` +
+  `views.ts` + `commanders.test.ts` + tripwire (M027).
+- ESTADO: `ACCEPTED`.

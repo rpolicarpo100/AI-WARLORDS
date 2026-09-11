@@ -1,6 +1,7 @@
 import { isPlayerId, type PlayerId, type TransitionHandler } from './authority.js';
 import { isBuildingsData, type BuildingsData } from './buildings.js';
 import { isCitiesData, type CitiesData } from './city.js';
+import { isCommandersData, type CommandersData } from './commanders.js';
 import { isExploredData, type ExploredData } from './explored.js';
 import { isMapData, type MapData } from './map.js';
 import { isStockpilesData, type StockpilesData } from './stockpiles.js';
@@ -57,6 +58,13 @@ export interface WorldState {
    * creation transitions; M022 movement bounds-checks cells.
    */
   readonly units?: UnitsData;
+  /**
+   * Commander roster (M027, optional compatible extension).
+   * Init-placed until a lifecycle owner exists (M018→M019 precedent);
+   * owners shape-checked only (M014 doctrine). Enemy commanders stay
+   * out of perception — fail-closed until M028+.
+   */
+  readonly commanders?: CommandersData;
 }
 
 export interface WorldStateInit {
@@ -68,6 +76,7 @@ export interface WorldStateInit {
   readonly buildings?: BuildingsData;
   readonly cities?: CitiesData;
   readonly units?: UnitsData;
+  readonly commanders?: CommandersData;
 }
 
 /**
@@ -138,6 +147,10 @@ export function isWorldState(value: unknown): value is WorldState {
   if (units !== undefined && !isUnitsData(units)) {
     return false;
   }
+  const commanders = fields['commanders'];
+  if (commanders !== undefined && !isCommandersData(commanders)) {
+    return false;
+  }
   return true;
 }
 
@@ -152,6 +165,7 @@ export function createWorldState(init: WorldStateInit): WorldState {
     ...(init.buildings === undefined ? {} : { buildings: init.buildings }),
     ...(init.cities === undefined ? {} : { cities: init.cities }),
     ...(init.units === undefined ? {} : { units: init.units }),
+    ...(init.commanders === undefined ? {} : { commanders: init.commanders }),
   };
   if (!isWorldState(candidate)) {
     throw new Error('createWorldState: invalid initial world.');

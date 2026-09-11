@@ -83,6 +83,7 @@ describe('perceive (integration: knowledge assembly)', () => {
       buildings: { 'town-center': 0, house: 0, storage: 0, barracks: 0, wall: 0, tower: 0 },
       city: { level: 1, queue: [] },
       units: [],
+      commanders: [],
       map: { width: 3, height: 3, visible: { 4: 'forest', 8: 'mountain' }, explored: [0] },
     });
   });
@@ -136,6 +137,7 @@ describe('perceive (integration: knowledge assembly)', () => {
       buildings: { 'town-center': 0, house: 0, storage: 0, barracks: 0, wall: 0, tower: 0 },
       city: { level: 1, queue: [] },
       units: [],
+      commanders: [],
     });
     expect('map' in known).toBe(false);
   });
@@ -210,6 +212,7 @@ describe('F-09 key tripwire (updated M015: perception keys)', () => {
     expect(Object.keys(perceive(state, P1, { p1: [4] })).sort()).toEqual([
       'buildings',
       'city',
+      'commanders',
       'exploredCells',
       'map',
       'players',
@@ -223,6 +226,7 @@ describe('F-09 key tripwire (updated M015: perception keys)', () => {
     expect(Object.keys(perceive(mapless, P1)).sort()).toEqual([
       'buildings',
       'city',
+      'commanders',
       'exploredCells',
       'players',
       'stockpile',

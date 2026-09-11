@@ -1,6 +1,7 @@
 import { freezeState, type PlayerId } from './authority.js';
 import { countsOf, type BuildingCounts } from './buildings.js';
 import { cityOf, type CityState } from './city.js';
+import { commandersOf, type CommanderRecord } from './commanders.js';
 import { isCellIndex } from './explored.js';
 import type { TerrainId } from './map.js';
 import { stockpileOf, type StockpileAmounts } from './stockpiles.js';
@@ -58,6 +59,11 @@ export interface PerceivedState {
    * fail-closed until an owning module (M028+; enemy scout is vision).
    */
   readonly units: readonly UnitInstance[];
+  /**
+   * Own commanders (M027; [] when absent). Other holders' commanders
+   * stay out — fail-closed until an owning module (M028+).
+   */
+  readonly commanders: readonly CommanderRecord[];
   /** Absent when the world is mapless (no map context ⇒ no cells). */
   readonly map?: PerceivedMap;
 }
@@ -146,6 +152,7 @@ export function perceive(
     buildings: countsOf(state.buildings, viewer),
     city: cityOf(state.cities, viewer),
     units: unitsOf(state.units, viewer),
+    commanders: commandersOf(state.commanders, viewer),
     ...(map === undefined
       ? {}
       : { map: { width: map.width, height: map.height, visible, explored } }),
