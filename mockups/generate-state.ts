@@ -107,6 +107,8 @@ function main(): void {
     }),
     economyConfig: scenarioEconomy(),
     buildingsConfig: scenarioBuildings(),
+    // Scenario fixture: the 16-keyframe chronicle spends 14 p1 prompts.
+    promptsPerPlayer: 20,
   });
 
   const snapshots = [match.getSnapshot()];
@@ -121,15 +123,15 @@ function main(): void {
     ['r3', 'p1', 'unit.move', { id: 'u0', col: 4, row: 2 }],
     ['r4', 'p1', 'economy.gather', { col: 4, row: 2 }],
     ['r5', 'p1', 'city.build', { type: 'house' }],
-    ['r6', 'p1', 'match.advance', {}],
+    ['r6', 'p1', 'world.noop', {}],
     ['r7', 'p1', 'unit.move', { id: 'u1', col: 4, row: 3 }],
     ['r8', 'p1', 'city.build', { type: 'tower' }],
-    ['r9', 'p1', 'match.advance', {}],
+    ['r9', 'p1', 'world.noop', {}],
     ['r10', 'p2', 'unit.move', { id: 'u3', col: 7, row: 3 }],
     ['r11', 'p1', 'unit.move', { id: 'u2', col: 2, row: 1 }],
-    ['r12', 'p1', 'match.advance', {}],
+    ['r12', 'p1', 'world.noop', {}],
     ['r13', 'p1', 'city.upgrade', {}],
-    ['r14', 'p1', 'match.advance', {}],
+    ['r14', 'p1', 'world.noop', {}],
     ['r15', 'p1', 'economy.gather', { col: 3, row: 2 }],
   ];
   for (const [rid, who, type, payload] of script) {
@@ -194,7 +196,7 @@ function main(): void {
   };
   writeFileSync(new URL('./state.json', import.meta.url), JSON.stringify(out, null, 1));
   console.log(
-    `scenario ok: ${snapshots.length} snapshots, ${out.events.length} events, tick=${final.tick}`,
+    `scenario ok: ${snapshots.length} snapshots, ${out.events.length} events, prompts=${JSON.stringify(final.prompts?.remaining)}`,
   );
 }
 

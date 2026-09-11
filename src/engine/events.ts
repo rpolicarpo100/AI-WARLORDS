@@ -18,14 +18,13 @@ export type EventPriority = 'low' | 'normal' | 'high' | 'critical';
 
 export interface GameEvent {
   readonly seq: number;
-  readonly tick: number;
   readonly revision: number;
   readonly type: string;
   readonly priority: EventPriority;
   readonly payload: unknown;
 }
 
-/** Unsequenced fact returned by producers; the emitter stamps seq/tick/revision. */
+/** Unsequenced fact returned by producers; the emitter stamps seq/revision. */
 export interface EventInput {
   readonly type: string;
   readonly priority: EventPriority;
@@ -42,16 +41,13 @@ export interface ProducerInput {
 
 export type EventProducer = (input: ProducerInput) => readonly EventInput[];
 
-function tickProducer(input: ProducerInput): readonly EventInput[] {
-  return [{ type: 'match.advanced', priority: 'low', payload: { tick: input.after.tick } }];
-}
-
 /**
- * Built-in producers by transition name. `world.noop` is deliberately
- * absent: silence is a feature (a noop emits nothing).
+ * Built-in producers by transition name. Empty today: `world.noop` is
+ * deliberately absent (silence is a feature) and `match.advance` retired
+ * with ticks (PROMPTS).
  */
 export function matchProducers(): Map<string, readonly EventProducer[]> {
-  const entries: Array<[string, readonly EventProducer[]]> = [['match.advance', [tickProducer]]];
+  const entries: Array<[string, readonly EventProducer[]]> = [];
   return new Map(entries);
 }
 
@@ -59,12 +55,10 @@ export function matchStartedEvent(
   seed: number,
   players: readonly PlayerId[],
   ruleset: { readonly id: string; readonly version: number },
-  tick: number,
   map?: { readonly id: string; readonly version: number },
 ): GameEvent {
   return freezeState({
     seq: 1,
-    tick,
     revision: 0,
     type: 'match.started',
     priority: 'normal',
@@ -75,13 +69,11 @@ export function matchStartedEvent(
 export function matchFinishedEvent(
   outcome: VerdictOutcome,
   condition: string,
-  tick: number,
   revision: number,
   seq: number,
 ): GameEvent {
   return freezeState({
     seq,
-    tick,
     revision,
     type: 'match.finished',
     priority: 'high',
@@ -109,14 +101,12 @@ function surrogate(
   transition: string,
   producerIndex: number,
   thrown: unknown,
-  tick: number,
   revision: number,
   seq: number,
 ): GameEvent {
   const message = thrown instanceof Error ? thrown.message : 'non-error thrown';
   return freezeState({
     seq,
-    tick,
     revision,
     type: 'system.event-fault',
     priority: 'high',
@@ -127,7 +117,6 @@ function surrogate(
 export function runProducers(
   input: ProducerInput,
   producers: readonly EventProducer[],
-  tick: number,
   revision: number,
   baseSeq: number,
 ): GameEvent[] {
@@ -140,7 +129,6 @@ export function runProducers(
         emitted.push(
           freezeState({
             seq: baseSeq + emitted.length,
-            tick,
             revision,
             type: fact.type,
             priority: fact.priority,
@@ -149,7 +137,7 @@ export function runProducers(
         );
       }
     } catch (error) {
-      emitted.push(surrogate(input.type, index, error, tick, revision, baseSeq + emitted.length));
+      emitted.push(surrogate(input.type, index, error, revision, baseSeq + emitted.length));
     }
   }
   return emitted;

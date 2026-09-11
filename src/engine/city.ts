@@ -47,14 +47,14 @@ export interface CitiesData {
 export const MAX_HOLDER_ID_CHARS = 64;
 
 /** Mirrors MAX_UINT32 (rng.js). Leaf: deliberately not imported. */
-const MAX_TICKS = 0xffffffff;
+const MAX_PROMPTS = 0xffffffff;
 
 function isHolderId(value: unknown): value is string {
   return typeof value === 'string' && value.length >= 1 && value.length <= MAX_HOLDER_ID_CHARS;
 }
 
-function isTicks(value: unknown): value is number {
-  return typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= MAX_TICKS;
+function isPrompts(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= MAX_PROMPTS;
 }
 
 export function isQueueBuilding(value: unknown): value is QueueBuilding {
@@ -66,7 +66,7 @@ export function isQueueItem(value: unknown): value is QueueItem {
     return false;
   }
   const fields = value as Record<string, unknown>;
-  return isQueueBuilding(fields['type']) && isTicks(fields['remaining']);
+  return isQueueBuilding(fields['type']) && isPrompts(fields['remaining']);
 }
 
 export function isCityState(value: unknown): value is CityState {

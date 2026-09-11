@@ -25,6 +25,7 @@ import { MAX_UINT32 } from './rng.js';
 import {
   createWorldValidator,
   noParamsRule,
+  promptsAvailableRule,
   wrapWithValidation,
   type PreRule,
   type RngHandler,
@@ -73,6 +74,7 @@ import {
   warfareHandlers,
   type UnitTreasury,
 } from './warfare.js';
+import { seedPrompts, spendPrompt } from './prompts.js';
 
 declare const matchBrand: unique symbol;
 declare const seedBrand: unique symbol;
@@ -94,6 +96,9 @@ export function isSeed(value: unknown): value is Seed {
 
 export const RULESET_VERSION = 1;
 
+/** Default per-player prompt budget (D-022: ~one 15-minute game). */
+export const DEFAULT_PROMPTS_PER_PLAYER = 10;
+
 export interface MatchRuleset {
   readonly id: 'standard';
   readonly version: typeof RULESET_VERSION;
@@ -105,7 +110,6 @@ export const STANDARD_RULESET: MatchRuleset = freezeState(standardRuleset);
 export interface TimelineEntry {
   readonly seq: number;
   readonly revision: number;
-  readonly tick: number;
   readonly requestId: string;
   readonly playerId: string;
   readonly type: string;
@@ -114,54 +118,13 @@ export interface TimelineEntry {
   readonly stateHash: string;
 }
 
-/**
- * M005 registers time progression only; M019 completes constructions
- * inside advance (cityless identity preserved). Seams: M017 economy
- * config, M019 buildings config. All other domain transitions arrive
- * with their modules (via `extraHandlers`). Payload is deliberately
- * ignored by the handler itself; M006 rejects non-empty payloads to
- * no-param handlers via the no-params pre-rule (fail loud on caller
- * mistakes).
- */
-export function matchHandlers(): Map<string, RngHandler<WorldState>> {
-  const entries: Array<[string, RngHandler<WorldState>]> = [
-    [
-      'match.advance',
-      (ctx) => {
-        const next = ctx.state.tick + 1;
-        // M019: time completes constructions. Cityless matches take the
-        // original path untouched (M005 identity — seal stays green).
-        if (ctx.state.cities === undefined) {
-          return {
-            applied: true,
-            state: { ...ctx.state, tick: next },
-            summary: `tick=${next}`,
-          };
-        }
-        const built = completeConstructions(ctx.state.cities, ctx.state.buildings);
-        return {
-          applied: true,
-          state: {
-            ...ctx.state,
-            tick: next,
-            cities: built.cities,
-            ...(built.buildings === undefined ? {} : { buildings: built.buildings }),
-          },
-          summary: `tick=${next}`,
-        };
-      },
-    ],
-  ];
-  return new Map(entries);
-}
-
 export interface MatchInit {
   readonly matchId?: string;
   readonly seed: unknown;
   readonly ruleset: unknown;
   readonly players: readonly PlayerId[];
   readonly initialState: unknown;
-  readonly maxTicks?: unknown;
+  readonly promptsPerPlayer?: unknown;
   readonly extraHandlers?: ReadonlyMap<string, RngHandler<WorldState>>;
   readonly extraProducers?: ReadonlyMap<string, readonly EventProducer[]>;
   readonly extraConditions?: readonly VictoryCondition[];
@@ -176,8 +139,8 @@ export type MatchDispatchOutcome =
 
 /**
  * Deterministic match aggregate: provenance (id/seed/ruleset/players/
- * initial) + owned kernel + timeline (kernel log enriched with tick and
- * state hash, 1:1). The kernel never escapes: every dispatch flows through
+ * initial) + owned kernel + timeline (kernel log enriched with revision
+ * and state hash, 1:1). The kernel never escapes: every dispatch flows through
  * `Match.dispatch`, which keeps the timeline coherent by construction.
  * M006 owns the registry: entries are validated at registration, and every
  * handler runs wrapped (pre-rules, per-dispatch RNG, post-invariants).
@@ -208,13 +171,13 @@ export class Match {
       throw new Error('Match: invalid seed (expected uint32).');
     }
     this.seed = init.seed;
-    let maxTicks: number | undefined;
-    if (init.maxTicks === undefined) {
-      maxTicks = undefined;
-    } else if (!isSeed(init.maxTicks) || init.maxTicks === 0) {
-      throw new Error('Match: invalid maxTicks (expected positive uint32).');
+    let promptsPerPlayer: number;
+    if (init.promptsPerPlayer === undefined) {
+      promptsPerPlayer = DEFAULT_PROMPTS_PER_PLAYER;
+    } else if (!isSeed(init.promptsPerPlayer) || init.promptsPerPlayer === 0) {
+      throw new Error('Match: invalid promptsPerPlayer (expected positive uint32).');
     } else {
-      maxTicks = init.maxTicks;
+      promptsPerPlayer = init.promptsPerPlayer;
     }
     const ruleset = init.ruleset;
     if (typeof ruleset !== 'object' || ruleset === null) {
@@ -243,6 +206,11 @@ export class Match {
     if (stateIds.size !== init.players.length || !init.players.every((id) => stateIds.has(id))) {
       throw new Error('Match: roster does not match initialState players.');
     }
+    // PROMPTS: seed an absent budget (present slots are respected as-is).
+    const seeded: WorldState =
+      init.initialState.prompts === undefined
+        ? { ...init.initialState, prompts: seedPrompts(init.players, promptsPerPlayer) }
+        : init.initialState;
     const economyConfig = init.economyConfig ?? DEFAULT_ECONOMY_CONFIG;
     if (!isEconomyConfig(economyConfig)) {
       throw new Error('Match: invalid economy config.');
@@ -260,7 +228,6 @@ export class Match {
       throw new Error('Match: invalid units config.');
     }
     const world = worldHandlers();
-    const match = matchHandlers();
     const economy = economyHandlers(economyConfig, buildingsConfig);
     const city = cityHandlers(buildingsConfig);
     // M022: passable = finite move cost (Infinity/NaN block, fail-closed).
@@ -276,16 +243,12 @@ export class Match {
     const extra = init.extraHandlers ?? new Map<string, RngHandler<WorldState>>();
     const merged = new Map<string, RngHandler<WorldState>>([
       ...world,
-      ...match,
       ...economy,
       ...city,
       ...warfare,
       ...extra,
     ]);
-    if (
-      merged.size !==
-      world.size + match.size + economy.size + city.size + warfare.size + extra.size
-    ) {
+    if (merged.size !== world.size + economy.size + city.size + warfare.size + extra.size) {
       throw new Error('Match: duplicate handler names.');
     }
     const baseValidator = createWorldValidator();
@@ -295,7 +258,7 @@ export class Match {
       ...baseValidator,
       post: [...baseValidator.post, createEconomyRule(buildingsConfig)],
     };
-    const noParamHandlers = new Set([...world.keys(), ...match.keys(), UPGRADE_TRANSITION]);
+    const noParamHandlers = new Set([...world.keys(), UPGRADE_TRANSITION]);
     const paramRules = new Map<string, PreRule>([
       [GATHER_TRANSITION, gatherParamsRule],
       [BUILD_TRANSITION, buildParamsRule],
@@ -316,13 +279,29 @@ export class Match {
       const paramRule = paramRules.get(name);
       let pre: readonly PreRule[];
       if (paramRule !== undefined) {
-        pre = [paramRule, ...validator.pre];
+        pre = [promptsAvailableRule, paramRule, ...validator.pre];
       } else if (noParamHandlers.has(name)) {
-        pre = [noParamsRule(name), ...validator.pre];
+        pre = [promptsAvailableRule, noParamsRule(name), ...validator.pre];
       } else {
-        pre = validator.pre;
+        pre = [promptsAvailableRule, ...validator.pre];
       }
-      validated.set(name, wrapWithValidation(handler, { ...validator, pre }, this.seed, nextSeq));
+      const postStep = (_before: WorldState, caller: PlayerId, applied: WorldState): WorldState => {
+        const prompts = spendPrompt(applied.prompts, caller);
+        if (applied.cities === undefined) {
+          return { ...applied, prompts };
+        }
+        const built = completeConstructions(applied.cities, applied.buildings, caller);
+        return {
+          ...applied,
+          prompts,
+          cities: built.cities,
+          ...(built.buildings === undefined ? {} : { buildings: built.buildings }),
+        };
+      };
+      validated.set(
+        name,
+        wrapWithValidation(handler, { ...validator, pre }, this.seed, nextSeq, postStep),
+      );
     }
     const producers = new Map<string, readonly EventProducer[]>(matchProducers());
     producers.set(GATHER_TRANSITION, [gatherProducer]);
@@ -331,49 +310,42 @@ export class Match {
     producers.set(ATTACK_TRANSITION, [attackProducer]);
     producers.set(TRAIN_TRANSITION, [trainProducer]);
     const extraProducers = init.extraProducers ?? new Map<string, readonly EventProducer[]>();
-    // (M019) The completion producer rides the same append path as caller extras:
-    // structurally after matchAdvanced, ahead of caller extras.
-    const orderedExtras: Array<[string, readonly EventProducer[]]> = [
-      ['match.advance', [completionProducer]],
-      ...extraProducers,
-    ];
+    // (PROMPTS) The completion producer rides every transition: domain
+    // producers first, completions second, caller extras last.
+    for (const name of validated.keys()) {
+      producers.set(name, [...(producers.get(name) ?? []), completionProducer]);
+    }
+    const orderedExtras: Array<[string, readonly EventProducer[]]> = [...extraProducers];
     for (const [name, extra] of orderedExtras) {
       producers.set(name, [...(producers.get(name) ?? []), ...extra]);
     }
     this.producers = producers;
     const extraConditions: readonly VictoryCondition[] = init.extraConditions ?? [];
-    this.conditions = [...extraConditions, ...matchConditions(maxTicks)];
+    this.conditions = [...extraConditions, ...matchConditions()];
     this.players = freezeState([...init.players]);
     this.kernel = new AuthorityKernel<WorldState>({
       players: init.players,
-      initialState: init.initialState,
+      initialState: seeded,
       handlers: validated,
     });
-    const initialMap = init.initialState.map;
+    const initialMap = seeded.map;
     this.events.push(
       matchStartedEvent(
         this.seed,
         this.players,
         this.ruleset,
-        init.initialState.tick,
         initialMap === undefined
           ? undefined
           : { id: initialMap.id, version: initialMap.schemaVersion },
       ),
     );
     const genesis = evaluateVictory(this.conditions, {
-      state: init.initialState,
+      state: seeded,
       revision: 0,
     });
     if (genesis.status === 'finished') {
       this.events.push(
-        matchFinishedEvent(
-          genesis.outcome,
-          genesis.condition,
-          init.initialState.tick,
-          0,
-          this.events.length + 1,
-        ),
+        matchFinishedEvent(genesis.outcome, genesis.condition, 0, this.events.length + 1),
       );
     }
     Object.freeze(this);
@@ -400,7 +372,9 @@ export class Match {
         // validation inside `kernel.dispatch` (this cast documents the seam).
         const validated = raw as ClientRequest;
         const after = this.kernel.getSnapshot();
-        const producers = this.producers.get(validated.type) ?? [];
+        // Total lookup: kernel-accepted ⟹ registered ⟹ the universal
+        // loop added an entry (same-keys proof as the cast above).
+        const producers = this.producers.get(validated.type) as readonly EventProducer[];
         const emitted = runProducers(
           {
             type: validated.type,
@@ -410,7 +384,6 @@ export class Match {
             after,
           },
           producers,
-          after.tick,
           outcome.revision,
           this.events.length + 1,
         );
@@ -424,7 +397,6 @@ export class Match {
             matchFinishedEvent(
               verdict.outcome,
               verdict.condition,
-              after.tick,
               outcome.revision,
               this.events.length + 1,
             ),
@@ -447,10 +419,6 @@ export class Match {
 
   getRevision(): number {
     return this.kernel.getRevision();
-  }
-
-  getTick(): number {
-    return this.kernel.getSnapshot().tick;
   }
 
   getStateHash(): string {
@@ -484,7 +452,6 @@ export class Match {
       const timelineEntry: TimelineEntry = {
         seq: this.timeline.length + 1,
         revision: entry.revision,
-        tick: snapshot.tick,
         requestId: entry.requestId,
         playerId: entry.playerId,
         type: entry.type,

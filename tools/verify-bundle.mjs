@@ -68,15 +68,15 @@ const SCRIPT = JSON.stringify([
   ['r3', 'p1', 'unit.move', { id: 'u0', col: 4, row: 2 }],
   ['r4', 'p1', 'economy.gather', { col: 4, row: 2 }],
   ['r5', 'p1', 'city.build', { type: 'house' }],
-  ['r6', 'p1', 'match.advance', {}],
+  ['r6', 'p1', 'world.noop', {}],
   ['r7', 'p1', 'unit.move', { id: 'u1', col: 4, row: 3 }],
   ['r8', 'p1', 'city.build', { type: 'tower' }],
-  ['r9', 'p1', 'match.advance', {}],
+  ['r9', 'p1', 'world.noop', {}],
   ['r10', 'p2', 'unit.move', { id: 'u3', col: 7, row: 3 }],
   ['r11', 'p1', 'unit.move', { id: 'u2', col: 2, row: 1 }],
-  ['r12', 'p1', 'match.advance', {}],
+  ['r12', 'p1', 'world.noop', {}],
   ['r13', 'p1', 'city.upgrade', {}],
-  ['r14', 'p1', 'match.advance', {}],
+  ['r14', 'p1', 'world.noop', {}],
   ['r15', 'p1', 'economy.gather', { col: 3, row: 2 }],
 ]);
 
@@ -87,7 +87,7 @@ const resultText = vm.runInContext(
   const mk = (text) => {
     const init = JSON.parse(text);
     const match = new E.Match({ seed: 7, ruleset: E.STANDARD_RULESET, players: ['p1', 'p2'],
-      initialState: E.createWorldState({ players: ['p1', 'p2'], tick: init.tick, map: init.map,
+      initialState: E.createWorldState({ players: ['p1', 'p2'], prompts: init.prompts, map: init.map,
         stockpiles: init.stockpiles, buildings: init.buildings, cities: init.cities, units: init.units }),
       economyConfig: JSON.parse(economyText), buildingsConfig: JSON.parse(buildingsText), unitsConfig: JSON.parse(unitsText) });
     return { match, s1: match.join('p1'), s2: match.join('p2') };
@@ -104,7 +104,7 @@ const resultText = vm.runInContext(
   const badMove = match.dispatch(s1, E.markUntrusted({ requestId: 'bad', playerId: 'p1', type: 'unit.move', payload: { id: 'u0', col: 0, row: 0 } }));
   // Stage 2: fork from a middle snapshot (Take-Command hydration recipe).
   const fork = mk(midText);
-  const adv = fork.match.dispatch(fork.s1, E.markUntrusted({ requestId: 'f1', playerId: 'p1', type: 'match.advance', payload: {} }));
+  const stp = fork.match.dispatch(fork.s1, E.markUntrusted({ requestId: 'f1', playerId: 'p1', type: 'world.noop', payload: {} }));
   const frej = fork.match.dispatch(fork.s1, E.markUntrusted({ requestId: 'f2', playerId: 'p1', type: 'unit.move', payload: { id: 'u0', col: 0, row: 0 } }));
   const fsnap = fork.match.getSnapshot();
   const seen = E.computeVisibility(fsnap.map, (fsnap.units.units || []).filter((u) => u.owner === 'p1')
@@ -119,12 +119,14 @@ const resultText = vm.runInContext(
   const bsnap = bat.match.getSnapshot();
   const bu4 = (bsnap.units.units || []).find((u) => u.id === 'u4');
   const battEvents = bat.match.getEvents();
-  const lastBattle = battEvents[battEvents.length - 1] || {};
+  // The attack also completes p1's queued house (completion rides every
+  // dispatch) — pin the attack fact itself, not the trailing completion.
+  const atkEvent = battEvents.find((e) => e.type === 'unit.attacked') || {};
   return JSON.stringify({ exports: Object.keys(E), snaps, outcomes, events: match.getEvents(), badMove,
-    fork: { advStatus: adv.status, frejStatus: frej.status, frejReason: frej.reason, seenN: (seen.p1 || []).length },
+    fork: { stepStatus: stp.status, frejStatus: frej.status, frejReason: frej.reason, seenN: (seen.p1 || []).length },
     battle: { nb: nb33, riverMove: String(riverMove), marchStatus: march.status, atkStatus: atk.status,
-      atkReason: atk.reason || '', u4hp: bu4 && bu4.hp, lastType: lastBattle.type,
-      lastDmg: (lastBattle.payload || {}).damage } });
+      atkReason: atk.reason || '', u4hp: bu4 && bu4.hp, atkType: atkEvent.type,
+      atkDmg: (atkEvent.payload || {}).damage } });
 })()`,
   sandbox,
 );
@@ -154,7 +156,7 @@ r.events.forEach((e, k) => {
 });
 if (r.badMove.status !== 'rejected' || !r.badMove.reason)
   fails.push('illegal move not rejected: ' + JSON.stringify(r.badMove));
-if (r.fork.advStatus !== 'applied') fails.push('fork advance not applied: ' + r.fork.advStatus);
+if (r.fork.stepStatus !== 'applied') fails.push('fork step not applied: ' + r.fork.stepStatus);
 if (r.fork.frejStatus !== 'rejected' || !r.fork.frejReason)
   fails.push('fork illegal move not rejected: ' + JSON.stringify(r.fork));
 if (!(r.fork.seenN > 0)) fails.push('fork fog empty');
@@ -167,7 +169,7 @@ if (r.battle.marchStatus !== 'applied')
 if (r.battle.atkStatus !== 'applied')
   fails.push('battle attack not applied: ' + JSON.stringify(r.battle));
 if (r.battle.u4hp !== 8) fails.push('battle u4 hp: ' + r.battle.u4hp);
-if (r.battle.lastType !== 'unit.attacked' || r.battle.lastDmg !== 4)
+if (r.battle.atkType !== 'unit.attacked' || r.battle.atkDmg !== 4)
   fails.push('battle event: ' + JSON.stringify(r.battle));
 
 if (fails.length > 0) {
@@ -178,9 +180,9 @@ console.log(
   `bundle replay identical: ${r.snaps.length} snapshots, ${r.outcomes.length} outcomes, ${r.events.length} events`,
 );
 console.log(
-  `fork test: advance=${r.fork.advStatus}, illegal=${r.fork.frejStatus} ("${r.fork.frejReason}"), fog cells=${r.fork.seenN}`,
+  `fork test: step=${r.fork.stepStatus}, illegal=${r.fork.frejStatus} ("${r.fork.frejReason}"), fog cells=${r.fork.seenN}`,
 );
 console.log(
-  `battle test: march=${r.battle.marchStatus}, attack=${r.battle.atkStatus}, u4hp=${r.battle.u4hp}, event=${r.battle.lastType} dmg=${r.battle.lastDmg}, river=${r.battle.riverMove}`,
+  `battle test: march=${r.battle.marchStatus}, attack=${r.battle.atkStatus}, u4hp=${r.battle.u4hp}, event=${r.battle.atkType} dmg=${r.battle.atkDmg}, river=${r.battle.riverMove}`,
 );
 console.log('BUNDLE VERIFY PASS');

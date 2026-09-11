@@ -9,6 +9,7 @@ import { exploredCells, explorationStatus, isExplored, markExplored } from './ex
 import { computeVisibility } from './fog.js';
 import { type MapData, type MapId, type TerrainId } from './map.js';
 import { Match, STANDARD_RULESET, type MatchInit } from './match.js';
+import { seedPrompts, spendPrompt } from './prompts.js';
 import { createWorldValidator, wrapWithValidation, type RngHandler } from './validation.js';
 import { toAiPerception } from './views.js';
 import { createWorldState, isWorldState, type WorldState } from './world-state.js';
@@ -46,9 +47,22 @@ function raw(value: unknown): Untrusted<ClientRequest> {
 function baseWorld(): WorldState {
   return createWorldState({
     players: [P1, P2],
+    prompts: seedPrompts([P1, P2], 10),
     map: openMap(3),
     explored: { schemaVersion: 1, viewers: { p1: [0, 4] } },
   });
+}
+
+/**
+ * Match post-step minus completions (cityless-identical): direct-wrapper
+ * tests mirror Match by spending exactly one prompt per applied outcome.
+ */
+function spendPostStep(
+  _before: WorldState,
+  caller: PlayerId,
+  applied: WorldState,
+): WorldState {
+  return { ...applied, prompts: spendPrompt(applied.prompts, caller) };
 }
 
 describe('markExplored (integration)', () => {
@@ -183,6 +197,7 @@ describe('explored-monotonic (security)', () => {
       createWorldValidator(),
       7,
       () => 1,
+      spendPostStep,
     );
   }
 
@@ -196,14 +211,20 @@ describe('explored-monotonic (security)', () => {
       createWorldValidator(),
       7,
       () => 1,
+      spendPostStep,
     );
     expect(grow({ state: before, caller: P1, params: {} }).applied).toBe(true);
-    const plain = createWorldState({ players: [P1, P2], map: openMap(3) });
+    const plain = createWorldState({
+      players: [P1, P2],
+      prompts: seedPrompts([P1, P2], 10),
+      map: openMap(3),
+    });
     const arrive = wrapWithValidation(
       () => ({ applied: true, state: { ...plain, explored: grown }, summary: 'arrive' }),
       createWorldValidator(),
       7,
       () => 1,
+      spendPostStep,
     );
     expect(arrive({ state: plain, caller: P1, params: {} }).applied).toBe(true);
   });
@@ -214,8 +235,8 @@ describe('explored-monotonic (security)', () => {
       () => {
         const wiped: WorldState = {
           schemaVersion: before.schemaVersion,
-          tick: before.tick,
           players: before.players,
+          ...(before.prompts === undefined ? {} : { prompts: before.prompts }),
           ...(before.map === undefined ? {} : { map: before.map }),
         };
         return { applied: true, state: wiped, summary: 'wipe' };
@@ -223,6 +244,7 @@ describe('explored-monotonic (security)', () => {
       createWorldValidator(),
       7,
       () => 1,
+      spendPostStep,
     );
     expect(() => wipe({ state: before, caller: P1, params: {} })).toThrow(/explored-monotonic/);
   });
@@ -235,6 +257,7 @@ describe('explored-monotonic (security)', () => {
       createWorldValidator(),
       7,
       () => 1,
+      spendPostStep,
     );
     expect(() => shrink({ state: before, caller: P1, params: {} })).toThrow(/explored-monotonic/);
     const swapped: ExploredData = { schemaVersion: 1, viewers: { p1: [0, 5] } };
@@ -243,6 +266,7 @@ describe('explored-monotonic (security)', () => {
       createWorldValidator(),
       7,
       () => 1,
+      spendPostStep,
     );
     expect(() => swap({ state: before, caller: P1, params: {} })).toThrow(/explored-monotonic/);
   });
@@ -255,11 +279,12 @@ describe('explored-monotonic (security)', () => {
       createWorldValidator(),
       7,
       () => 1,
+      spendPostStep,
     );
     expect(() => remove({ state: before, caller: P1, params: {} })).toThrow(/explored-monotonic/);
   });
 
-  it('advance preserves explored by reference through a real Match (E2E)', () => {
+  it('applied dispatch preserves explored through a real Match (E2E)', () => {
     const init: MatchInit = {
       seed: 5,
       ruleset: STANDARD_RULESET,
@@ -270,10 +295,11 @@ describe('explored-monotonic (security)', () => {
     const s1 = match.join(P1);
     const outcome = match.dispatch(
       s1,
-      raw({ requestId: 'r1', playerId: P1, type: 'match.advance', payload: {} }),
+      raw({ requestId: 'r1', playerId: P1, type: 'world.noop', payload: {} }),
     );
     expect(outcome.status).toBe('applied');
     expect(match.getSnapshot().explored).toEqual({ schemaVersion: 1, viewers: { p1: [0, 4] } });
+    expect(match.getSnapshot().prompts?.remaining).toEqual({ p1: 9, p2: 10 });
   });
 
   it('shrinking handler faults HANDLER_FAULT with state untouched (E2E)', () => {

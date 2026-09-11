@@ -69,7 +69,7 @@ interface GameStats {
   kills: number;
   damageDealt: number;
   trained: number;
-  ticks: number;
+  promptsLeft: number;
   finalPiles: Record<string, Record<string, number>>;
   finalBuildings: Record<string, Record<string, number>>;
   explored: number;
@@ -108,6 +108,9 @@ function scenarioFor(seed: number): Match {
       units: tiled.units,
     }),
     unitsConfig: DRILL_UNITS,
+    // Drill fixture budget (60 steps/game ≈ 30 prompts/side; exhaustion is
+    // drilled in unit tests, not here — D-022).
+    promptsPerPlayer: 200,
   });
 }
 
@@ -150,7 +153,7 @@ function candidates(
     }
   }
   out.push({ type: 'city.upgrade', payload: {} });
-  out.push({ type: 'match.advance', payload: {} });
+  out.push({ type: 'world.noop', payload: {} });
   // Shuffle so the bot policy varies per game/step.
   for (let i = out.length - 1; i > 0; i -= 1) {
     const j = Math.floor(rnd() * (i + 1));
@@ -161,10 +164,10 @@ function candidates(
 
 function checkInvariants(
   snap: ReturnType<Match['getSnapshot']>,
-  prev: { explored: number; events: number; tick: number; nextId: number },
+  prev: { explored: number; events: number; promptsLeft: number; nextId: number },
   violations: string[],
   where: string,
-): { explored: number; events: number; tick: number; nextId: number } {
+): { explored: number; events: number; promptsLeft: number; nextId: number } {
   const piles = snap.stockpiles?.stockpiles as Record<string, Record<string, number>> | undefined;
   for (const [pid, pile] of Object.entries(piles ?? {})) {
     for (const [res, v] of Object.entries(pile)) {
@@ -192,11 +195,16 @@ function checkInvariants(
   }
   const explored = (snap as unknown as { exploredCount?: number }).exploredCount;
   void explored;
-  const tick = snap.tick ?? 0;
-  if (tick < prev.tick) violations.push(`${where}: tick went backwards ${prev.tick}->${tick}`);
+  const remaining = snap.prompts?.remaining ?? {};
+  const promptsLeft = Object.values(remaining).reduce((a, b) => a + b, 0);
+  if (promptsLeft > prev.promptsLeft) {
+    violations.push(
+      `${where}: prompts refilled ${prev.promptsLeft}->${promptsLeft}`,
+    );
+  }
   // Snapshot must survive a JSON round-trip (persistence safety).
   JSON.parse(JSON.stringify(snap));
-  return { explored: prev.explored, events: prev.events, tick, nextId };
+  return { explored: prev.explored, events: prev.events, promptsLeft, nextId };
 }
 
 function playGame(seed: number): { stats: GameStats; violations: string[]; csv: string[] } {
@@ -211,7 +219,7 @@ function playGame(seed: number): { stats: GameStats; violations: string[]; csv: 
   let rejected = 0;
   const byType: Record<string, number> = {};
   let memory = { schemaVersion: 1 as const, viewers: {} as Record<string, number[]> };
-  let guard = { explored: 0, events: 0, tick: 0, nextId: 0 };
+  let guard = { explored: 0, events: 0, promptsLeft: Number.POSITIVE_INFINITY, nextId: 0 };
   let rid = 0;
   const sides: PlayerId[] = ['p1' as PlayerId, 'p2' as PlayerId];
   for (let step = 0; step < STEPS; step += 1) {
@@ -237,7 +245,7 @@ function playGame(seed: number): { stats: GameStats; violations: string[]; csv: 
     memory = markExplored(memory, seen) as typeof memory;
     const p1 = (after.stockpiles?.stockpiles as Record<string, Record<string, number>> | undefined)?.['p1'];
     if (p1 && step % 10 === 0) {
-      csv.push(`${seed},${after.tick ?? 0},${p1['food'] ?? 0},${p1['wood'] ?? 0},${p1['stone'] ?? 0},${p1['gold'] ?? 0}`);
+      csv.push(`${seed},${step},${p1['food'] ?? 0},${p1['wood'] ?? 0},${p1['stone'] ?? 0},${p1['gold'] ?? 0}`);
     }
   }
   const fin = match.getSnapshot();
@@ -263,7 +271,7 @@ function playGame(seed: number): { stats: GameStats; violations: string[]; csv: 
       kills,
       damageDealt,
       trained,
-      ticks: fin.tick ?? 0,
+      promptsLeft: Object.values(fin.prompts?.remaining ?? {}).reduce((a, b) => a + b, 0),
       finalPiles: piles,
       finalBuildings: buildings,
       explored: memory.viewers['p1']?.length ?? 0,
@@ -277,7 +285,7 @@ function main(): void {
   const t0 = Date.now();
   const games: GameStats[] = [];
   const violations: string[] = [];
-  const csv = ['game,tick,p1_food,p1_wood,p1_stone,p1_gold'];
+  const csv = ['game,step,p1_food,p1_wood,p1_stone,p1_gold'];
   for (let g = 0; g < GAMES; g += 1) {
     const seed = 1000 + g;
     const { stats, violations: v, csv: rows } = playGame(seed);
@@ -296,7 +304,7 @@ function main(): void {
       appliedByType[t] = (appliedByType[t] ?? 0) + n;
     }
   }
-  const avgTick = games.reduce((a, g) => a + g.ticks, 0) / Math.max(1, games.length);
+  const avgPromptsLeft = games.reduce((a, g) => a + g.promptsLeft, 0) / Math.max(1, games.length);
   const avg = (pick: (g: GameStats) => number): number =>
     games.reduce((a, g) => a + pick(g), 0) / Math.max(1, games.length);
   const report = {
@@ -310,7 +318,7 @@ function main(): void {
     },
     totals: { applied, rejected, violations: violations.length, kills, damageDealt, trained, appliedByType },
     balance: {
-      avgTicks: avgTick,
+      avgPromptsLeft,
       avgFinalP1: {
         food: avg((g) => g.finalPiles['p1']?.['food'] ?? 0),
         wood: avg((g) => g.finalPiles['p1']?.['wood'] ?? 0),
@@ -334,7 +342,7 @@ function main(): void {
   writeFileSync(new URL('./balance.csv', import.meta.url), csv.join('\n') + '\n');
   console.log(
     `playtest ok: ${GAMES} games x ${STEPS} steps, applied=${applied} rejected=${rejected} ` +
-      `violations=${violations.length} avgTicks=${avgTick.toFixed(1)} (${Date.now() - t0}ms)`,
+      `violations=${violations.length} avgPromptsLeft=${avgPromptsLeft.toFixed(1)} (${Date.now() - t0}ms)`,
   );
   if (violations.length > 0) {
     console.error(violations.slice(0, 10).join('\n'));

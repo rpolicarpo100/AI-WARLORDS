@@ -53,8 +53,8 @@ function joinBoth(match: Match): { readonly s1: SessionHandle; readonly s2: Sess
   return { s1: match.join(P1), s2: match.join(P2) };
 }
 
-/** Dispatches one real `match.advance` and asserts exact application. */
-function advance(
+/** Dispatches one real `world.noop` and asserts exact application. */
+function step(
   match: Match,
   session: SessionHandle,
   requestId: string,
@@ -62,16 +62,16 @@ function advance(
 ): void {
   const outcome = match.dispatch(
     session,
-    raw({ requestId, playerId, type: 'match.advance', payload: {} }),
+    raw({ requestId, playerId, type: 'world.noop', payload: {} }),
   );
   expect(outcome).toEqual({
     status: 'applied',
     revision: match.getRevision(),
-    summary: `tick=${match.getTick()}`,
+    summary: 'world-noop',
   });
 }
 
-/** Shared valid script (ticks 1–6): identical call history on every twin. */
+/** Shared valid script (steps 1–6): identical call history on every twin. */
 const SCRIPT: ReadonlyArray<{ readonly id: string; readonly player: 1 | 2 }> = [
   { id: 'v1', player: 1 },
   { id: 'v2', player: 2 },
@@ -89,11 +89,11 @@ function runSteps(
   to: number,
 ): void {
   for (let index = from; index < to; index += 1) {
-    const step = SCRIPT[index];
-    if (step === undefined) {
+    const move = SCRIPT[index];
+    if (move === undefined) {
       throw new Error('test setup: script step out of range');
     }
-    advance(match, step.player === 1 ? s1 : s2, step.id, step.player === 1 ? P1 : P2);
+    step(match, move.player === 1 ? s1 : s2, move.id, move.player === 1 ? P1 : P2);
   }
 }
 
@@ -107,7 +107,7 @@ interface Fingerprint {
   readonly timelineHash: string;
   readonly eventsHash: string;
   readonly verdict: Verdict;
-  readonly tick: number;
+  readonly prompts: { readonly [holder: string]: number };
   readonly revision: number;
   readonly logLength: number;
   readonly timelineLength: number;
@@ -120,7 +120,7 @@ function fingerprint(match: Match): Fingerprint {
     timelineHash: hashState(match.getTimeline()),
     eventsHash: hashState(match.getEvents()),
     verdict: match.getVerdict(),
-    tick: match.getTick(),
+    prompts: match.getSnapshot().prompts?.remaining ?? {},
     revision: match.getRevision(),
     logLength: match.getLog().length,
     timelineLength: match.getTimeline().length,
@@ -142,22 +142,22 @@ function noiseA(match: Match, s1: SessionHandle): void {
     ),
   ).toEqual({ status: 'error', code: 'UNKNOWN_TRANSITION' });
   expect(
-    match.dispatch(s1, raw({ requestId: 'v1', playerId: P1, type: 'match.advance', payload: {} })),
+    match.dispatch(s1, raw({ requestId: 'v1', playerId: P1, type: 'world.noop', payload: {} })),
   ).toEqual({
     status: 'duplicate',
-    original: { status: 'applied', revision: 1, summary: 'tick=1' },
+    original: { status: 'applied', revision: 1, summary: 'world-noop' },
   });
   expect(
     match.dispatch(
       s1,
-      raw({ requestId: 'a-spoof', playerId: P2, type: 'match.advance', payload: {} }),
+      raw({ requestId: 'a-spoof', playerId: P2, type: 'world.noop', payload: {} }),
     ),
   ).toEqual({ status: 'error', code: 'SPOOFED_SENDER' });
   const forged = { sessionId: 'nope' as SessionId, playerId: P1 };
   expect(
     match.dispatch(
       forged,
-      raw({ requestId: 'a-forge', playerId: P1, type: 'match.advance', payload: {} }),
+      raw({ requestId: 'a-forge', playerId: P1, type: 'world.noop', payload: {} }),
     ),
   ).toEqual({ status: 'error', code: 'INVALID_SESSION' });
 }
@@ -177,12 +177,12 @@ function noiseB(match: Match, s1: SessionHandle, s2: SessionHandle): void {
   expect(
     match.dispatch(
       tampered,
-      raw({ requestId: 'b-tamper', playerId: P1, type: 'match.advance', payload: {} }),
+      raw({ requestId: 'b-tamper', playerId: P1, type: 'world.noop', payload: {} }),
     ),
   ).toEqual({ status: 'error', code: 'INVALID_SESSION' });
   const v2 = recordedV2(match);
   expect(
-    match.dispatch(s2, raw({ requestId: 'v2', playerId: P2, type: 'match.advance', payload: {} })),
+    match.dispatch(s2, raw({ requestId: 'v2', playerId: P2, type: 'world.noop', payload: {} })),
   ).toEqual({
     status: 'duplicate',
     original: { status: 'applied', revision: v2.revision, summary: v2.summary },
@@ -230,33 +230,32 @@ describe('determinism equation: seed + state + actions = result (#80)', () => {
   });
 
   it('phase-1 seal: full-stack golden incl. events + verdict (generated-then-locked)', () => {
-    // M015 regen (secrets-field removal): ONLY the two state-derived hashes
-    // changed — entry-level proof (4 embedded stateHash atoms) + the
-    // superseded seal live in docs/modules/M015.md §6. All other fields
-    // below are byte-identical to the M009 lock (any drift fails loud).
+    // PROMPTS regen (budget replaces clock): the M015 seal is superseded —
+    // old-vs-new field proof lives in docs/modules/PROMPTS.md §6
+    // (tick field removed, prompts seeded, match.advanced retired).
+    // All fields below are locked against the new mechanism.
     const SEAL: Fingerprint = {
-      stateHash: '2e1d8cc4a41fe59597bd9fc140ef044a5977a2c2586a0cde85eb9ef1f6dcda49',
-      timelineHash: 'bf3b98d38bf58e667b1b50d89473e263812a58a604dca4e0bb9527c934e530b5',
-      eventsHash: '3cc8a91199a87118a8c8f339b3b9fdd028dd8c269a2f42d1e95312eb60fc8631',
+      stateHash: '9476c6057a318e0c6734206d3672a5910b701e045837af960df73443634c0ca9',
+      timelineHash: '10ce3a1403c5b555427806008925ce04c851e1c0358891789544dc67c757fd42',
+      eventsHash: '1ada392242f202f3cc9a517ca6a331528136d449f2b4912326f620fe5441e2c3',
       verdict: {
         status: 'finished',
         outcome: { kind: 'draw' },
-        condition: 'time-limit',
-        tick: 4,
+        condition: 'prompts-exhausted',
         revision: 4,
       },
-      tick: 4,
+      prompts: { p1: 0, p2: 0 },
       revision: 4,
       logLength: 4,
       timelineLength: 4,
-      eventsLength: 6,
+      eventsLength: 2,
     };
-    const match = makeMatch({ maxTicks: 4 });
+    const match = makeMatch({ promptsPerPlayer: 2 });
     const { s1, s2 } = joinBoth(match);
-    advance(match, s1, 's1', P1);
-    advance(match, s2, 's2', P2);
-    advance(match, s1, 's3', P1);
-    advance(match, s2, 's4', P2);
+    step(match, s1, 's1', P1);
+    step(match, s2, 's2', P2);
+    step(match, s1, 's3', P1);
+    step(match, s2, 's4', P2);
 
     expect(fingerprint(match)).toEqual(SEAL);
   });
@@ -288,13 +287,13 @@ describe('invalid-input zero-trace (adversarial, cross-module)', () => {
     const b = makeMatch();
     runFullScript(b);
 
-    const replay = raw({ requestId: 'v4', playerId: P1, type: 'match.advance', payload: {} });
+    const replay = raw({ requestId: 'v4', playerId: P1, type: 'world.noop', payload: {} });
     const outA = a.dispatch(a.join(P1), replay);
     const outB = b.dispatch(b.join(P1), replay);
     expect(outA).toEqual(outB);
     expect(outA).toEqual({
       status: 'duplicate',
-      original: { status: 'applied', revision: 4, summary: 'tick=4' },
+      original: { status: 'applied', revision: 4, summary: 'world-noop' },
     });
 
     const ghost = raw({
@@ -337,17 +336,17 @@ describe('invalid-input zero-trace (adversarial, cross-module)', () => {
 
     const a = makeMatch({ extraHandlers: rngHandlers });
     const sa = joinBoth(a);
-    advance(a, sa.s1, 'v1', P1);
+    step(a, sa.s1, 'v1', P1);
     draw(a, sa.s1, 'd1', P1);
     noiseA(a, sa.s1);
-    advance(a, sa.s2, 'v2', P2);
+    step(a, sa.s2, 'v2', P2);
     draw(a, sa.s2, 'd2', P2);
 
     const b = makeMatch({ extraHandlers: rngHandlers });
     const sb = joinBoth(b);
-    advance(b, sb.s1, 'v1', P1);
+    step(b, sb.s1, 'v1', P1);
     draw(b, sb.s1, 'd1', P1);
-    advance(b, sb.s2, 'v2', P2);
+    step(b, sb.s2, 'v2', P2);
     noiseB(b, sb.s1, sb.s2);
     draw(b, sb.s2, 'd2', P2);
 
@@ -358,14 +357,15 @@ describe('invalid-input zero-trace (adversarial, cross-module)', () => {
 });
 
 describe('finish boundary (M006 x M007 x M008 interplay)', () => {
-  it('invalid storm at the finishing tick keeps exactly-once finish', () => {
-    const match = makeMatch({ maxTicks: 3 });
+  it('invalid storm before the finishing prompt keeps exactly-once finish', () => {
+    const match = makeMatch({ promptsPerPlayer: 2 });
     const { s1, s2 } = joinBoth(match);
-    advance(match, s1, 'v1', P1);
-    advance(match, s2, 'v2', P2);
+    step(match, s1, 'v1', P1);
+    step(match, s2, 'v2', P2);
     noiseA(match, s1);
     noiseB(match, s1, s2);
-    advance(match, s1, 'v3', P1);
+    step(match, s1, 'v3', P1);
+    step(match, s2, 'v4', P2);
 
     expect(match.dispatch(s1, raw({}))).toEqual({ status: 'error', code: 'MATCH_FINISHED' });
     const finished = match.getEvents().filter((event) => event.type === 'match.finished');
@@ -373,17 +373,17 @@ describe('finish boundary (M006 x M007 x M008 interplay)', () => {
     expect(match.getVerdict()).toEqual({
       status: 'finished',
       outcome: { kind: 'draw' },
-      condition: 'time-limit',
-      tick: 3,
-      revision: 3,
+      condition: 'prompts-exhausted',
+      revision: 4,
     });
-    expect(match.getTick()).toBe(3);
+    expect(match.getSnapshot().prompts?.remaining).toEqual({ p1: 0, p2: 0 });
   });
 
   it('post-finish blocks every request shape with frozen traces', () => {
-    const match = makeMatch({ maxTicks: 1 });
+    const match = makeMatch({ promptsPerPlayer: 1 });
     const { s1, s2 } = joinBoth(match);
-    advance(match, s1, 'v1', P1);
+    step(match, s1, 'v1', P1);
+    step(match, s2, 'v2', P2);
     expect(match.getVerdict().status).toBe('finished');
 
     const timelineLength = match.getTimeline().length;
@@ -392,13 +392,13 @@ describe('finish boundary (M006 x M007 x M008 interplay)', () => {
     const outcomes = [
       match.dispatch(
         s1,
-        raw({ requestId: 'w1', playerId: P1, type: 'match.advance', payload: {} }),
+        raw({ requestId: 'w1', playerId: P1, type: 'world.noop', payload: {} }),
       ),
       match.dispatch(s1, raw({})),
       match.dispatch(s2, raw({ requestId: 'w2', playerId: P2, type: 'nope.unknown', payload: {} })),
       match.dispatch(
         forged,
-        raw({ requestId: 'w3', playerId: P1, type: 'match.advance', payload: {} }),
+        raw({ requestId: 'w3', playerId: P1, type: 'world.noop', payload: {} }),
       ),
     ];
     for (const outcome of outcomes) {
@@ -406,8 +406,8 @@ describe('finish boundary (M006 x M007 x M008 interplay)', () => {
     }
     expect(match.getTimeline()).toHaveLength(timelineLength);
     expect(match.getEvents()).toHaveLength(eventsLength);
-    expect(match.getTick()).toBe(1);
-    expect(match.getRevision()).toBe(1);
+    expect(match.getSnapshot().prompts?.remaining).toEqual({ p1: 0, p2: 0 });
+    expect(match.getRevision()).toBe(2);
   });
 });
 
@@ -439,6 +439,7 @@ describe('determinism hygiene (static security review)', () => {
       'hash.ts',
       'map.ts',
       'match.ts',
+      'prompts.ts',
       'resources.ts',
       'rng.ts',
       'stockpiles.ts',
@@ -510,6 +511,7 @@ describe('architecture boundary (static review)', () => {
     city: 0,
     units: 0,
     commanders: 0,
+    prompts: 0,
     'world-state': 1,
     economy: 2,
     exploration: 2,
@@ -588,21 +590,21 @@ describe('scale execution (performance review: measured, never gated)', () => {
   it('500 dispatches stay correct and deterministic (#93: no invented thresholds)', () => {
     const K = 500;
     const run = (): Match => {
-      const match = makeMatch();
+      const match = makeMatch({ promptsPerPlayer: 500 });
       const { s1, s2 } = joinBoth(match);
       for (let i = 1; i <= K; i += 1) {
         const even = i % 2 === 0;
-        advance(match, even ? s2 : s1, `k${i}`, even ? P2 : P1);
+        step(match, even ? s2 : s1, `k${i}`, even ? P2 : P1);
       }
       return match;
     };
 
     const match = run();
-    expect(match.getTick()).toBe(K);
+    expect(match.getSnapshot().prompts?.remaining).toEqual({ p1: 250, p2: 250 });
     expect(match.getRevision()).toBe(K);
     expect(match.getLog()).toHaveLength(K);
     expect(match.getTimeline()).toHaveLength(K);
-    expect(match.getEvents()).toHaveLength(K + 1);
+    expect(match.getEvents()).toHaveLength(1);
     expect(match.getVerdict()).toEqual({ status: 'ongoing' });
 
     const twin = run();

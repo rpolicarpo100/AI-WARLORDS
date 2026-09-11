@@ -4,6 +4,7 @@ import { isCitiesData, type CitiesData } from './city.js';
 import { isCommandersData, type CommandersData } from './commanders.js';
 import { isExploredData, type ExploredData } from './explored.js';
 import { isMapData, type MapData } from './map.js';
+import { isPromptsData, type PromptsData } from './prompts.js';
 import { isStockpilesData, type StockpilesData } from './stockpiles.js';
 import { isUnitsData, type UnitsData } from './units.js';
 
@@ -15,8 +16,6 @@ export interface WorldPlayer {
 
 export interface WorldState {
   readonly schemaVersion: typeof WORLD_SCHEMA_VERSION;
-  /** World clock field. M004 never advances it — time progression belongs to M005+. */
-  readonly tick: number;
   readonly players: readonly WorldPlayer[];
   /**
    * World geography (M010, optional compatible extension — no version bump).
@@ -65,11 +64,17 @@ export interface WorldState {
    * out of perception — fail-closed until M028+.
    */
   readonly commanders?: CommandersData;
+  /**
+   * Prompt budgets (PROMPTS, optional compatible extension). Per-holder
+   * remaining counts; every applied dispatch spends one of the caller's
+   * (rejected are free). Absent holders read blocked (fail-closed).
+   * Match seeds absent slots at construction (D-022).
+   */
+  readonly prompts?: PromptsData;
 }
 
 export interface WorldStateInit {
   readonly players: readonly PlayerId[];
-  readonly tick?: number;
   readonly map?: MapData;
   readonly explored?: ExploredData;
   readonly stockpiles?: StockpilesData;
@@ -77,6 +82,7 @@ export interface WorldStateInit {
   readonly cities?: CitiesData;
   readonly units?: UnitsData;
   readonly commanders?: CommandersData;
+  readonly prompts?: PromptsData;
 }
 
 /**
@@ -89,10 +95,6 @@ export function isWorldState(value: unknown): value is WorldState {
   }
   const fields = value as Record<string, unknown>;
   if (fields['schemaVersion'] !== WORLD_SCHEMA_VERSION) {
-    return false;
-  }
-  const tick = fields['tick'];
-  if (typeof tick !== 'number' || !Number.isInteger(tick) || tick < 0) {
     return false;
   }
   const players = fields['players'];
@@ -151,13 +153,16 @@ export function isWorldState(value: unknown): value is WorldState {
   if (commanders !== undefined && !isCommandersData(commanders)) {
     return false;
   }
+  const prompts = fields['prompts'];
+  if (prompts !== undefined && !isPromptsData(prompts)) {
+    return false;
+  }
   return true;
 }
 
 export function createWorldState(init: WorldStateInit): WorldState {
   const candidate = {
     schemaVersion: WORLD_SCHEMA_VERSION,
-    tick: init.tick ?? 0,
     players: init.players.map((id) => ({ id })),
     ...(init.map === undefined ? {} : { map: init.map }),
     ...(init.explored === undefined ? {} : { explored: init.explored }),
@@ -166,6 +171,7 @@ export function createWorldState(init: WorldStateInit): WorldState {
     ...(init.cities === undefined ? {} : { cities: init.cities }),
     ...(init.units === undefined ? {} : { units: init.units }),
     ...(init.commanders === undefined ? {} : { commanders: init.commanders }),
+    ...(init.prompts === undefined ? {} : { prompts: init.prompts }),
   };
   if (!isWorldState(candidate)) {
     throw new Error('createWorldState: invalid initial world.');

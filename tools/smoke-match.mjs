@@ -188,7 +188,7 @@ fire('vFull', 'click');
 fire('vFog', 'click');
 fire('vHeat', 'click');
 fire('tCmd', 'click');
-for (const id of ['cmdGather', 'cmdAttack', 'cmdHouse', 'cmdTower', 'cmdStorage', 'cmdAdvance', 'cmdUpgrade'])
+for (const id of ['cmdGather', 'cmdAttack', 'cmdHouse', 'cmdTower', 'cmdStorage', 'cmdWait', 'cmdUpgrade'])
   fire(id, 'click');
 fire('tMute', 'click');
 fire('tMute', 'click');

@@ -520,8 +520,9 @@ export function capOf(
 /**
  * M019 — City System: construction + progression (city data lives in
  * city.js L0; build costs/times come from BuildingsConfig). Builds are
- * prepaid at enqueue and complete on time (completeConstructions runs
- * inside match.advance — time owns progress). Upgrades are free
+ * prepaid at enqueue and complete on prompts (completeConstructions runs
+ * in the Match post-step per applied dispatch — prompts own progress).
+ * Only the dispatch owner's queues tick down (D-022 owner-only). Upgrades are free
  * (costs/effects ungrounded — neutral). Wired by match.ts (seam).
  */
 
@@ -582,7 +583,7 @@ export function createBuildHandler(config: BuildingsConfig): TransitionHandler<W
     return {
       applied: true,
       state: { ...ctx.state, cities, stockpiles: paid },
-      summary: `started ${type} (${time} ticks)`,
+      summary: `started ${type} (${time} prompts)`,
     };
   };
 }
@@ -622,10 +623,15 @@ export interface CompletedBuilding {
 export function completeConstructions(
   cities: CitiesData,
   buildings: BuildingsData | undefined,
+  owner: string,
 ): { readonly cities: CitiesData; readonly buildings: BuildingsData | undefined } {
   const next: { [holder: string]: CityState } = {};
   const done: CompletedBuilding[] = [];
   for (const [holder, city] of Object.entries(cities.cities)) {
+    if (holder !== owner) {
+      next[holder] = city;
+      continue;
+    }
     const queue: QueueItem[] = [];
     for (const item of city.queue) {
       const remaining = item.remaining - 1;

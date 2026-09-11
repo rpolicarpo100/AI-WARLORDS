@@ -6,10 +6,11 @@ import { describe, expect, it } from 'vitest';
 import type { PlayerId } from './authority.js';
 import { isMapData, isResourceType, loadMapData, RESOURCE_TYPES, type MapData } from './map.js';
 import { Match, STANDARD_RULESET } from './match.js';
+import { seedPrompts, spendPrompt } from './prompts.js';
 import { resourceAt, resourceNodes, totalResource } from './resources.js';
 import { createWorldValidator, wrapWithValidation } from './validation.js';
 import { toAiPerception, toClientView } from './views.js';
-import { createWorldState } from './world-state.js';
+import { createWorldState, type WorldState } from './world-state.js';
 
 const P1 = 'p1' as PlayerId;
 const P2 = 'p2' as PlayerId;
@@ -237,9 +238,25 @@ describe('resource queries (unit)', () => {
   });
 });
 
+/**
+ * Match post-step minus completions (cityless-identical): direct-wrapper
+ * tests mirror Match by spending exactly one prompt per applied outcome.
+ */
+function spendPostStep(
+  _before: WorldState,
+  caller: PlayerId,
+  applied: WorldState,
+): WorldState {
+  return { ...applied, prompts: spendPrompt(applied.prompts, caller) };
+}
+
 describe('node integrity + blindness (security)', () => {
   it('node forgery (increase) still faults map-preserved', () => {
-    const state = createWorldState({ players: [P1], map: nodeMap() });
+    const state = createWorldState({
+      players: [P1],
+      prompts: seedPrompts([P1], 10),
+      map: nodeMap(),
+    });
     const map = state.map;
     if (map === undefined) {
       throw new Error('test setup: expected a map');
@@ -252,12 +269,17 @@ describe('node integrity + blindness (security)', () => {
       createWorldValidator(),
       7,
       () => 1,
+      spendPostStep,
     );
     expect(() => wrapped({ state, caller: P1, params: {} })).toThrow(/map-preserved/);
   });
 
   it('pure depletion passes map-preserved (M017 writer)', () => {
-    const state = createWorldState({ players: [P1], map: nodeMap() });
+    const state = createWorldState({
+      players: [P1],
+      prompts: seedPrompts([P1], 10),
+      map: nodeMap(),
+    });
     const map = state.map;
     if (map === undefined) {
       throw new Error('test setup: expected a map');
@@ -270,6 +292,7 @@ describe('node integrity + blindness (security)', () => {
       createWorldValidator(),
       7,
       () => 1,
+      spendPostStep,
     );
     const result = wrapped({ state, caller: P1, params: {} });
     if (result.applied !== true) {

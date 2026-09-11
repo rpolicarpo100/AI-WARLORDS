@@ -119,7 +119,7 @@
   <span class="realm display">⚔ Vale of Echoes</span>
   <div class="resbar" id="res"></div>
   <span class="age display" title="Ages are ungrounded — concept">🏰 Feudal Age*</span>
-  <b id="tick" class="display">TICK 0</b>
+  <b id="prompts" class="display" title="prompts left per player">P1 20 · P2 20</b>
   <button class="sbtn on" id="vFog">Commander</button><button class="sbtn" id="vFull">Strategist</button><button class="sbtn" id="vHeat" title="resource heat + threat overlay">Heat</button>
   <span class="links"><a href="index.html">hub</a><a href="city.html">city</a><a href="menu.html">menu</a></span>
 </div>
@@ -149,7 +149,7 @@
     <button class="tbtn" id="cmdHouse" title="build a house">🏠 House</button>
     <button class="tbtn" id="cmdTower" title="build a tower">🗼 Tower</button>
     <button class="tbtn" id="cmdStorage" title="build storage">📦 Storage</button>
-    <button class="tbtn" id="cmdAdvance" title="advance the clock">⏭ Advance</button>
+    <button class="tbtn" id="cmdWait" title="wait: spend a prompt, do nothing">⏳ Wait</button>
     <button class="tbtn" id="cmdUpgrade" title="upgrade the city">⬆ Upgrade</button>
   </div>
   <div id="toast" hidden></div>
@@ -290,7 +290,6 @@
  "snapshots": [
   {
    "schemaVersion": 1,
-   "tick": 0,
    "players": [
     {
      "id": "p1"
@@ -685,11 +684,17 @@
       "row": 2
      }
     ]
+   },
+   "prompts": {
+    "schemaVersion": 1,
+    "remaining": {
+     "p1": 20,
+     "p2": 20
+    }
    }
   },
   {
    "schemaVersion": 1,
-   "tick": 0,
    "players": [
     {
      "id": "p1"
@@ -1021,7 +1026,7 @@
       "queue": [
        {
         "type": "house",
-        "remaining": 2
+        "remaining": 1
        }
       ]
      },
@@ -1084,11 +1089,17 @@
       "row": 2
      }
     ]
+   },
+   "prompts": {
+    "schemaVersion": 1,
+    "remaining": {
+     "p1": 19,
+     "p2": 20
+    }
    }
   },
   {
    "schemaVersion": 1,
-   "tick": 0,
    "players": [
     {
      "id": "p1"
@@ -1396,7 +1407,7 @@
     "buildings": {
      "p1": {
       "town-center": 1,
-      "house": 2,
+      "house": 3,
       "storage": 1,
       "barracks": 0,
       "wall": 0,
@@ -1417,12 +1428,7 @@
     "cities": {
      "p1": {
       "level": 2,
-      "queue": [
-       {
-        "type": "house",
-        "remaining": 2
-       }
-      ]
+      "queue": []
      },
      "p2": {
       "level": 1,
@@ -1483,11 +1489,17 @@
       "row": 2
      }
     ]
+   },
+   "prompts": {
+    "schemaVersion": 1,
+    "remaining": {
+     "p1": 18,
+     "p2": 20
+    }
    }
   },
   {
    "schemaVersion": 1,
-   "tick": 0,
    "players": [
     {
      "id": "p1"
@@ -1795,7 +1807,7 @@
     "buildings": {
      "p1": {
       "town-center": 1,
-      "house": 2,
+      "house": 3,
       "storage": 1,
       "barracks": 0,
       "wall": 0,
@@ -1816,12 +1828,7 @@
     "cities": {
      "p1": {
       "level": 2,
-      "queue": [
-       {
-        "type": "house",
-        "remaining": 2
-       }
-      ]
+      "queue": []
      },
      "p2": {
       "level": 1,
@@ -1882,11 +1889,17 @@
       "row": 2
      }
     ]
+   },
+   "prompts": {
+    "schemaVersion": 1,
+    "remaining": {
+     "p1": 17,
+     "p2": 20
+    }
    }
   },
   {
    "schemaVersion": 1,
-   "tick": 0,
    "players": [
     {
      "id": "p1"
@@ -2194,7 +2207,7 @@
     "buildings": {
      "p1": {
       "town-center": 1,
-      "house": 2,
+      "house": 3,
       "storage": 1,
       "barracks": 0,
       "wall": 0,
@@ -2215,12 +2228,7 @@
     "cities": {
      "p1": {
       "level": 2,
-      "queue": [
-       {
-        "type": "house",
-        "remaining": 2
-       }
-      ]
+      "queue": []
      },
      "p2": {
       "level": 1,
@@ -2281,11 +2289,17 @@
       "row": 2
      }
     ]
+   },
+   "prompts": {
+    "schemaVersion": 1,
+    "remaining": {
+     "p1": 16,
+     "p2": 20
+    }
    }
   },
   {
    "schemaVersion": 1,
-   "tick": 0,
    "players": [
     {
      "id": "p1"
@@ -2593,7 +2607,7 @@
     "buildings": {
      "p1": {
       "town-center": 1,
-      "house": 2,
+      "house": 3,
       "storage": 1,
       "barracks": 0,
       "wall": 0,
@@ -2617,11 +2631,7 @@
       "queue": [
        {
         "type": "house",
-        "remaining": 2
-       },
-       {
-        "type": "house",
-        "remaining": 2
+        "remaining": 1
        }
       ]
      },
@@ -2684,11 +2694,17 @@
       "row": 2
      }
     ]
+   },
+   "prompts": {
+    "schemaVersion": 1,
+    "remaining": {
+     "p1": 15,
+     "p2": 20
+    }
    }
   },
   {
    "schemaVersion": 1,
-   "tick": 1,
    "players": [
     {
      "id": "p1"
@@ -2996,7 +3012,7 @@
     "buildings": {
      "p1": {
       "town-center": 1,
-      "house": 2,
+      "house": 4,
       "storage": 1,
       "barracks": 0,
       "wall": 0,
@@ -3017,16 +3033,7 @@
     "cities": {
      "p1": {
       "level": 2,
-      "queue": [
-       {
-        "type": "house",
-        "remaining": 1
-       },
-       {
-        "type": "house",
-        "remaining": 1
-       }
-      ]
+      "queue": []
      },
      "p2": {
       "level": 1,
@@ -3087,11 +3094,17 @@
       "row": 2
      }
     ]
+   },
+   "prompts": {
+    "schemaVersion": 1,
+    "remaining": {
+     "p1": 14,
+     "p2": 20
+    }
    }
   },
   {
    "schemaVersion": 1,
-   "tick": 1,
    "players": [
     {
      "id": "p1"
@@ -3399,7 +3412,7 @@
     "buildings": {
      "p1": {
       "town-center": 1,
-      "house": 2,
+      "house": 4,
       "storage": 1,
       "barracks": 0,
       "wall": 0,
@@ -3420,16 +3433,7 @@
     "cities": {
      "p1": {
       "level": 2,
-      "queue": [
-       {
-        "type": "house",
-        "remaining": 1
-       },
-       {
-        "type": "house",
-        "remaining": 1
-       }
-      ]
+      "queue": []
      },
      "p2": {
       "level": 1,
@@ -3490,418 +3494,17 @@
       "row": 2
      }
     ]
+   },
+   "prompts": {
+    "schemaVersion": 1,
+    "remaining": {
+     "p1": 13,
+     "p2": 20
+    }
    }
   },
   {
    "schemaVersion": 1,
-   "tick": 1,
-   "players": [
-    {
-     "id": "p1"
-    },
-    {
-     "id": "p2"
-    }
-   ],
-   "map": {
-    "schemaVersion": 1,
-    "id": "mockup-vale",
-    "width": 8,
-    "height": 6,
-    "stagger": "odd",
-    "cells": [
-     {
-      "col": 0,
-      "row": 0,
-      "terrain": "forest"
-     },
-     {
-      "col": 1,
-      "row": 0,
-      "terrain": "field"
-     },
-     {
-      "col": 2,
-      "row": 0,
-      "terrain": "field"
-     },
-     {
-      "col": 3,
-      "row": 0,
-      "terrain": "mountain"
-     },
-     {
-      "col": 4,
-      "row": 0,
-      "terrain": "mountain"
-     },
-     {
-      "col": 5,
-      "row": 0,
-      "terrain": "field"
-     },
-     {
-      "col": 6,
-      "row": 0,
-      "terrain": "forest"
-     },
-     {
-      "col": 7,
-      "row": 0,
-      "terrain": "field"
-     },
-     {
-      "col": 0,
-      "row": 1,
-      "terrain": "field"
-     },
-     {
-      "col": 1,
-      "row": 1,
-      "terrain": "road"
-     },
-     {
-      "col": 2,
-      "row": 1,
-      "terrain": "road"
-     },
-     {
-      "col": 3,
-      "row": 1,
-      "terrain": "road"
-     },
-     {
-      "col": 4,
-      "row": 1,
-      "terrain": "bridge"
-     },
-     {
-      "col": 5,
-      "row": 1,
-      "terrain": "river"
-     },
-     {
-      "col": 6,
-      "row": 1,
-      "terrain": "field"
-     },
-     {
-      "col": 7,
-      "row": 1,
-      "terrain": "forest"
-     },
-     {
-      "col": 0,
-      "row": 2,
-      "terrain": "field"
-     },
-     {
-      "col": 1,
-      "row": 2,
-      "terrain": "road"
-     },
-     {
-      "col": 2,
-      "row": 2,
-      "terrain": "city"
-     },
-     {
-      "col": 3,
-      "row": 2,
-      "terrain": "resource",
-      "resource": {
-       "type": "gold",
-       "amount": 27
-      }
-     },
-     {
-      "col": 4,
-      "row": 2,
-      "terrain": "resource",
-      "resource": {
-       "type": "wood",
-       "amount": 23
-      }
-     },
-     {
-      "col": 5,
-      "row": 2,
-      "terrain": "river"
-     },
-     {
-      "col": 6,
-      "row": 2,
-      "terrain": "village"
-     },
-     {
-      "col": 7,
-      "row": 2,
-      "terrain": "field"
-     },
-     {
-      "col": 0,
-      "row": 3,
-      "terrain": "field"
-     },
-     {
-      "col": 1,
-      "row": 3,
-      "terrain": "road"
-     },
-     {
-      "col": 2,
-      "row": 3,
-      "terrain": "field"
-     },
-     {
-      "col": 3,
-      "row": 3,
-      "terrain": "resource",
-      "resource": {
-       "type": "stone",
-       "amount": 20
-      }
-     },
-     {
-      "col": 4,
-      "row": 3,
-      "terrain": "field"
-     },
-     {
-      "col": 5,
-      "row": 3,
-      "terrain": "river"
-     },
-     {
-      "col": 6,
-      "row": 3,
-      "terrain": "field"
-     },
-     {
-      "col": 7,
-      "row": 3,
-      "terrain": "mountain"
-     },
-     {
-      "col": 0,
-      "row": 4,
-      "terrain": "forest"
-     },
-     {
-      "col": 1,
-      "row": 4,
-      "terrain": "field"
-     },
-     {
-      "col": 2,
-      "row": 4,
-      "terrain": "field"
-     },
-     {
-      "col": 3,
-      "row": 4,
-      "terrain": "road"
-     },
-     {
-      "col": 4,
-      "row": 4,
-      "terrain": "road"
-     },
-     {
-      "col": 5,
-      "row": 4,
-      "terrain": "bridge"
-     },
-     {
-      "col": 6,
-      "row": 4,
-      "terrain": "river"
-     },
-     {
-      "col": 7,
-      "row": 4,
-      "terrain": "field"
-     },
-     {
-      "col": 0,
-      "row": 5,
-      "terrain": "field"
-     },
-     {
-      "col": 1,
-      "row": 5,
-      "terrain": "forest"
-     },
-     {
-      "col": 2,
-      "row": 5,
-      "terrain": "resource",
-      "resource": {
-       "type": "food",
-       "amount": 40
-      }
-     },
-     {
-      "col": 3,
-      "row": 5,
-      "terrain": "field"
-     },
-     {
-      "col": 4,
-      "row": 5,
-      "terrain": "mountain"
-     },
-     {
-      "col": 5,
-      "row": 5,
-      "terrain": "field"
-     },
-     {
-      "col": 6,
-      "row": 5,
-      "terrain": "forest"
-     },
-     {
-      "col": 7,
-      "row": 5,
-      "terrain": "field"
-     }
-    ],
-    "spawns": [
-     {
-      "playerIndex": 0,
-      "col": 1,
-      "row": 2
-     },
-     {
-      "playerIndex": 1,
-      "col": 6,
-      "row": 3
-     }
-    ]
-   },
-   "stockpiles": {
-    "schemaVersion": 1,
-    "stockpiles": {
-     "p1": {
-      "food": 60,
-      "wood": 40,
-      "stone": 29,
-      "gold": 28
-     },
-     "p2": {
-      "food": 40,
-      "wood": 30,
-      "stone": 20,
-      "gold": 15
-     }
-    }
-   },
-   "buildings": {
-    "schemaVersion": 1,
-    "buildings": {
-     "p1": {
-      "town-center": 1,
-      "house": 2,
-      "storage": 1,
-      "barracks": 0,
-      "wall": 0,
-      "tower": 0
-     },
-     "p2": {
-      "town-center": 1,
-      "house": 1,
-      "storage": 0,
-      "barracks": 0,
-      "wall": 0,
-      "tower": 0
-     }
-    }
-   },
-   "cities": {
-    "schemaVersion": 1,
-    "cities": {
-     "p1": {
-      "level": 2,
-      "queue": [
-       {
-        "type": "house",
-        "remaining": 1
-       },
-       {
-        "type": "house",
-        "remaining": 1
-       },
-       {
-        "type": "tower",
-        "remaining": 3
-       }
-      ]
-     },
-     "p2": {
-      "level": 1,
-      "queue": []
-     }
-    }
-   },
-   "units": {
-    "schemaVersion": 1,
-    "nextId": 6,
-    "units": [
-     {
-      "id": "u0",
-      "owner": "p1",
-      "type": "worker",
-      "hp": 5,
-      "col": 4,
-      "row": 2
-     },
-     {
-      "id": "u5",
-      "owner": "p1",
-      "type": "worker",
-      "hp": 5,
-      "col": 3,
-      "row": 2
-     },
-     {
-      "id": "u1",
-      "owner": "p1",
-      "type": "warrior",
-      "hp": 12,
-      "col": 4,
-      "row": 3
-     },
-     {
-      "id": "u2",
-      "owner": "p1",
-      "type": "archer",
-      "hp": 8,
-      "col": 1,
-      "row": 1
-     },
-     {
-      "id": "u3",
-      "owner": "p2",
-      "type": "worker",
-      "hp": 5,
-      "col": 6,
-      "row": 3
-     },
-     {
-      "id": "u4",
-      "owner": "p2",
-      "type": "warrior",
-      "hp": 12,
-      "col": 5,
-      "row": 2
-     }
-    ]
-   }
-  },
-  {
-   "schemaVersion": 1,
-   "tick": 2,
    "players": [
     {
      "id": "p1"
@@ -4296,809 +3899,17 @@
       "row": 2
      }
     ]
+   },
+   "prompts": {
+    "schemaVersion": 1,
+    "remaining": {
+     "p1": 12,
+     "p2": 20
+    }
    }
   },
   {
    "schemaVersion": 1,
-   "tick": 2,
-   "players": [
-    {
-     "id": "p1"
-    },
-    {
-     "id": "p2"
-    }
-   ],
-   "map": {
-    "schemaVersion": 1,
-    "id": "mockup-vale",
-    "width": 8,
-    "height": 6,
-    "stagger": "odd",
-    "cells": [
-     {
-      "col": 0,
-      "row": 0,
-      "terrain": "forest"
-     },
-     {
-      "col": 1,
-      "row": 0,
-      "terrain": "field"
-     },
-     {
-      "col": 2,
-      "row": 0,
-      "terrain": "field"
-     },
-     {
-      "col": 3,
-      "row": 0,
-      "terrain": "mountain"
-     },
-     {
-      "col": 4,
-      "row": 0,
-      "terrain": "mountain"
-     },
-     {
-      "col": 5,
-      "row": 0,
-      "terrain": "field"
-     },
-     {
-      "col": 6,
-      "row": 0,
-      "terrain": "forest"
-     },
-     {
-      "col": 7,
-      "row": 0,
-      "terrain": "field"
-     },
-     {
-      "col": 0,
-      "row": 1,
-      "terrain": "field"
-     },
-     {
-      "col": 1,
-      "row": 1,
-      "terrain": "road"
-     },
-     {
-      "col": 2,
-      "row": 1,
-      "terrain": "road"
-     },
-     {
-      "col": 3,
-      "row": 1,
-      "terrain": "road"
-     },
-     {
-      "col": 4,
-      "row": 1,
-      "terrain": "bridge"
-     },
-     {
-      "col": 5,
-      "row": 1,
-      "terrain": "river"
-     },
-     {
-      "col": 6,
-      "row": 1,
-      "terrain": "field"
-     },
-     {
-      "col": 7,
-      "row": 1,
-      "terrain": "forest"
-     },
-     {
-      "col": 0,
-      "row": 2,
-      "terrain": "field"
-     },
-     {
-      "col": 1,
-      "row": 2,
-      "terrain": "road"
-     },
-     {
-      "col": 2,
-      "row": 2,
-      "terrain": "city"
-     },
-     {
-      "col": 3,
-      "row": 2,
-      "terrain": "resource",
-      "resource": {
-       "type": "gold",
-       "amount": 27
-      }
-     },
-     {
-      "col": 4,
-      "row": 2,
-      "terrain": "resource",
-      "resource": {
-       "type": "wood",
-       "amount": 23
-      }
-     },
-     {
-      "col": 5,
-      "row": 2,
-      "terrain": "river"
-     },
-     {
-      "col": 6,
-      "row": 2,
-      "terrain": "village"
-     },
-     {
-      "col": 7,
-      "row": 2,
-      "terrain": "field"
-     },
-     {
-      "col": 0,
-      "row": 3,
-      "terrain": "field"
-     },
-     {
-      "col": 1,
-      "row": 3,
-      "terrain": "road"
-     },
-     {
-      "col": 2,
-      "row": 3,
-      "terrain": "field"
-     },
-     {
-      "col": 3,
-      "row": 3,
-      "terrain": "resource",
-      "resource": {
-       "type": "stone",
-       "amount": 20
-      }
-     },
-     {
-      "col": 4,
-      "row": 3,
-      "terrain": "field"
-     },
-     {
-      "col": 5,
-      "row": 3,
-      "terrain": "river"
-     },
-     {
-      "col": 6,
-      "row": 3,
-      "terrain": "field"
-     },
-     {
-      "col": 7,
-      "row": 3,
-      "terrain": "mountain"
-     },
-     {
-      "col": 0,
-      "row": 4,
-      "terrain": "forest"
-     },
-     {
-      "col": 1,
-      "row": 4,
-      "terrain": "field"
-     },
-     {
-      "col": 2,
-      "row": 4,
-      "terrain": "field"
-     },
-     {
-      "col": 3,
-      "row": 4,
-      "terrain": "road"
-     },
-     {
-      "col": 4,
-      "row": 4,
-      "terrain": "road"
-     },
-     {
-      "col": 5,
-      "row": 4,
-      "terrain": "bridge"
-     },
-     {
-      "col": 6,
-      "row": 4,
-      "terrain": "river"
-     },
-     {
-      "col": 7,
-      "row": 4,
-      "terrain": "field"
-     },
-     {
-      "col": 0,
-      "row": 5,
-      "terrain": "field"
-     },
-     {
-      "col": 1,
-      "row": 5,
-      "terrain": "forest"
-     },
-     {
-      "col": 2,
-      "row": 5,
-      "terrain": "resource",
-      "resource": {
-       "type": "food",
-       "amount": 40
-      }
-     },
-     {
-      "col": 3,
-      "row": 5,
-      "terrain": "field"
-     },
-     {
-      "col": 4,
-      "row": 5,
-      "terrain": "mountain"
-     },
-     {
-      "col": 5,
-      "row": 5,
-      "terrain": "field"
-     },
-     {
-      "col": 6,
-      "row": 5,
-      "terrain": "forest"
-     },
-     {
-      "col": 7,
-      "row": 5,
-      "terrain": "field"
-     }
-    ],
-    "spawns": [
-     {
-      "playerIndex": 0,
-      "col": 1,
-      "row": 2
-     },
-     {
-      "playerIndex": 1,
-      "col": 6,
-      "row": 3
-     }
-    ]
-   },
-   "stockpiles": {
-    "schemaVersion": 1,
-    "stockpiles": {
-     "p1": {
-      "food": 60,
-      "wood": 40,
-      "stone": 29,
-      "gold": 28
-     },
-     "p2": {
-      "food": 40,
-      "wood": 30,
-      "stone": 20,
-      "gold": 15
-     }
-    }
-   },
-   "buildings": {
-    "schemaVersion": 1,
-    "buildings": {
-     "p1": {
-      "town-center": 1,
-      "house": 4,
-      "storage": 1,
-      "barracks": 0,
-      "wall": 0,
-      "tower": 0
-     },
-     "p2": {
-      "town-center": 1,
-      "house": 1,
-      "storage": 0,
-      "barracks": 0,
-      "wall": 0,
-      "tower": 0
-     }
-    }
-   },
-   "cities": {
-    "schemaVersion": 1,
-    "cities": {
-     "p1": {
-      "level": 2,
-      "queue": [
-       {
-        "type": "tower",
-        "remaining": 2
-       }
-      ]
-     },
-     "p2": {
-      "level": 1,
-      "queue": []
-     }
-    }
-   },
-   "units": {
-    "schemaVersion": 1,
-    "nextId": 6,
-    "units": [
-     {
-      "id": "u0",
-      "owner": "p1",
-      "type": "worker",
-      "hp": 5,
-      "col": 4,
-      "row": 2
-     },
-     {
-      "id": "u5",
-      "owner": "p1",
-      "type": "worker",
-      "hp": 5,
-      "col": 3,
-      "row": 2
-     },
-     {
-      "id": "u1",
-      "owner": "p1",
-      "type": "warrior",
-      "hp": 12,
-      "col": 4,
-      "row": 3
-     },
-     {
-      "id": "u2",
-      "owner": "p1",
-      "type": "archer",
-      "hp": 8,
-      "col": 1,
-      "row": 1
-     },
-     {
-      "id": "u3",
-      "owner": "p2",
-      "type": "worker",
-      "hp": 5,
-      "col": 7,
-      "row": 3
-     },
-     {
-      "id": "u4",
-      "owner": "p2",
-      "type": "warrior",
-      "hp": 12,
-      "col": 5,
-      "row": 2
-     }
-    ]
-   }
-  },
-  {
-   "schemaVersion": 1,
-   "tick": 2,
-   "players": [
-    {
-     "id": "p1"
-    },
-    {
-     "id": "p2"
-    }
-   ],
-   "map": {
-    "schemaVersion": 1,
-    "id": "mockup-vale",
-    "width": 8,
-    "height": 6,
-    "stagger": "odd",
-    "cells": [
-     {
-      "col": 0,
-      "row": 0,
-      "terrain": "forest"
-     },
-     {
-      "col": 1,
-      "row": 0,
-      "terrain": "field"
-     },
-     {
-      "col": 2,
-      "row": 0,
-      "terrain": "field"
-     },
-     {
-      "col": 3,
-      "row": 0,
-      "terrain": "mountain"
-     },
-     {
-      "col": 4,
-      "row": 0,
-      "terrain": "mountain"
-     },
-     {
-      "col": 5,
-      "row": 0,
-      "terrain": "field"
-     },
-     {
-      "col": 6,
-      "row": 0,
-      "terrain": "forest"
-     },
-     {
-      "col": 7,
-      "row": 0,
-      "terrain": "field"
-     },
-     {
-      "col": 0,
-      "row": 1,
-      "terrain": "field"
-     },
-     {
-      "col": 1,
-      "row": 1,
-      "terrain": "road"
-     },
-     {
-      "col": 2,
-      "row": 1,
-      "terrain": "road"
-     },
-     {
-      "col": 3,
-      "row": 1,
-      "terrain": "road"
-     },
-     {
-      "col": 4,
-      "row": 1,
-      "terrain": "bridge"
-     },
-     {
-      "col": 5,
-      "row": 1,
-      "terrain": "river"
-     },
-     {
-      "col": 6,
-      "row": 1,
-      "terrain": "field"
-     },
-     {
-      "col": 7,
-      "row": 1,
-      "terrain": "forest"
-     },
-     {
-      "col": 0,
-      "row": 2,
-      "terrain": "field"
-     },
-     {
-      "col": 1,
-      "row": 2,
-      "terrain": "road"
-     },
-     {
-      "col": 2,
-      "row": 2,
-      "terrain": "city"
-     },
-     {
-      "col": 3,
-      "row": 2,
-      "terrain": "resource",
-      "resource": {
-       "type": "gold",
-       "amount": 27
-      }
-     },
-     {
-      "col": 4,
-      "row": 2,
-      "terrain": "resource",
-      "resource": {
-       "type": "wood",
-       "amount": 23
-      }
-     },
-     {
-      "col": 5,
-      "row": 2,
-      "terrain": "river"
-     },
-     {
-      "col": 6,
-      "row": 2,
-      "terrain": "village"
-     },
-     {
-      "col": 7,
-      "row": 2,
-      "terrain": "field"
-     },
-     {
-      "col": 0,
-      "row": 3,
-      "terrain": "field"
-     },
-     {
-      "col": 1,
-      "row": 3,
-      "terrain": "road"
-     },
-     {
-      "col": 2,
-      "row": 3,
-      "terrain": "field"
-     },
-     {
-      "col": 3,
-      "row": 3,
-      "terrain": "resource",
-      "resource": {
-       "type": "stone",
-       "amount": 20
-      }
-     },
-     {
-      "col": 4,
-      "row": 3,
-      "terrain": "field"
-     },
-     {
-      "col": 5,
-      "row": 3,
-      "terrain": "river"
-     },
-     {
-      "col": 6,
-      "row": 3,
-      "terrain": "field"
-     },
-     {
-      "col": 7,
-      "row": 3,
-      "terrain": "mountain"
-     },
-     {
-      "col": 0,
-      "row": 4,
-      "terrain": "forest"
-     },
-     {
-      "col": 1,
-      "row": 4,
-      "terrain": "field"
-     },
-     {
-      "col": 2,
-      "row": 4,
-      "terrain": "field"
-     },
-     {
-      "col": 3,
-      "row": 4,
-      "terrain": "road"
-     },
-     {
-      "col": 4,
-      "row": 4,
-      "terrain": "road"
-     },
-     {
-      "col": 5,
-      "row": 4,
-      "terrain": "bridge"
-     },
-     {
-      "col": 6,
-      "row": 4,
-      "terrain": "river"
-     },
-     {
-      "col": 7,
-      "row": 4,
-      "terrain": "field"
-     },
-     {
-      "col": 0,
-      "row": 5,
-      "terrain": "field"
-     },
-     {
-      "col": 1,
-      "row": 5,
-      "terrain": "forest"
-     },
-     {
-      "col": 2,
-      "row": 5,
-      "terrain": "resource",
-      "resource": {
-       "type": "food",
-       "amount": 40
-      }
-     },
-     {
-      "col": 3,
-      "row": 5,
-      "terrain": "field"
-     },
-     {
-      "col": 4,
-      "row": 5,
-      "terrain": "mountain"
-     },
-     {
-      "col": 5,
-      "row": 5,
-      "terrain": "field"
-     },
-     {
-      "col": 6,
-      "row": 5,
-      "terrain": "forest"
-     },
-     {
-      "col": 7,
-      "row": 5,
-      "terrain": "field"
-     }
-    ],
-    "spawns": [
-     {
-      "playerIndex": 0,
-      "col": 1,
-      "row": 2
-     },
-     {
-      "playerIndex": 1,
-      "col": 6,
-      "row": 3
-     }
-    ]
-   },
-   "stockpiles": {
-    "schemaVersion": 1,
-    "stockpiles": {
-     "p1": {
-      "food": 60,
-      "wood": 40,
-      "stone": 29,
-      "gold": 28
-     },
-     "p2": {
-      "food": 40,
-      "wood": 30,
-      "stone": 20,
-      "gold": 15
-     }
-    }
-   },
-   "buildings": {
-    "schemaVersion": 1,
-    "buildings": {
-     "p1": {
-      "town-center": 1,
-      "house": 4,
-      "storage": 1,
-      "barracks": 0,
-      "wall": 0,
-      "tower": 0
-     },
-     "p2": {
-      "town-center": 1,
-      "house": 1,
-      "storage": 0,
-      "barracks": 0,
-      "wall": 0,
-      "tower": 0
-     }
-    }
-   },
-   "cities": {
-    "schemaVersion": 1,
-    "cities": {
-     "p1": {
-      "level": 2,
-      "queue": [
-       {
-        "type": "tower",
-        "remaining": 2
-       }
-      ]
-     },
-     "p2": {
-      "level": 1,
-      "queue": []
-     }
-    }
-   },
-   "units": {
-    "schemaVersion": 1,
-    "nextId": 6,
-    "units": [
-     {
-      "id": "u0",
-      "owner": "p1",
-      "type": "worker",
-      "hp": 5,
-      "col": 4,
-      "row": 2
-     },
-     {
-      "id": "u5",
-      "owner": "p1",
-      "type": "worker",
-      "hp": 5,
-      "col": 3,
-      "row": 2
-     },
-     {
-      "id": "u1",
-      "owner": "p1",
-      "type": "warrior",
-      "hp": 12,
-      "col": 4,
-      "row": 3
-     },
-     {
-      "id": "u2",
-      "owner": "p1",
-      "type": "archer",
-      "hp": 8,
-      "col": 2,
-      "row": 1
-     },
-     {
-      "id": "u3",
-      "owner": "p2",
-      "type": "worker",
-      "hp": 5,
-      "col": 7,
-      "row": 3
-     },
-     {
-      "id": "u4",
-      "owner": "p2",
-      "type": "warrior",
-      "hp": 12,
-      "col": 5,
-      "row": 2
-     }
-    ]
-   }
-  },
-  {
-   "schemaVersion": 1,
-   "tick": 3,
    "players": [
     {
      "id": "p1"
@@ -5473,7 +4284,7 @@
       "owner": "p1",
       "type": "archer",
       "hp": 8,
-      "col": 2,
+      "col": 1,
       "row": 1
      },
      {
@@ -5481,7 +4292,7 @@
       "owner": "p2",
       "type": "worker",
       "hp": 5,
-      "col": 7,
+      "col": 6,
       "row": 3
      },
      {
@@ -5493,11 +4304,17 @@
       "row": 2
      }
     ]
+   },
+   "prompts": {
+    "schemaVersion": 1,
+    "remaining": {
+     "p1": 11,
+     "p2": 20
+    }
    }
   },
   {
    "schemaVersion": 1,
-   "tick": 3,
    "players": [
     {
      "id": "p1"
@@ -5825,13 +4642,413 @@
     "schemaVersion": 1,
     "cities": {
      "p1": {
-      "level": 3,
+      "level": 2,
       "queue": [
        {
         "type": "tower",
         "remaining": 1
        }
       ]
+     },
+     "p2": {
+      "level": 1,
+      "queue": []
+     }
+    }
+   },
+   "units": {
+    "schemaVersion": 1,
+    "nextId": 6,
+    "units": [
+     {
+      "id": "u0",
+      "owner": "p1",
+      "type": "worker",
+      "hp": 5,
+      "col": 4,
+      "row": 2
+     },
+     {
+      "id": "u5",
+      "owner": "p1",
+      "type": "worker",
+      "hp": 5,
+      "col": 3,
+      "row": 2
+     },
+     {
+      "id": "u1",
+      "owner": "p1",
+      "type": "warrior",
+      "hp": 12,
+      "col": 4,
+      "row": 3
+     },
+     {
+      "id": "u2",
+      "owner": "p1",
+      "type": "archer",
+      "hp": 8,
+      "col": 1,
+      "row": 1
+     },
+     {
+      "id": "u3",
+      "owner": "p2",
+      "type": "worker",
+      "hp": 5,
+      "col": 7,
+      "row": 3
+     },
+     {
+      "id": "u4",
+      "owner": "p2",
+      "type": "warrior",
+      "hp": 12,
+      "col": 5,
+      "row": 2
+     }
+    ]
+   },
+   "prompts": {
+    "schemaVersion": 1,
+    "remaining": {
+     "p1": 11,
+     "p2": 19
+    }
+   }
+  },
+  {
+   "schemaVersion": 1,
+   "players": [
+    {
+     "id": "p1"
+    },
+    {
+     "id": "p2"
+    }
+   ],
+   "map": {
+    "schemaVersion": 1,
+    "id": "mockup-vale",
+    "width": 8,
+    "height": 6,
+    "stagger": "odd",
+    "cells": [
+     {
+      "col": 0,
+      "row": 0,
+      "terrain": "forest"
+     },
+     {
+      "col": 1,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 2,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 0,
+      "terrain": "mountain"
+     },
+     {
+      "col": 4,
+      "row": 0,
+      "terrain": "mountain"
+     },
+     {
+      "col": 5,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 6,
+      "row": 0,
+      "terrain": "forest"
+     },
+     {
+      "col": 7,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 1,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 3,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 4,
+      "row": 1,
+      "terrain": "bridge"
+     },
+     {
+      "col": 5,
+      "row": 1,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 1,
+      "terrain": "field"
+     },
+     {
+      "col": 7,
+      "row": 1,
+      "terrain": "forest"
+     },
+     {
+      "col": 0,
+      "row": 2,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 2,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 2,
+      "terrain": "city"
+     },
+     {
+      "col": 3,
+      "row": 2,
+      "terrain": "resource",
+      "resource": {
+       "type": "gold",
+       "amount": 27
+      }
+     },
+     {
+      "col": 4,
+      "row": 2,
+      "terrain": "resource",
+      "resource": {
+       "type": "wood",
+       "amount": 23
+      }
+     },
+     {
+      "col": 5,
+      "row": 2,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 2,
+      "terrain": "village"
+     },
+     {
+      "col": 7,
+      "row": 2,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 3,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 3,
+      "terrain": "resource",
+      "resource": {
+       "type": "stone",
+       "amount": 20
+      }
+     },
+     {
+      "col": 4,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 5,
+      "row": 3,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 7,
+      "row": 3,
+      "terrain": "mountain"
+     },
+     {
+      "col": 0,
+      "row": 4,
+      "terrain": "forest"
+     },
+     {
+      "col": 1,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 2,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 4,
+      "terrain": "road"
+     },
+     {
+      "col": 4,
+      "row": 4,
+      "terrain": "road"
+     },
+     {
+      "col": 5,
+      "row": 4,
+      "terrain": "bridge"
+     },
+     {
+      "col": 6,
+      "row": 4,
+      "terrain": "river"
+     },
+     {
+      "col": 7,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 5,
+      "terrain": "forest"
+     },
+     {
+      "col": 2,
+      "row": 5,
+      "terrain": "resource",
+      "resource": {
+       "type": "food",
+       "amount": 40
+      }
+     },
+     {
+      "col": 3,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 4,
+      "row": 5,
+      "terrain": "mountain"
+     },
+     {
+      "col": 5,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 6,
+      "row": 5,
+      "terrain": "forest"
+     },
+     {
+      "col": 7,
+      "row": 5,
+      "terrain": "field"
+     }
+    ],
+    "spawns": [
+     {
+      "playerIndex": 0,
+      "col": 1,
+      "row": 2
+     },
+     {
+      "playerIndex": 1,
+      "col": 6,
+      "row": 3
+     }
+    ]
+   },
+   "stockpiles": {
+    "schemaVersion": 1,
+    "stockpiles": {
+     "p1": {
+      "food": 60,
+      "wood": 40,
+      "stone": 29,
+      "gold": 28
+     },
+     "p2": {
+      "food": 40,
+      "wood": 30,
+      "stone": 20,
+      "gold": 15
+     }
+    }
+   },
+   "buildings": {
+    "schemaVersion": 1,
+    "buildings": {
+     "p1": {
+      "town-center": 1,
+      "house": 4,
+      "storage": 1,
+      "barracks": 0,
+      "wall": 0,
+      "tower": 1
+     },
+     "p2": {
+      "town-center": 1,
+      "house": 1,
+      "storage": 0,
+      "barracks": 0,
+      "wall": 0,
+      "tower": 0
+     }
+    }
+   },
+   "cities": {
+    "schemaVersion": 1,
+    "cities": {
+     "p1": {
+      "level": 2,
+      "queue": []
      },
      "p2": {
       "level": 1,
@@ -5892,11 +5109,417 @@
       "row": 2
      }
     ]
+   },
+   "prompts": {
+    "schemaVersion": 1,
+    "remaining": {
+     "p1": 10,
+     "p2": 19
+    }
    }
   },
   {
    "schemaVersion": 1,
-   "tick": 4,
+   "players": [
+    {
+     "id": "p1"
+    },
+    {
+     "id": "p2"
+    }
+   ],
+   "map": {
+    "schemaVersion": 1,
+    "id": "mockup-vale",
+    "width": 8,
+    "height": 6,
+    "stagger": "odd",
+    "cells": [
+     {
+      "col": 0,
+      "row": 0,
+      "terrain": "forest"
+     },
+     {
+      "col": 1,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 2,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 0,
+      "terrain": "mountain"
+     },
+     {
+      "col": 4,
+      "row": 0,
+      "terrain": "mountain"
+     },
+     {
+      "col": 5,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 6,
+      "row": 0,
+      "terrain": "forest"
+     },
+     {
+      "col": 7,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 1,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 3,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 4,
+      "row": 1,
+      "terrain": "bridge"
+     },
+     {
+      "col": 5,
+      "row": 1,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 1,
+      "terrain": "field"
+     },
+     {
+      "col": 7,
+      "row": 1,
+      "terrain": "forest"
+     },
+     {
+      "col": 0,
+      "row": 2,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 2,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 2,
+      "terrain": "city"
+     },
+     {
+      "col": 3,
+      "row": 2,
+      "terrain": "resource",
+      "resource": {
+       "type": "gold",
+       "amount": 27
+      }
+     },
+     {
+      "col": 4,
+      "row": 2,
+      "terrain": "resource",
+      "resource": {
+       "type": "wood",
+       "amount": 23
+      }
+     },
+     {
+      "col": 5,
+      "row": 2,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 2,
+      "terrain": "village"
+     },
+     {
+      "col": 7,
+      "row": 2,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 3,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 3,
+      "terrain": "resource",
+      "resource": {
+       "type": "stone",
+       "amount": 20
+      }
+     },
+     {
+      "col": 4,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 5,
+      "row": 3,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 7,
+      "row": 3,
+      "terrain": "mountain"
+     },
+     {
+      "col": 0,
+      "row": 4,
+      "terrain": "forest"
+     },
+     {
+      "col": 1,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 2,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 4,
+      "terrain": "road"
+     },
+     {
+      "col": 4,
+      "row": 4,
+      "terrain": "road"
+     },
+     {
+      "col": 5,
+      "row": 4,
+      "terrain": "bridge"
+     },
+     {
+      "col": 6,
+      "row": 4,
+      "terrain": "river"
+     },
+     {
+      "col": 7,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 5,
+      "terrain": "forest"
+     },
+     {
+      "col": 2,
+      "row": 5,
+      "terrain": "resource",
+      "resource": {
+       "type": "food",
+       "amount": 40
+      }
+     },
+     {
+      "col": 3,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 4,
+      "row": 5,
+      "terrain": "mountain"
+     },
+     {
+      "col": 5,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 6,
+      "row": 5,
+      "terrain": "forest"
+     },
+     {
+      "col": 7,
+      "row": 5,
+      "terrain": "field"
+     }
+    ],
+    "spawns": [
+     {
+      "playerIndex": 0,
+      "col": 1,
+      "row": 2
+     },
+     {
+      "playerIndex": 1,
+      "col": 6,
+      "row": 3
+     }
+    ]
+   },
+   "stockpiles": {
+    "schemaVersion": 1,
+    "stockpiles": {
+     "p1": {
+      "food": 60,
+      "wood": 40,
+      "stone": 29,
+      "gold": 28
+     },
+     "p2": {
+      "food": 40,
+      "wood": 30,
+      "stone": 20,
+      "gold": 15
+     }
+    }
+   },
+   "buildings": {
+    "schemaVersion": 1,
+    "buildings": {
+     "p1": {
+      "town-center": 1,
+      "house": 4,
+      "storage": 1,
+      "barracks": 0,
+      "wall": 0,
+      "tower": 1
+     },
+     "p2": {
+      "town-center": 1,
+      "house": 1,
+      "storage": 0,
+      "barracks": 0,
+      "wall": 0,
+      "tower": 0
+     }
+    }
+   },
+   "cities": {
+    "schemaVersion": 1,
+    "cities": {
+     "p1": {
+      "level": 2,
+      "queue": []
+     },
+     "p2": {
+      "level": 1,
+      "queue": []
+     }
+    }
+   },
+   "units": {
+    "schemaVersion": 1,
+    "nextId": 6,
+    "units": [
+     {
+      "id": "u0",
+      "owner": "p1",
+      "type": "worker",
+      "hp": 5,
+      "col": 4,
+      "row": 2
+     },
+     {
+      "id": "u5",
+      "owner": "p1",
+      "type": "worker",
+      "hp": 5,
+      "col": 3,
+      "row": 2
+     },
+     {
+      "id": "u1",
+      "owner": "p1",
+      "type": "warrior",
+      "hp": 12,
+      "col": 4,
+      "row": 3
+     },
+     {
+      "id": "u2",
+      "owner": "p1",
+      "type": "archer",
+      "hp": 8,
+      "col": 2,
+      "row": 1
+     },
+     {
+      "id": "u3",
+      "owner": "p2",
+      "type": "worker",
+      "hp": 5,
+      "col": 7,
+      "row": 3
+     },
+     {
+      "id": "u4",
+      "owner": "p2",
+      "type": "warrior",
+      "hp": 12,
+      "col": 5,
+      "row": 2
+     }
+    ]
+   },
+   "prompts": {
+    "schemaVersion": 1,
+    "remaining": {
+     "p1": 9,
+     "p2": 19
+    }
+   }
+  },
+  {
+   "schemaVersion": 1,
    "players": [
     {
      "id": "p1"
@@ -6286,11 +5909,417 @@
       "row": 2
      }
     ]
+   },
+   "prompts": {
+    "schemaVersion": 1,
+    "remaining": {
+     "p1": 8,
+     "p2": 19
+    }
    }
   },
   {
    "schemaVersion": 1,
-   "tick": 4,
+   "players": [
+    {
+     "id": "p1"
+    },
+    {
+     "id": "p2"
+    }
+   ],
+   "map": {
+    "schemaVersion": 1,
+    "id": "mockup-vale",
+    "width": 8,
+    "height": 6,
+    "stagger": "odd",
+    "cells": [
+     {
+      "col": 0,
+      "row": 0,
+      "terrain": "forest"
+     },
+     {
+      "col": 1,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 2,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 0,
+      "terrain": "mountain"
+     },
+     {
+      "col": 4,
+      "row": 0,
+      "terrain": "mountain"
+     },
+     {
+      "col": 5,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 6,
+      "row": 0,
+      "terrain": "forest"
+     },
+     {
+      "col": 7,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 1,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 3,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 4,
+      "row": 1,
+      "terrain": "bridge"
+     },
+     {
+      "col": 5,
+      "row": 1,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 1,
+      "terrain": "field"
+     },
+     {
+      "col": 7,
+      "row": 1,
+      "terrain": "forest"
+     },
+     {
+      "col": 0,
+      "row": 2,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 2,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 2,
+      "terrain": "city"
+     },
+     {
+      "col": 3,
+      "row": 2,
+      "terrain": "resource",
+      "resource": {
+       "type": "gold",
+       "amount": 27
+      }
+     },
+     {
+      "col": 4,
+      "row": 2,
+      "terrain": "resource",
+      "resource": {
+       "type": "wood",
+       "amount": 23
+      }
+     },
+     {
+      "col": 5,
+      "row": 2,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 2,
+      "terrain": "village"
+     },
+     {
+      "col": 7,
+      "row": 2,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 3,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 3,
+      "terrain": "resource",
+      "resource": {
+       "type": "stone",
+       "amount": 20
+      }
+     },
+     {
+      "col": 4,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 5,
+      "row": 3,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 7,
+      "row": 3,
+      "terrain": "mountain"
+     },
+     {
+      "col": 0,
+      "row": 4,
+      "terrain": "forest"
+     },
+     {
+      "col": 1,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 2,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 4,
+      "terrain": "road"
+     },
+     {
+      "col": 4,
+      "row": 4,
+      "terrain": "road"
+     },
+     {
+      "col": 5,
+      "row": 4,
+      "terrain": "bridge"
+     },
+     {
+      "col": 6,
+      "row": 4,
+      "terrain": "river"
+     },
+     {
+      "col": 7,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 5,
+      "terrain": "forest"
+     },
+     {
+      "col": 2,
+      "row": 5,
+      "terrain": "resource",
+      "resource": {
+       "type": "food",
+       "amount": 40
+      }
+     },
+     {
+      "col": 3,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 4,
+      "row": 5,
+      "terrain": "mountain"
+     },
+     {
+      "col": 5,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 6,
+      "row": 5,
+      "terrain": "forest"
+     },
+     {
+      "col": 7,
+      "row": 5,
+      "terrain": "field"
+     }
+    ],
+    "spawns": [
+     {
+      "playerIndex": 0,
+      "col": 1,
+      "row": 2
+     },
+     {
+      "playerIndex": 1,
+      "col": 6,
+      "row": 3
+     }
+    ]
+   },
+   "stockpiles": {
+    "schemaVersion": 1,
+    "stockpiles": {
+     "p1": {
+      "food": 60,
+      "wood": 40,
+      "stone": 29,
+      "gold": 28
+     },
+     "p2": {
+      "food": 40,
+      "wood": 30,
+      "stone": 20,
+      "gold": 15
+     }
+    }
+   },
+   "buildings": {
+    "schemaVersion": 1,
+    "buildings": {
+     "p1": {
+      "town-center": 1,
+      "house": 4,
+      "storage": 1,
+      "barracks": 0,
+      "wall": 0,
+      "tower": 1
+     },
+     "p2": {
+      "town-center": 1,
+      "house": 1,
+      "storage": 0,
+      "barracks": 0,
+      "wall": 0,
+      "tower": 0
+     }
+    }
+   },
+   "cities": {
+    "schemaVersion": 1,
+    "cities": {
+     "p1": {
+      "level": 3,
+      "queue": []
+     },
+     "p2": {
+      "level": 1,
+      "queue": []
+     }
+    }
+   },
+   "units": {
+    "schemaVersion": 1,
+    "nextId": 6,
+    "units": [
+     {
+      "id": "u0",
+      "owner": "p1",
+      "type": "worker",
+      "hp": 5,
+      "col": 4,
+      "row": 2
+     },
+     {
+      "id": "u5",
+      "owner": "p1",
+      "type": "worker",
+      "hp": 5,
+      "col": 3,
+      "row": 2
+     },
+     {
+      "id": "u1",
+      "owner": "p1",
+      "type": "warrior",
+      "hp": 12,
+      "col": 4,
+      "row": 3
+     },
+     {
+      "id": "u2",
+      "owner": "p1",
+      "type": "archer",
+      "hp": 8,
+      "col": 2,
+      "row": 1
+     },
+     {
+      "id": "u3",
+      "owner": "p2",
+      "type": "worker",
+      "hp": 5,
+      "col": 7,
+      "row": 3
+     },
+     {
+      "id": "u4",
+      "owner": "p2",
+      "type": "warrior",
+      "hp": 12,
+      "col": 5,
+      "row": 2
+     }
+    ]
+   },
+   "prompts": {
+    "schemaVersion": 1,
+    "remaining": {
+     "p1": 7,
+     "p2": 19
+    }
+   }
+  },
+  {
+   "schemaVersion": 1,
    "players": [
     {
      "id": "p1"
@@ -6680,6 +6709,13 @@
       "row": 2
      }
     ]
+   },
+   "prompts": {
+    "schemaVersion": 1,
+    "remaining": {
+     "p1": 6,
+     "p2": 19
+    }
    }
   }
  ],
@@ -6707,12 +6743,12 @@
   {
    "status": "applied",
    "revision": 5,
-   "summary": "started house (2 ticks)"
+   "summary": "started house (2 prompts)"
   },
   {
    "status": "applied",
    "revision": 6,
-   "summary": "tick=1"
+   "summary": "world-noop"
   },
   {
    "status": "applied",
@@ -6722,12 +6758,12 @@
   {
    "status": "applied",
    "revision": 8,
-   "summary": "started tower (3 ticks)"
+   "summary": "started tower (3 prompts)"
   },
   {
    "status": "applied",
    "revision": 9,
-   "summary": "tick=2"
+   "summary": "world-noop"
   },
   {
    "status": "applied",
@@ -6742,7 +6778,7 @@
   {
    "status": "applied",
    "revision": 12,
-   "summary": "tick=3"
+   "summary": "world-noop"
   },
   {
    "status": "applied",
@@ -6752,7 +6788,7 @@
   {
    "status": "applied",
    "revision": 14,
-   "summary": "tick=4"
+   "summary": "world-noop"
   },
   {
    "status": "applied",
@@ -6763,7 +6799,6 @@
  "events": [
   {
    "seq": 1,
-   "tick": 0,
    "revision": 0,
    "type": "match.started",
    "priority": "normal",
@@ -6785,7 +6820,6 @@
   },
   {
    "seq": 2,
-   "tick": 0,
    "revision": 1,
    "type": "resource.gathered",
    "priority": "normal",
@@ -6799,7 +6833,6 @@
   },
   {
    "seq": 3,
-   "tick": 0,
    "revision": 2,
    "type": "unit.moved",
    "priority": "low",
@@ -6812,7 +6845,16 @@
   },
   {
    "seq": 4,
-   "tick": 0,
+   "revision": 2,
+   "type": "build.completed",
+   "priority": "normal",
+   "payload": {
+    "player": "p1",
+    "building": "house"
+   }
+  },
+  {
+   "seq": 5,
    "revision": 3,
    "type": "unit.moved",
    "priority": "low",
@@ -6824,8 +6866,7 @@
    }
   },
   {
-   "seq": 5,
-   "tick": 0,
+   "seq": 6,
    "revision": 4,
    "type": "resource.gathered",
    "priority": "normal",
@@ -6838,8 +6879,7 @@
    }
   },
   {
-   "seq": 6,
-   "tick": 0,
+   "seq": 7,
    "revision": 5,
    "type": "build.started",
    "priority": "normal",
@@ -6849,18 +6889,17 @@
    }
   },
   {
-   "seq": 7,
-   "tick": 1,
+   "seq": 8,
    "revision": 6,
-   "type": "match.advanced",
-   "priority": "low",
+   "type": "build.completed",
+   "priority": "normal",
    "payload": {
-    "tick": 1
+    "player": "p1",
+    "building": "house"
    }
   },
   {
-   "seq": 8,
-   "tick": 1,
+   "seq": 9,
    "revision": 7,
    "type": "unit.moved",
    "priority": "low",
@@ -6872,8 +6911,7 @@
    }
   },
   {
-   "seq": 9,
-   "tick": 1,
+   "seq": 10,
    "revision": 8,
    "type": "build.started",
    "priority": "normal",
@@ -6883,40 +6921,7 @@
    }
   },
   {
-   "seq": 10,
-   "tick": 2,
-   "revision": 9,
-   "type": "match.advanced",
-   "priority": "low",
-   "payload": {
-    "tick": 2
-   }
-  },
-  {
    "seq": 11,
-   "tick": 2,
-   "revision": 9,
-   "type": "build.completed",
-   "priority": "normal",
-   "payload": {
-    "player": "p1",
-    "building": "house"
-   }
-  },
-  {
-   "seq": 12,
-   "tick": 2,
-   "revision": 9,
-   "type": "build.completed",
-   "priority": "normal",
-   "payload": {
-    "player": "p1",
-    "building": "house"
-   }
-  },
-  {
-   "seq": 13,
-   "tick": 2,
    "revision": 10,
    "type": "unit.moved",
    "priority": "low",
@@ -6928,8 +6933,7 @@
    }
   },
   {
-   "seq": 14,
-   "tick": 2,
+   "seq": 12,
    "revision": 11,
    "type": "unit.moved",
    "priority": "low",
@@ -6941,29 +6945,8 @@
    }
   },
   {
-   "seq": 15,
-   "tick": 3,
-   "revision": 12,
-   "type": "match.advanced",
-   "priority": "low",
-   "payload": {
-    "tick": 3
-   }
-  },
-  {
-   "seq": 16,
-   "tick": 4,
-   "revision": 14,
-   "type": "match.advanced",
-   "priority": "low",
-   "payload": {
-    "tick": 4
-   }
-  },
-  {
-   "seq": 17,
-   "tick": 4,
-   "revision": 14,
+   "seq": 13,
+   "revision": 11,
    "type": "build.completed",
    "priority": "normal",
    "payload": {
@@ -6972,8 +6955,7 @@
    }
   },
   {
-   "seq": 18,
-   "tick": 4,
+   "seq": 14,
    "revision": 15,
    "type": "resource.gathered",
    "priority": "normal",
@@ -6990,167 +6972,152 @@
   {
    "seq": 1,
    "revision": 1,
-   "tick": 0,
    "requestId": "r1",
    "playerId": "p1",
    "type": "economy.gather",
    "applied": true,
    "detail": "gathered 3 gold at 3,2",
-   "stateHash": "7d3826212f5d046e3fe3501828cb17c8d93e91671d9fb35e0237db40b41ba0a8"
+   "stateHash": "73942cdef5d40b5bd5358827dac77d82e72bae8824bf6190ab3d69afd9d8e75f"
   },
   {
    "seq": 2,
    "revision": 2,
-   "tick": 0,
    "requestId": "r2",
    "playerId": "p1",
    "type": "unit.move",
    "applied": true,
    "detail": "moved u0 to 3,2",
-   "stateHash": "d5ac090b2bea2cb273522bef7212ec12198680e6decb13b1089ce2d0752f5018"
+   "stateHash": "473bdacf42086a3e9cdc5f73abb82d9f9b241fdd94848aa277e89444f682318c"
   },
   {
    "seq": 3,
    "revision": 3,
-   "tick": 0,
    "requestId": "r3",
    "playerId": "p1",
    "type": "unit.move",
    "applied": true,
    "detail": "moved u0 to 4,2",
-   "stateHash": "6929abb3ca1fc98db8a223995495acda3ce2a1e7980c4a6cd225aae3e4f92c90"
+   "stateHash": "12e354a08edb2006456ad03a265d4c2e0c15026027130a3bad84a19afac29c3d"
   },
   {
    "seq": 4,
    "revision": 4,
-   "tick": 0,
    "requestId": "r4",
    "playerId": "p1",
    "type": "economy.gather",
    "applied": true,
    "detail": "gathered 2 wood at 4,2",
-   "stateHash": "e75efd70e2a0586dc166df36b8c965b085eae703c3f99fa10bc364044896a6d3"
+   "stateHash": "7f4afde6bde223af0101e71f1a3c9b7bddbd56a83eb42517f46c5d74cd70d518"
   },
   {
    "seq": 5,
    "revision": 5,
-   "tick": 0,
    "requestId": "r5",
    "playerId": "p1",
    "type": "city.build",
    "applied": true,
-   "detail": "started house (2 ticks)",
-   "stateHash": "da9a0869d9b27d9c2d10dc43ed7eb68b09b67fed4534f9ed33588f97bddd2f93"
+   "detail": "started house (2 prompts)",
+   "stateHash": "6154b66e8d12a7b0b4c787e7301cd91b4d323a238e4504367f4d81130622a94c"
   },
   {
    "seq": 6,
    "revision": 6,
-   "tick": 1,
    "requestId": "r6",
    "playerId": "p1",
-   "type": "match.advance",
+   "type": "world.noop",
    "applied": true,
-   "detail": "tick=1",
-   "stateHash": "61197e5c5b52160ce0719ab8eedace46026f7380b37954ea05f946f28761d1d3"
+   "detail": "world-noop",
+   "stateHash": "232a2dd8dd5b7b4ef603bfd16b1c7a4cb23e1d8cc048fdbed607dff89b549268"
   },
   {
    "seq": 7,
    "revision": 7,
-   "tick": 1,
    "requestId": "r7",
    "playerId": "p1",
    "type": "unit.move",
    "applied": true,
    "detail": "moved u1 to 4,3",
-   "stateHash": "4a3d91e32ded5d16faa93a9906ad3069b3f28c29b9fd192c0073c2bc6eb2c8bc"
+   "stateHash": "6a2c2b9425c1fc30d2cfe10b4fbac754c8257a9564e52aaa7cc2d4c129e5bc22"
   },
   {
    "seq": 8,
    "revision": 8,
-   "tick": 1,
    "requestId": "r8",
    "playerId": "p1",
    "type": "city.build",
    "applied": true,
-   "detail": "started tower (3 ticks)",
-   "stateHash": "ec636773cbf6f1ef9c327839c53428da315d30b59547fb9d71775a6fcabe50ae"
+   "detail": "started tower (3 prompts)",
+   "stateHash": "8389077b79a9d5c2f08e54d82f11587b51a24b80a921632793d1daab51941612"
   },
   {
    "seq": 9,
    "revision": 9,
-   "tick": 2,
    "requestId": "r9",
    "playerId": "p1",
-   "type": "match.advance",
+   "type": "world.noop",
    "applied": true,
-   "detail": "tick=2",
-   "stateHash": "8b4d1a3cbeae216d86df7e7024495c4abcec3b62fa2c31014d539be873930630"
+   "detail": "world-noop",
+   "stateHash": "e4ec5edcc043e5ea75d19c4dc26a2a6bbbd2ca007993963f8b30724bd06a454c"
   },
   {
    "seq": 10,
    "revision": 10,
-   "tick": 2,
    "requestId": "r10",
    "playerId": "p2",
    "type": "unit.move",
    "applied": true,
    "detail": "moved u3 to 7,3",
-   "stateHash": "1c5212243d58bbacebc2828e0f9862b0766b6536a36cc9935d5ba5037b1c6718"
+   "stateHash": "2d55888c554d500342cd592e3c3bc624e8a8daca72bc4fa255fb292a497f9cd2"
   },
   {
    "seq": 11,
    "revision": 11,
-   "tick": 2,
    "requestId": "r11",
    "playerId": "p1",
    "type": "unit.move",
    "applied": true,
    "detail": "moved u2 to 2,1",
-   "stateHash": "9fe0bf006d8c74a77a2aa23ffa75aac9748f282d5b116aeaab528df36617f743"
+   "stateHash": "069609774f875a4f5e37d1d5e707010dab39abd1d031dbfa249dce771449dd89"
   },
   {
    "seq": 12,
    "revision": 12,
-   "tick": 3,
    "requestId": "r12",
    "playerId": "p1",
-   "type": "match.advance",
+   "type": "world.noop",
    "applied": true,
-   "detail": "tick=3",
-   "stateHash": "fb5fa68b289fe65e07f39ab443bafb473302efee5d247252ba3591770b2047cb"
+   "detail": "world-noop",
+   "stateHash": "b23a6285513d18a12380dee9cea7efbd474f0e7267517e9b2ba678db4e95be80"
   },
   {
    "seq": 13,
    "revision": 13,
-   "tick": 3,
    "requestId": "r13",
    "playerId": "p1",
    "type": "city.upgrade",
    "applied": true,
    "detail": "upgraded to level 3",
-   "stateHash": "943965f289aef00e4b8ed6ff93a73f4172a97010d5d274105561e0d385011f66"
+   "stateHash": "81321b5a6160f987b4db873f9dcc33d7230e47bcdf07eb76c7b127e6520ff3b1"
   },
   {
    "seq": 14,
    "revision": 14,
-   "tick": 4,
    "requestId": "r14",
    "playerId": "p1",
-   "type": "match.advance",
+   "type": "world.noop",
    "applied": true,
-   "detail": "tick=4",
-   "stateHash": "1b4f6ac4e7c641bf9f9a2813c656fff59b9916a272cee3b166d74f87ab1f6d5f"
+   "detail": "world-noop",
+   "stateHash": "5957feffb3e025fea550d887be764a4d6ccc69c293e1c29555cd35b60407bfae"
   },
   {
    "seq": 15,
    "revision": 15,
-   "tick": 4,
    "requestId": "r15",
    "playerId": "p1",
    "type": "economy.gather",
    "applied": true,
    "detail": "gathered 3 gold at 3,2",
-   "stateHash": "08a316740b6ac64bac355d086c5414b0f2e557ea6ad5deff5dfdf8d1ac800690"
+   "stateHash": "f85fb10e89db8bdcce24f1d67ab2b45cd896357d730bbe03e23c2d762b4e74de"
   }
  ],
  "visibility": {
@@ -8354,7 +8321,7 @@
   ]
  ],
  "perception": {
-  "tick": 4,
+  "prompts": 6,
   "players": [
    {
     "id": "p1"
@@ -8450,6 +8417,7 @@
     "row": 1
    }
   ],
+  "commanders": [],
   "map": {
    "width": 8,
    "height": 6,
@@ -8486,12 +8454,13 @@
     "44": "mountain",
     "45": "field"
    },
-   "explored": []
+   "explored": [],
+   "inferred": {}
   }
  }
 };</script>
 <script>//__ENGINE_START__
-"use strict";var AIWLEngine=(()=>{var fe=Object.defineProperty;var Zr=Object.getOwnPropertyDescriptor;var en=Object.getOwnPropertyNames;var rn=Object.prototype.hasOwnProperty;var nn=(e,r,n)=>r in e?fe(e,r,{enumerable:!0,configurable:!0,writable:!0,value:n}):e[r]=n;var tn=(e,r)=>{for(var n in r)fe(e,n,{get:r[n],enumerable:!0})},on=(e,r,n,t)=>{if(r&&typeof r=="object"||typeof r=="function")for(let o of en(r))!rn.call(e,o)&&o!==n&&fe(e,o,{get:()=>r[o],enumerable:!(t=Zr(r,o))||t.enumerable});return e};var an=e=>on(fe({},"__esModule",{value:!0}),e);var x=(e,r,n)=>nn(e,typeof r!="symbol"?r+"":r,n);var Ut={};tn(Ut,{DEFAULT_TERRAIN_CONFIG:()=>De,Match:()=>ve,STANDARD_RULESET:()=>Kr,WORLD_SCHEMA_VERSION:()=>Se,computeVisibility:()=>Yr,createMatchId:()=>Ke,createWorldState:()=>br,markExplored:()=>Jr,markUntrusted:()=>sr,modifiersFor:()=>se,neighborsOf:()=>H});var sn=[1116352408,1899447441,3049323471,3921009573,961987163,1508970993,2453635748,2870763221,3624381080,310598401,607225278,1426881987,1925078388,2162078206,2614888103,3248222580,3835390401,4022224774,264347078,604807628,770255983,1249150122,1555081692,1996064986,2554220882,2821834349,2952996808,3210313671,3336571891,3584528711,113926993,338241895,666307205,773529912,1294757372,1396182291,1695183700,1986661051,2177026350,2456956037,2730485921,2820302411,3259730800,3345764771,3516065817,3600352804,4094571909,275423344,430227734,506948616,659060556,883997877,958139571,1322822218,1537002063,1747873779,1955562222,2024104815,2227730452,2361852424,2428436474,2756734187,3204031479,3329325298];function ln(e){let r=e instanceof Uint8Array?e:new Uint8Array(e),n=r.length*8,t=[r.length+1+8],o=r.length+1;for(;o%64!==56;)o+=1;o+=8;let i=new Uint8Array(o);i.set(r,0),i[r.length]=128;let a=new DataView(i.buffer);a.setUint32(o-8,Math.floor(n/4294967296),!1),a.setUint32(o-4,n>>>0,!1);let s=1779033703,l=3144134277,u=1013904242,d=2773480762,c=1359893119,f=2600822924,p=528734635,w=1541459225,m=new Uint32Array(64),h=(M,E)=>M>>>E|M<<32-E;for(let M=0;M<o;M+=64){for(let g=0;g<16;g+=1)m[g]=a.getUint32(M+g*4,!1);for(let g=16;g<64;g+=1){let Y=(h(m[g-15],7)^h(m[g-15],18)^m[g-15]>>>3)>>>0,J=(h(m[g-2],17)^h(m[g-2],19)^m[g-2]>>>10)>>>0;m[g]=m[g-16]+Y+m[g-7]+J>>>0}let E=s,T=l,D=u,Q=d,C=c,U=f,B=p,W=w;for(let g=0;g<64;g+=1){let Y=(h(C,6)^h(C,11)^h(C,25))>>>0,J=(C&U^~C&B)>>>0,de=W+Y+J+sn[g]+m[g]>>>0,Z=(h(E,2)^h(E,13)^h(E,22))>>>0,ee=(E&T^E&D^T&D)>>>0,ue=Z+ee>>>0;W=B,B=U,U=C,C=Q+de>>>0,Q=D,D=T,T=E,E=de+ue>>>0}s=s+E>>>0,l=l+T>>>0,u=u+D>>>0,d=d+Q>>>0,c=c+C>>>0,f=f+U>>>0,p=p+B>>>0,w=w+W>>>0}let Ne=new Uint8Array(32),k=new DataView(Ne.buffer);return k.setUint32(0,s,!1),k.setUint32(4,l,!1),k.setUint32(8,u,!1),k.setUint32(12,d,!1),k.setUint32(16,c,!1),k.setUint32(20,f,!1),k.setUint32(24,p,!1),k.setUint32(28,w,!1),Ne}function tr(e){if(e!=="sha256")throw new Error("shim createHash supports sha256 only");let r=[];return{update(n,t){return typeof n=="string"?r.push(new TextEncoder().encode(n)):n instanceof Uint8Array?r.push(n):r.push(new Uint8Array(n)),this},digest(n){let t=0;for(let s of r)t+=s.length;let o=new Uint8Array(t),i=0;for(let s of r)o.set(s,i),i+=s.length;let a=ln(o);return n==="hex"?[...a].map(s=>s.toString(16).padStart(2,"0")).join(""):a}}}function pe(){return globalThis.crypto.randomUUID()}function sr(e){return e}var _=64,dn=64,un=65536;function A(e){return typeof e=="string"&&e.length>=1&&e.length<=_}function cn(e){return typeof e=="string"&&e.length>=1&&e.length<=_}function fn(e){if(typeof e!="object"||e===null)return{ok:!1,error:"MALFORMED_REQUEST"};let r=e,n=r.requestId;if(!cn(n))return{ok:!1,error:"MALFORMED_REQUEST"};let t=r.playerId;if(!A(t))return{ok:!1,error:"MALFORMED_REQUEST"};let o=r.type;if(typeof o!="string"||o.length===0||o.length>dn)return{ok:!1,error:"MALFORMED_REQUEST"};let i=r.payload;if(i===void 0)return{ok:!1,error:"MALFORMED_REQUEST"};let a;try{a=JSON.stringify(i)}catch{return{ok:!1,error:"MALFORMED_REQUEST"}}return a===void 0?{ok:!1,error:"MALFORMED_REQUEST"}:a.length>un?{ok:!1,error:"PAYLOAD_TOO_LARGE"}:{ok:!0,envelope:{requestId:n,playerId:t,type:o,payload:i}}}var or="AuthorityKernel state must be plain JSON-style data (objects, arrays, primitives).",ir="freezeState: non-finite number (state must be exactly serializable).",pn="freezeState: circular structure (state must be a tree).",ar=new WeakSet;function y(e,r){return lr(e,(r==null?void 0:r.allowNonFinite)===!0,new Set)}function lr(e,r,n){let t=typeof e;if(e===null||t==="string"||t==="boolean")return e;if(t==="number"){if(Number.isNaN(e))throw new Error(ir);if(!r&&!Number.isFinite(e))throw new Error(ir);return e}if(t!=="object")throw new Error(or);let o=e,i=Object.getPrototypeOf(o);if(i!==Object.prototype&&i!==null&&!Array.isArray(o))throw new Error(or);if(ar.has(o))return o;if(n.has(o))throw new Error(pn);n.add(o);for(let a of Reflect.ownKeys(o))lr(o[a],r,n);return n.delete(o),Object.freeze(o),ar.add(o),o}var ye=class{constructor(r){x(this,"canonical");x(this,"handlers");x(this,"players");x(this,"sessions",new Map);x(this,"seen",new Map);x(this,"log",[]);x(this,"revision",0);if(r.players.length===0)throw new Error("AuthorityKernel needs at least one player.");let n=new Set(r.players);if(n.size!==r.players.length)throw new Error("AuthorityKernel players must be unique.");this.players=n,this.handlers=new Map(r.handlers),this.canonical=y(structuredClone(r.initialState))}join(r){if(!this.players.has(r))throw new Error("AuthorityKernel.join: unknown player.");let n=pe();return this.sessions.set(n,r),{sessionId:n,playerId:r}}getSnapshot(){return this.canonical}getLog(){return[...this.log]}getRevision(){return this.revision}record(r,n,t,o,i){return y({revision:this.revision,requestId:r,playerId:n,type:t,applied:o,detail:i})}dispatch(r,n){let t=this.sessions.get(r.sessionId);if(t===void 0||t!==r.playerId)return{status:"error",code:"INVALID_SESSION"};let o=fn(n);if(!o.ok)return{status:"error",code:o.error};let{requestId:i,playerId:a,type:s,payload:l}=o.envelope;if(a!==t)return{status:"error",code:"SPOOFED_SENDER"};let u=this.seen.get(i);if(u!==void 0)return{status:"duplicate",original:u};let d=this.handlers.get(s);if(d===void 0)return{status:"error",code:"UNKNOWN_TRANSITION"};try{let c=d({state:this.canonical,caller:t,params:l});if(c.applied!==!0){let w={status:"rejected",reason:c.reason};return this.seen.set(i,w),this.log.push(this.record(i,a,s,!1,c.reason)),w}let f=y(c.state);this.revision+=1,this.canonical=f;let p={status:"applied",revision:this.revision,summary:c.summary};return this.seen.set(i,p),this.log.push(this.record(i,a,s,!0,c.summary)),p}catch{return{status:"error",code:"HANDLER_FAULT"}}}};function yn(e){return[{type:"match.advanced",priority:"low",payload:{tick:e.after.tick}}]}function dr(){let e=[["match.advance",[yn]]];return new Map(e)}function ur(e,r,n,t,o){return y({seq:1,tick:t,revision:0,type:"match.started",priority:"normal",payload:o===void 0?{seed:e,players:r,ruleset:n}:{seed:e,players:r,ruleset:n,map:o}})}function Pe(e,r,n,t,o){return y({seq:o,tick:n,revision:t,type:"match.finished",priority:"high",payload:{outcome:e,condition:r}})}function mn(e,r,n){if(typeof e.type!="string"||e.type.length===0||e.type.length>_)throw new Error(`invalid event fact for ${r} (producer ${n}): bad type`);if(e.priority!=="low"&&e.priority!=="normal"&&e.priority!=="high"&&e.priority!=="critical")throw new Error(`invalid event fact for ${r} (producer ${n}): bad priority`)}function gn(e,r,n,t,o,i){let a=n instanceof Error?n.message:"non-error thrown";return y({seq:i,tick:t,revision:o,type:"system.event-fault",priority:"high",payload:{transition:e,producer:r,message:a}})}function cr(e,r,n,t,o){let i=[];for(let[a,s]of r.entries())try{let l=s(e);for(let u of l)mn(u,e.type,a),i.push(y({seq:o+i.length,tick:n,revision:t,type:u.type,priority:u.priority,payload:u.payload}))}catch(l){i.push(gn(e.type,a,l,n,t,o+i.length))}return i}var me="stableStringify: unserializable value.";function $(e){return Ue(e,new Set)}function Ue(e,r){if(e===null||typeof e!="object"){if(typeof e=="number"&&!Number.isFinite(e))throw new Error(me);let o;try{o=JSON.stringify(e)}catch{throw new Error(me)}if(o===void 0)throw new Error(me);return o}let n=e;if(r.has(n))throw new Error(me);r.add(n);let t;if(Array.isArray(e))t=`[${e.map(i=>Ue(i,r)).join(",")}]`;else{let o=e;t=`{${Object.keys(o).sort().map(s=>`${JSON.stringify(s)}:${Ue(o[s],r)}`).join(",")}}`}return r.delete(n),t}function Ve(e){return tr("sha256").update($(e),"utf8").digest("hex")}var ge=class{constructor(r){x(this,"state");if(!Number.isInteger(r)||r<0||r>4294967295)throw new Error("SeededRng: seed must be a uint32.");this.state=r}nextUint32(){this.state=this.state+1831565813>>>0;let r=Math.imul(this.state^this.state>>>15,1|this.state);return r=r+Math.imul(r^r>>>7,61|r)^r,(r^r>>>14)>>>0}nextInt(r){if(!Number.isInteger(r)||r<1)throw new Error("SeededRng.nextInt: bound must be a positive integer.");return Math.floor(this.nextUint32()/4294967296*r)}nextFloat(){return this.nextUint32()/4294967296}getState(){return this.state}};function fr(e,r){if(!Number.isInteger(e)||e<0||e>4294967295)throw new Error("deriveSeed: seed must be a uint32.");if(!Number.isInteger(r)||r<1||r>4294967295)throw new Error("deriveSeed: seq must be a positive uint32.");let n=Math.imul(e^2654435769,2246822507);return n=Math.imul(n^r,3266489909),n^=n>>>13,n>>>0}var we=Object.freeze(["town-center","house","storage","barracks","wall","tower"]);function q(e){return typeof e=="string"&&we.includes(e)}var wn=64,hn=4294967295;function bn(e){return typeof e=="string"&&e.length>=1&&e.length<=wn}function F(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0&&e<=hn}function xn(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;return F(r["town-center"])&&F(r.house)&&F(r.storage)&&F(r.barracks)&&F(r.wall)&&F(r.tower)}function re(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;if(r.schemaVersion!==1)return!1;let n=r.buildings;if(typeof n!="object"||n===null||Array.isArray(n))return!1;for(let[t,o]of Object.entries(n))if(!bn(t)||!xn(o))return!1;return!0}function X(e,r){let n=e==null?void 0:e.buildings[r];return n===void 0?{"town-center":0,house:0,storage:0,barracks:0,wall:0,tower:0}:{"town-center":n["town-center"],house:n.house,storage:n.storage,barracks:n.barracks,wall:n.wall,tower:n.tower}}var En=Object.freeze(["town-center","house","storage","barracks","wall","tower"]),Sn=64,In=4294967295;function kn(e){return typeof e=="string"&&e.length>=1&&e.length<=Sn}function An(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0&&e<=In}function Rn(e){return typeof e=="string"&&En.includes(e)}function Dn(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;return Rn(r.type)&&An(r.remaining)}function Cn(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e,n=r.level;if(n!==1&&n!==2&&n!==3)return!1;let t=r.queue;return Array.isArray(t)?t.every(Dn):!1}function pr(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;if(r.schemaVersion!==1)return!1;let n=r.cities;if(typeof n!="object"||n===null||Array.isArray(n))return!1;for(let[t,o]of Object.entries(n))if(!kn(t)||!Cn(o))return!1;return!0}function He(e,r){let n=e==null?void 0:e.cities[r];return n===void 0?{level:1,queue:[]}:{level:n.level,queue:n.queue.map(t=>({...t}))}}function Mn(e){return typeof e=="string"&&e.length>=1&&e.length<=64}function Tn(e){return typeof e=="string"&&e.length>=1&&e.length<=64}function On(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0&&e<=4294967295}function _n(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;return Tn(r.id)&&Mn(r.owner)&&typeof r.active=="boolean"}function yr(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;if(r.schemaVersion!==1||!On(r.nextId))return!1;let n=r.commanders;if(!Array.isArray(n))return!1;let t=new Set;for(let o of n){if(!_n(o)||t.has(o.id))return!1;t.add(o.id)}return!0}function vn(e){return typeof e=="string"&&e.length>=1&&e.length<=64}function je(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0&&e<=4294967295}function he(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;if(r.schemaVersion!==1)return!1;let n=r.viewers;if(typeof n!="object"||n===null||Array.isArray(n))return!1;for(let[t,o]of Object.entries(n)){if(!vn(t)||!Array.isArray(o))return!1;let i=-1;for(let a of o){if(!je(a)||a<=i)return!1;i=a}}return!0}function Nn(e){return typeof e=="string"&&e.length>=1&&e.length<=64}var ne=Object.freeze(["field","forest","mountain","river","road","bridge","resource","village","city"]);function te(e){return typeof e=="string"&&ne.includes(e)}var oe=Object.freeze(["food","wood","stone","gold"]);function V(e){return typeof e=="string"&&oe.includes(e)}function G(e,r){return Object.freeze({q:e,r})}var Pn=Object.freeze([G(1,0),G(1,-1),G(0,-1),G(-1,0),G(-1,1),G(0,1)]);function Un(e,r,n){let t=n==="odd"?(r-(r&1))/2:(r+(r&1))/2;return{q:e-t,r}}function Vn(e,r,n){let t=n==="odd"?(r-(r&1))/2:(r+(r&1))/2;return{col:e+t,row:r}}function mr(e){return typeof e=="number"&&Number.isInteger(e)&&e>=1&&e<=64}function gr(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0&&e<=4294967295}function wr(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;if(r.schemaVersion!==1||!Nn(r.id))return!1;let n=r.width,t=r.height;if(!mr(n)||!mr(t)||r.stagger!=="odd"&&r.stagger!=="even")return!1;let o=r.cells;if(!Array.isArray(o)||o.length!==n*t)return!1;for(let l=0;l<o.length;l+=1){let u=o[l];if(typeof u!="object"||u===null||Array.isArray(u)||u.col!==l%n||u.row!==Math.floor(l/n)||!te(u.terrain))return!1;let d=u.resource;if(u.terrain==="resource"){if(typeof d!="object"||d===null||Array.isArray(d)||!V(d.type)||!gr(d.amount))return!1}else if(d!==void 0)return!1}let i=r.spawns;if(!Array.isArray(i)||i.length>16)return!1;let a=new Set,s=new Set;for(let l of i){if(typeof l!="object"||l===null||Array.isArray(l))return!1;let u=l,d=u.playerIndex,c=u.col,f=u.row;if(!gr(d)||typeof c!="number"||!Number.isInteger(c)||c<0||c>=n||typeof f!="number"||!Number.isInteger(f)||f<0||f>=t||s.has(d))return!1;s.add(d);let p=`${c},${f}`;if(a.has(p))return!1;a.add(p)}return!0}function v(e,r,n){if(!(!Number.isInteger(r)||!Number.isInteger(n))&&!(r<0||r>=e.width||n<0||n>=e.height))return e.cells[n*e.width+r]}function Hn(e,r,n){let{col:t,row:o}=Vn(r,n,e.stagger);return v(e,t,o)}function H(e,r,n){if(v(e,r,n)===void 0)return[];let t=Un(r,n,e.stagger),o=[];for(let i of Pn){let a=Hn(e,t.q+i.q,t.r+i.r);a!==void 0&&o.push(a)}return o}function jn(e){return typeof e=="string"&&e.length>=1&&e.length<=64}function be(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0&&e<=4294967295}function Bn(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;return be(r.food)&&be(r.wood)&&be(r.stone)&&be(r.gold)}function z(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;if(r.schemaVersion!==1)return!1;let n=r.stockpiles;if(typeof n!="object"||n===null||Array.isArray(n))return!1;for(let[t,o]of Object.entries(n))if(!jn(t)||!Bn(o))return!1;return!0}function N(e,r){let n=e==null?void 0:e.stockpiles[r];return n===void 0?{food:0,wood:0,stone:0,gold:0}:{food:n.food,wood:n.wood,stone:n.stone,gold:n.gold}}var Be=Object.freeze(["worker","warrior","archer"]),Wn=64,Ln=64,$n=4294967295;function Fn(e){return typeof e=="string"&&e.length>=1&&e.length<=Wn}function qn(e){return typeof e=="string"&&e.length>=1&&e.length<=Ln}function xe(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0&&e<=$n}function ie(e){return typeof e=="string"&&Be.includes(e)}function Xn(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;return qn(r.id)&&Fn(r.owner)&&ie(r.type)&&xe(r.hp)&&xe(r.col)&&xe(r.row)}function Ee(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;if(r.schemaVersion!==1||!xe(r.nextId))return!1;let n=r.units;if(!Array.isArray(n))return!1;let t=new Set;for(let o of n){if(!Xn(o)||t.has(o.id))return!1;t.add(o.id)}return!0}function hr(e,r){return e===void 0?[]:e.units.filter(n=>n.owner===r).map(n=>({...n}))}function j(e,r){let n=e==null?void 0:e.units.find(t=>t.id===r);if(n!==void 0)return{...n}}var Se=1;function ae(e){if(typeof e!="object"||e===null)return!1;let r=e;if(r.schemaVersion!==Se)return!1;let n=r.tick;if(typeof n!="number"||!Number.isInteger(n)||n<0)return!1;let t=r.players;if(!Array.isArray(t)||t.length===0)return!1;let o=new Set;for(let f of t){if(typeof f!="object"||f===null)return!1;let p=f.id;if(!A(p)||o.has(p))return!1;o.add(p)}let i=r.map;if(i!==void 0&&!wr(i))return!1;let a=r.explored;if(a!==void 0){if(i===void 0||!he(a))return!1;let f=i.width*i.height;for(let p of Object.values(a.viewers))for(let w of p)if(w>=f)return!1}let s=r.stockpiles;if(s!==void 0&&!z(s))return!1;let l=r.buildings;if(l!==void 0&&!re(l))return!1;let u=r.cities;if(u!==void 0&&!pr(u))return!1;let d=r.units;if(d!==void 0&&!Ee(d))return!1;let c=r.commanders;return!(c!==void 0&&!yr(c))}function br(e){var n;let r={schemaVersion:Se,tick:(n=e.tick)!=null?n:0,players:e.players.map(t=>({id:t})),...e.map===void 0?{}:{map:e.map},...e.explored===void 0?{}:{explored:e.explored},...e.stockpiles===void 0?{}:{stockpiles:e.stockpiles},...e.buildings===void 0?{}:{buildings:e.buildings},...e.cities===void 0?{}:{cities:e.cities},...e.units===void 0?{}:{units:e.units},...e.commanders===void 0?{}:{commanders:e.commanders}};if(!ae(r))throw new Error("createWorldState: invalid initial world.");return r}function xr(){let e=[["world.noop",r=>({applied:!0,state:r.state,summary:"world-noop"})]];return new Map(e)}var Er=1e6;function Sr(e){return(r,n)=>{let t;try{t=$(n)}catch{return{rule:"no-params",detail:`${e} payload is not serializable`}}return t!=="{}"?{rule:"no-params",detail:`${e} takes no parameters`}:null}}function Gn(e,r){return ae(r)?null:{rule:"state-shape",detail:"applied state failed the WorldState guard"}}function zn(e,r){let n=JSON.stringify(e.players.map(o=>o.id)),t=JSON.stringify(r.players.map(o=>o.id));return n===t?null:{rule:"roster-preserved",detail:`expected ${n} got ${t}`}}function Kn(e,r){return r.tick>=e.tick?null:{rule:"tick-monotonic",detail:`tick ${e.tick} -> ${r.tick}`}}function Qn(e,r){let n=$(r).length;return n<=Er?null:{rule:"state-size",detail:`${n} bytes (max ${Er})`}}function Yn(e,r){if(e===void 0||r===void 0||e.id!==r.id||e.width!==r.width||e.height!==r.height||e.stagger!==r.stagger||e.cells.length!==r.cells.length||$(e.spawns)!==$(r.spawns))return!1;let n=new Map;for(let t of e.cells)n.set(t.row*e.width+t.col,t);return r.cells.every(t=>{let o=n.get(t.row*r.width+t.col);if(o===void 0||o.terrain!==t.terrain)return!1;let i=o.resource,a=t.resource;return i===void 0||a===void 0?i===a:i.type!==a.type?!1:a.amount<=i.amount})}function Jn(e,r){return e.map===r.map||Yn(e.map,r.map)?null:{rule:"map-preserved",detail:"map changed beyond resource depletion"}}function Zn(e,r){if(e.explored===r.explored||e.explored===void 0)return null;let n=r.explored;if(n===void 0)return{rule:"explored-monotonic",detail:"explored memory wiped"};for(let[t,o]of Object.entries(e.explored.viewers)){let i=n.viewers[t];if(i===void 0||i.length<o.length)return{rule:"explored-monotonic",detail:`viewer ${t} lost memory`};for(let a of o)if(!i.includes(a))return{rule:"explored-monotonic",detail:`viewer ${t} lost cell ${a}`}}return null}function Ir(){return{pre:[],postShape:Gn,post:[zn,Kn,Qn,Jn,Zn]}}function We(e,r){return`${e}: ${r.map(n=>`[${n.rule}] ${n.detail}`).join("; ")}`}function kr(e,r,n,t){return o=>{let i=t(),a=[];for(let c of r.pre){let f=c(o.caller,o.params,o.state);f!==null&&a.push(f)}if(a.length>0)return{applied:!1,reason:We("validation",a)};let s=new ge(fr(n,i)),l=e({...o,rng:s});if(!l.applied)return l;let u=r.postShape(o.state,l.state);if(u!==null)throw new Error(We("postcondition",[u]));let d=[];for(let c of r.post){let f=c(o.state,l.state);f!==null&&d.push(f)}if(d.length>0)throw new Error(We("postcondition",d));return l}}var et=y({status:"ongoing"});function rt(e){return r=>r.state.tick<e?null:{outcome:{kind:"draw"},condition:"time-limit"}}function Ar(e){return e===void 0?[]:[rt(e)]}function nt(e,r,n){let t=e.outcome;if(t.kind!=="win"&&t.kind!=="draw")throw new Error(`invalid victory decision (condition ${r}): bad outcome`);if(t.kind==="win"&&(!A(t.winner)||!n.includes(t.winner)))throw new Error(`invalid victory decision (condition ${r}): bad winner`);if(typeof e.condition!="string"||e.condition.length===0||e.condition.length>_)throw new Error(`invalid victory decision (condition ${r}): bad condition`)}function Ie(e,r){let n=r.state.players.map(t=>t.id);for(let[t,o]of e.entries()){let i;try{i=o(r)}catch{throw new Error(`invalid victory decision (condition ${t}): threw`)}if(i!==null)return nt(i,t,n),y({status:"finished",outcome:i.outcome,condition:i.condition,tick:r.state.tick,revision:r.revision})}return et}function S(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0&&e<=4294967295}function tt(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;return S(r.value)&&S(r.gatherYield)}function $e(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=Object.entries(e);if(r.length!==oe.length)return!1;for(let[n,t]of r)if(!V(n)||!tt(t))return!1;return!0}var Cr=y({food:{value:1,gatherYield:1},wood:{value:1,gatherYield:1},stone:{value:1,gatherYield:1},gold:{value:1,gatherYield:1}});function ke(e,r){let n=e!=null?e:0;if(!S(n))throw new Error(`${r}: invalid cost.`);return n}function Fe(e,r){if(typeof e!="object"||e===null||Array.isArray(e))throw new Error(`${r}: invalid cost.`);let n=e;return{food:ke(n.food,r),wood:ke(n.wood,r),stone:ke(n.stone,r),gold:ke(n.gold,r)}}function ot(e,r,n,t){let i={...N(e,r),[n]:t};return y({schemaVersion:1,stockpiles:{...e.stockpiles,[r]:i}})}function it(e,r,n,t){if(!z(e))throw new Error("credit: invalid stockpiles data.");if(!V(n))throw new Error("credit: invalid resource type.");if(!S(t))throw new Error("credit: invalid amount.");let o=N(e,r)[n]+t;if(o>4294967295)throw new Error("credit: overflow.");return ot(e,r,n,o)}function qe(e,r,n){if(!z(e))throw new Error("canAfford: invalid stockpiles data.");let t=Fe(n,"canAfford"),o=N(e,r);return o.food>=t.food&&o.wood>=t.wood&&o.stone>=t.stone&&o.gold>=t.gold}var Ae="economy.gather";function Mr(e,r){if(typeof r!="object"||r===null||Array.isArray(r))return{rule:"gather-params",detail:"gather takes { col, row }"};let n=r;return!S(n.col)||!S(n.row)?{rule:"gather-params",detail:"gather takes { col, row } uint32"}:null}function at(e,r){if(!$e(e))throw new Error("createGatherHandler: invalid economy config.");let n=r!=null?r:Xe;if(!P(n))throw new Error("createGatherHandler: invalid buildings config.");return t=>{var m;let{col:o,row:i}=t.params,a=t.state.map;if(a===void 0)return{applied:!1,reason:"gather: no map."};let s=a.cells.find(h=>h.col===o&&h.row===i);if(s===void 0)return{applied:!1,reason:"gather: out of bounds."};let l=s.resource;if(l===void 0)return{applied:!1,reason:"gather: no node here."};if(l.amount===0)return{applied:!1,reason:"gather: node depleted."};if(!hr(t.state.units,t.caller).some(h=>h.type==="worker"&&h.col===o&&h.row===i))return{applied:!1,reason:"gather: no worker here."};let d=Math.min(e[l.type].gatherYield,l.amount);if(d===0)return{applied:!1,reason:"gather: yield is zero."};let c=_r(t.state.buildings,t.caller,n)-N(t.state.stockpiles,t.caller)[l.type];if(d>c)return{applied:!1,reason:"gather: storage full."};let f=a.cells.map(h=>h===s?{...h,resource:{type:l.type,amount:l.amount-d}}:h),p=(m=t.state.stockpiles)!=null?m:{schemaVersion:1,stockpiles:{}},w=it(p,t.caller,l.type,d);return{applied:!0,state:{...t.state,map:{...a,cells:f},stockpiles:w},summary:`gathered ${d} ${l.type} at ${o},${i}`}}}function Tr(e,r){return new Map([[Ae,at(e,r)]])}function Or(e){var l,u;if(typeof e.params!="object"||e.params===null)throw new Error("gatherProducer: invalid params.");let r=e.params,n=r.col,t=r.row;if(!S(n)||!S(t))throw new Error("gatherProducer: invalid params.");let o=e.before.map,i=e.after.map;if(o===void 0||i===void 0)throw new Error("gatherProducer: map missing.");let a=(l=v(o,n,t))==null?void 0:l.resource,s=(u=v(i,n,t))==null?void 0:u.resource;if(a===void 0||s===void 0)throw new Error("gatherProducer: node missing.");return[{type:"resource.gathered",priority:"normal",payload:{player:e.caller,col:n,row:t,resource:a.type,amount:a.amount-s.amount}}]}function st(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;for(let[r,n]of Object.entries(e))if(!V(r)||!S(n))return!1;return!0}function lt(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;return st(r.cost)&&S(r.buildTime)}function dt(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;return S(r.base)&&S(r.perStorage)}function P(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=Object.entries(e);if(r.length!==we.length+1)return!1;for(let[n,t]of r)if(n==="caps"){if(!dt(t))return!1}else if(!q(n)||!lt(t))return!1;return!0}var Xe=y({"town-center":{cost:{},buildTime:0},house:{cost:{},buildTime:0},storage:{cost:{},buildTime:0},barracks:{cost:{},buildTime:0},wall:{cost:{},buildTime:0},tower:{cost:{},buildTime:0},caps:{base:4294967295,perStorage:0}});function ut(e,r){if(!P(e))throw new Error("costOf: invalid buildings config.");if(!q(r))throw new Error("costOf: invalid building type.");return Fe(e[r].cost,"costOf")}function ct(e,r){if(!P(e))throw new Error("buildTimeOf: invalid buildings config.");if(!q(r))throw new Error("buildTimeOf: invalid building type.");return e[r].buildTime}var ft=["food","wood","stone","gold"];function Ge(e,r,n){if(!z(e))throw new Error("payCost: invalid stockpiles data.");let t=Fe(n,"payCost"),o=N(e,r);for(let i of ft)if(o[i]<t[i])throw new Error(`payCost: insufficient ${i}.`);return y({schemaVersion:1,stockpiles:{...e.stockpiles,[r]:{food:o.food-t.food,wood:o.wood-t.wood,stone:o.stone-t.stone,gold:o.gold-t.gold}}})}function pt(e,r,n,t){let i={...X(e,r),[n]:t};return y({schemaVersion:1,buildings:{...e.buildings,[r]:i}})}function yt(e,r,n){if(!re(e))throw new Error("addBuilding: invalid buildings data.");if(!q(n))throw new Error("addBuilding: invalid building type.");let t=X(e,r)[n]+1;if(t>4294967295)throw new Error("addBuilding: overflow.");return pt(e,r,n,t)}function _r(e,r,n){if(e!==void 0&&!re(e))throw new Error("capOf: invalid buildings data.");if(!P(n))throw new Error("capOf: invalid buildings config.");let t=X(e,r).storage,o=n.caps.base+t*n.caps.perStorage;if(!S(o))throw new Error("capOf: overflow.");return o}var Re="city.build",ze="city.upgrade";function vr(e,r){return typeof r!="object"||r===null||Array.isArray(r)?{rule:"build-params",detail:"build takes { type }"}:typeof r.type!="string"?{rule:"build-params",detail:"build takes a string type"}:null}function mt(e){if(!P(e))throw new Error("createBuildHandler: invalid buildings config.");return r=>{var d,c,f;let{type:n}=r.params;if(!q(n))return{applied:!1,reason:"build: unknown building."};let t=ut(e,n),o=(d=r.state.stockpiles)!=null?d:{schemaVersion:1,stockpiles:{}};if(!qe(o,r.caller,t))return{applied:!1,reason:"build: cannot afford."};let i=Ge(o,r.caller,t),a=ct(e,n),s=He(r.state.cities,r.caller),l=(f=(c=r.state.cities)==null?void 0:c.cities)!=null?f:{},u={schemaVersion:1,cities:{...l,[r.caller]:{level:s.level,queue:[...s.queue,{type:n,remaining:a}]}}};return{applied:!0,state:{...r.state,cities:u,stockpiles:i},summary:`started ${n} (${a} ticks)`}}}function gt(){return e=>{var i,a;let r=He(e.state.cities,e.caller);if(r.level>=3)return{applied:!1,reason:"upgrade: already max level."};let n=r.level===1?2:3,t=(a=(i=e.state.cities)==null?void 0:i.cities)!=null?a:{},o={schemaVersion:1,cities:{...t,[e.caller]:{level:n,queue:r.queue}}};return{applied:!0,state:{...e.state,cities:o},summary:`upgraded to level ${n}`}}}function Nr(e){return new Map([[Re,mt(e)],[ze,gt()]])}function Pr(e,r){let n={},t=[];for(let[i,a]of Object.entries(e.cities)){let s=[];for(let l of a.queue){let u=l.remaining-1;u<=0?t.push({holder:i,type:l.type}):s.push({type:l.type,remaining:u})}n[i]={level:a.level,queue:s}}let o=r;for(let i of t){let a=o!=null?o:{schemaVersion:1,buildings:{}};o=yt(a,i.holder,i.type)}return{cities:{schemaVersion:1,cities:n},buildings:o}}function Ur(e){if(typeof e.params!="object"||e.params===null)throw new Error("buildStartedProducer: invalid params.");let r=e.params;if(typeof r.type!="string")throw new Error("buildStartedProducer: invalid params.");return[{type:"build.started",priority:"normal",payload:{player:e.caller,building:r.type}}]}function Vr(e){var i,a,s,l;let r=[],n=(a=(i=e.before.buildings)==null?void 0:i.buildings)!=null?a:{},t=(l=(s=e.after.buildings)==null?void 0:s.buildings)!=null?l:{},o=[...new Set([...Object.keys(n),...Object.keys(t)])].sort();for(let u of o){let d=X(e.before.buildings,u),c=X(e.after.buildings,u);for(let f of we){let p=f,w=c[p]-d[p];for(let m=0;m<w;m+=1)r.push({type:"build.completed",priority:"normal",payload:{player:u,building:p}})}}return r}function Hr(e){if(!P(e))throw new Error("createEconomyRule: invalid buildings config.");return(r,n)=>{let t=n.stockpiles;if(t!==void 0)for(let o of Object.keys(t.stockpiles).sort()){let i=_r(n.buildings,o,e),a=N(t,o);for(let s of oe){let l=s;if(a[l]>i)return{rule:"economy-cap",detail:`${o}.${l} ${a[l]} exceeds cap ${i}`}}}for(let o of oe){let i=o,a=Rr(r,i),s=Rr(n,i);if(s>a)return{rule:"economy-conservation",detail:`${i} ${a} -> ${s}`}}return null}}function Rr(e,r){let n=0,t=e.stockpiles;if(t!==void 0)for(let i of Object.keys(t.stockpiles))n+=N(t,i)[r];let o=e.map;if(o!==void 0)for(let i of o.cells){let a=i.resource;a!==void 0&&a.type===r&&(n+=a.amount)}return n}function wt(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e,n=r.move;if(typeof n!="number"||!(n>=0))return!1;for(let t of["defense","stealth","ranged"]){let o=r[t];if(typeof o!="number"||!Number.isFinite(o))return!1}return!0}function jr(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=Object.entries(e);if(r.length!==ne.length)return!1;for(let[n,t]of r)if(!te(n)||!wt(t))return!1;return!0}var ht={field:{move:1,defense:0,stealth:0,ranged:0},forest:{move:2,defense:1,stealth:2,ranged:0},mountain:{move:3,defense:2,stealth:0,ranged:1},river:{move:1/0,defense:0,stealth:0,ranged:0},road:{move:.5,defense:0,stealth:0,ranged:0},bridge:{move:1,defense:0,stealth:0,ranged:0},resource:{move:1,defense:0,stealth:0,ranged:0},village:{move:1,defense:0,stealth:0,ranged:0},city:{move:1,defense:0,stealth:0,ranged:0}},De=y(ht,{allowNonFinite:!0});function se(e,r){let n=e[r];if(n===void 0)throw new Error(`modifiersFor: unknown terrain "${String(r)}".`);return n}function I(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0&&e<=4294967295}function bt(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;for(let[r,n]of Object.entries(e))if(!V(r)||!I(n))return!1;return!0}function xt(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e,n=r.maxHp;return bt(r.cost)&&I(n)&&n>=1&&I(r.damage)}function le(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=Object.entries(e);if(r.length!==Be.length)return!1;for(let[n,t]of r)if(!ie(n)||!xt(t))return!1;return!0}var Br=y({worker:{cost:{},maxHp:1,damage:0},warrior:{cost:{},maxHp:1,damage:0},archer:{cost:{},maxHp:1,damage:0}});function Et(e,r,n,t,o,i){if(e!==void 0&&!Ee(e))throw new Error("spawnUnit: invalid units data.");if(!A(r))throw new Error("spawnUnit: invalid owner.");if(!ie(n))throw new Error("spawnUnit: invalid unit type.");if(!I(t)||!I(o))throw new Error("spawnUnit: invalid cell.");if(!le(i))throw new Error("spawnUnit: invalid units config.");let a=e!=null?e:{schemaVersion:1,nextId:0,units:[]};if(a.nextId>=4294967295)throw new Error("spawnUnit: id space exhausted.");let s=`u${a.nextId}`;if(a.units.some(l=>l.id===s))throw new Error("spawnUnit: id collision.");return{schemaVersion:1,nextId:a.nextId+1,units:[...a.units,{id:s,owner:r,type:n,hp:i[n].maxHp,col:t,row:o}]}}var Me="unit.move";function Wr(e,r){if(typeof r!="object"||r===null||Array.isArray(r))return{rule:"move-params",detail:"move takes { id, col, row }"};let n=r;return typeof n.id!="string"||!I(n.col)||!I(n.row)?{rule:"move-params",detail:"move takes { id string, col/row uint32 }"}:null}function St(e){if(typeof e!="function")throw new Error("createMoveHandler: invalid passable predicate.");return r=>{let{id:n,col:t,row:o}=r.params,i=r.state.units;if(i===void 0)return{applied:!1,reason:"move: no units."};let a=j(i,n);if(a===void 0)return{applied:!1,reason:"move: unknown unit."};if(a.owner!==r.caller)return{applied:!1,reason:"move: not your unit."};let s=r.state.map;if(s===void 0)return{applied:!1,reason:"move: no map."};let l=s.cells.find(d=>d.col===t&&d.row===o);return l===void 0?{applied:!1,reason:"move: out of bounds."}:H(s,a.col,a.row).some(d=>d.col===t&&d.row===o)?e(l.terrain)?{applied:!0,state:{...r.state,units:{schemaVersion:1,nextId:i.nextId,units:i.units.map(d=>d.id===n?{...d,col:t,row:o}:d)}},summary:`moved ${n} to ${t},${o}`}:{applied:!1,reason:"move: impassable."}:{applied:!1,reason:"move: not adjacent."}}}var Te="unit.attack";function Lr(e,r){if(typeof r!="object"||r===null||Array.isArray(r))return{rule:"attack-params",detail:"attack takes { id, target }"};let n=r;return typeof n.id!="string"||typeof n.target!="string"?{rule:"attack-params",detail:"attack takes { id string, target string }"}:null}function It(e,r){if(!le(e))throw new Error("createAttackHandler: invalid units config.");if(typeof r!="function")throw new Error("createAttackHandler: invalid defense predicate.");return n=>{let{id:t,target:o}=n.params,i=n.state.units;if(i===void 0)return{applied:!1,reason:"attack: no units."};let a=j(i,t);if(a===void 0)return{applied:!1,reason:"attack: unknown unit."};if(a.owner!==n.caller)return{applied:!1,reason:"attack: not your unit."};if(a.hp<=0)return{applied:!1,reason:"attack: unit down."};let s=j(i,o);if(s===void 0)return{applied:!1,reason:"attack: unknown target."};if(s.owner===n.caller)return{applied:!1,reason:"attack: not an enemy."};if(s.hp<=0)return{applied:!1,reason:"attack: target down."};let l=n.state.map;if(l===void 0)return{applied:!1,reason:"attack: no map."};let u=H(l,a.col,a.row).find(m=>m.col===s.col&&m.row===s.row);if(u===void 0)return{applied:!1,reason:"attack: out of range."};let d=e[a.type].damage,c=r(u.terrain),f=Math.max(0,d-c),p=Math.max(0,s.hp-f),w=p<=0;return{applied:!0,state:{...n.state,units:{schemaVersion:1,nextId:i.nextId,units:w?i.units.filter(m=>m.id!==o):i.units.map(m=>m.id===o?{...m,hp:p}:m)}},summary:`attacked ${o} for ${f} (hp ${s.hp}\u2192${p})${w?", slain":""}`}}}function $r(e,r,n,t){return new Map([[Me,St(e)],[Te,It(r,n)],[Oe,kt(r,t)]])}var Oe="unit.train";function Fr(e,r){if(typeof r!="object"||r===null||Array.isArray(r))return{rule:"train-params",detail:"train takes { type, col, row }"};let n=r;return typeof n.type!="string"||!I(n.col)||!I(n.row)?{rule:"train-params",detail:"train takes { type string, col/row uint32 }"}:null}function kt(e,r){if(!le(e))throw new Error("createTrainHandler: invalid units config.");if(typeof(r==null?void 0:r.pay)!="function"||typeof(r==null?void 0:r.canAfford)!="function")throw new Error("createTrainHandler: invalid treasury.");return n=>{var p,w;let{type:t,col:o,row:i}=n.params;if(!ie(t))return{applied:!1,reason:"train: unknown unit type."};let a=n.state.map;if(a===void 0)return{applied:!1,reason:"train: no map."};if(a.cells.find(m=>m.col===o&&m.row===i)===void 0)return{applied:!1,reason:"train: out of bounds."};let s=e[t].cost,l=(p=n.state.stockpiles)!=null?p:{schemaVersion:1,stockpiles:{}};if(!r.canAfford(l,n.caller,s))return{applied:!1,reason:"train: cannot afford."};let u=r.pay(l,n.caller,s),d=n.state.units,c=`u${(w=d==null?void 0:d.nextId)!=null?w:0}`,f=Et(d,n.caller,t,o,i,e);return{applied:!0,state:{...n.state,units:f,stockpiles:u},summary:`trained ${t} ${c} at ${o},${i}`}}}function qr(e){let r=e.params;if(typeof r!="object"||r===null||Array.isArray(r))throw new Error("moveProducer: invalid params.");let n=r,{id:t,col:o,row:i}=n;if(typeof t!="string"||!I(o)||!I(i))throw new Error("moveProducer: invalid params.");return[{type:"unit.moved",priority:"low",payload:{player:e.caller,unit:t,col:o,row:i}}]}function Xr(e){let r=e.params;if(typeof r!="object"||r===null||Array.isArray(r))throw new Error("attackProducer: invalid params.");let n=r,{id:t,target:o}=n;if(typeof t!="string"||typeof o!="string")throw new Error("attackProducer: invalid params.");let i=e.before.units,a=e.after.units;if(i===void 0||a===void 0)throw new Error("attackProducer: missing units.");let s=j(i,o),l=j(a,o);if(s===void 0)throw new Error("attackProducer: missing target.");let u=[{type:"unit.attacked",priority:"normal",payload:{player:e.caller,unit:t,target:o,damage:s.hp-(l===void 0?0:l.hp)}}];return l===void 0&&u.push({type:"unit.slain",priority:"normal",payload:{player:e.caller,unit:t,target:o}}),u}function Gr(e){var u,d;let r=e.params;if(typeof r!="object"||r===null||Array.isArray(r))throw new Error("trainProducer: invalid params.");let n=r,{type:t,col:o,row:i}=n;if(typeof t!="string"||!I(o)||!I(i))throw new Error("trainProducer: invalid params.");let a=e.after.units;if(a===void 0)throw new Error("trainProducer: missing unit.");let s=`u${(d=(u=e.before.units)==null?void 0:u.nextId)!=null?d:0}`,l=j(a,s);if(l===void 0)throw new Error("trainProducer: missing unit.");return[{type:"unit.trained",priority:"normal",payload:{player:e.caller,unit:s,type:l.type,col:l.col,row:l.row}}]}function At(e){return typeof e=="string"&&e.length>=1&&e.length<=_}function Ke(){return pe()}function zr(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0&&e<=4294967295}var _e=1,Rt={id:"standard",version:_e},Kr=y(Rt);function Dt(){let e=[["match.advance",r=>{let n=r.state.tick+1;if(r.state.cities===void 0)return{applied:!0,state:{...r.state,tick:n},summary:`tick=${n}`};let t=Pr(r.state.cities,r.state.buildings);return{applied:!0,state:{...r.state,tick:n,cities:t.cities,...t.buildings===void 0?{}:{buildings:t.buildings}},summary:`tick=${n}`}}]];return new Map(e)}var ve=class{constructor(r){x(this,"id");x(this,"seed");x(this,"ruleset");x(this,"players");x(this,"kernel");x(this,"timeline",[]);x(this,"producers");x(this,"events",[]);x(this,"conditions");var ue,Qe,Ye,Je,Ze,er,rr,nr;if(r.matchId===void 0)this.id=Ke();else if(At(r.matchId))this.id=r.matchId;else throw new Error("Match: invalid matchId.");if(!zr(r.seed))throw new Error("Match: invalid seed (expected uint32).");this.seed=r.seed;let n;if(r.maxTicks===void 0)n=void 0;else{if(!zr(r.maxTicks)||r.maxTicks===0)throw new Error("Match: invalid maxTicks (expected positive uint32).");n=r.maxTicks}let t=r.ruleset;if(typeof t!="object"||t===null)throw new Error("Match: invalid ruleset (not an object).");let o=t;if(o.id!=="standard")throw new Error("Match: unknown ruleset id.");if(o.version!==_e)throw new Error(`Match: unsupported ruleset version (engine: ${_e}).`);let i={id:"standard",version:_e};this.ruleset=y(i);for(let b of r.players)if(!A(b))throw new Error("Match: invalid player id in roster.");if(!ae(r.initialState))throw new Error("Match: invalid initialState.");let a=new Set(r.initialState.players.map(b=>b.id));if(a.size!==r.players.length||!r.players.every(b=>a.has(b)))throw new Error("Match: roster does not match initialState players.");let s=(ue=r.economyConfig)!=null?ue:Cr;if(!$e(s))throw new Error("Match: invalid economy config.");let l=(Qe=r.buildingsConfig)!=null?Qe:Xe;if(!P(l))throw new Error("Match: invalid buildings config.");let u=(Ye=r.terrainConfig)!=null?Ye:De;if(!jr(u))throw new Error("Match: invalid terrain config.");let d=(Je=r.unitsConfig)!=null?Je:Br;if(!le(d))throw new Error("Match: invalid units config.");let c=xr(),f=Dt(),p=Tr(s,l),w=Nr(l),k=$r(b=>Number.isFinite(se(u,b).move),d,b=>se(u,b).defense,{canAfford:(b,O,L)=>qe(b,O,L),pay:(b,O,L)=>Ge(b,O,L)}),M=(Ze=r.extraHandlers)!=null?Ze:new Map,E=new Map([...c,...f,...p,...w,...k,...M]);if(E.size!==c.size+f.size+p.size+w.size+k.size+M.size)throw new Error("Match: duplicate handler names.");let T=Ir(),D={...T,post:[...T.post,Hr(l)]},Q=new Set([...c.keys(),...f.keys(),ze]),C=new Map([[Ae,Mr],[Re,vr],[Me,Wr],[Te,Lr],[Oe,Fr]]),U=0,B=()=>(U+=1,U),W=new Map;for(let[b,O]of E){if(b.length===0||typeof O!="function")throw new Error("Match: invalid handler registration.");let L=C.get(b),ce;L!==void 0?ce=[L,...D.pre]:Q.has(b)?ce=[Sr(b),...D.pre]:ce=D.pre,W.set(b,kr(O,{...D,pre:ce},this.seed,B))}let g=new Map(dr());g.set(Ae,[Or]),g.set(Re,[Ur]),g.set(Me,[qr]),g.set(Te,[Xr]),g.set(Oe,[Gr]);let Y=(er=r.extraProducers)!=null?er:new Map,J=[["match.advance",[Vr]],...Y];for(let[b,O]of J)g.set(b,[...(rr=g.get(b))!=null?rr:[],...O]);this.producers=g;let de=(nr=r.extraConditions)!=null?nr:[];this.conditions=[...de,...Ar(n)],this.players=y([...r.players]),this.kernel=new ye({players:r.players,initialState:r.initialState,handlers:W});let Z=r.initialState.map;this.events.push(ur(this.seed,this.players,this.ruleset,r.initialState.tick,Z===void 0?void 0:{id:Z.id,version:Z.schemaVersion}));let ee=Ie(this.conditions,{state:r.initialState,revision:0});ee.status==="finished"&&this.events.push(Pe(ee.outcome,ee.condition,r.initialState.tick,0,this.events.length+1)),Object.freeze(this)}join(r){return this.kernel.join(r)}dispatch(r,n){var i;if(this.getVerdict().status==="finished")return{status:"error",code:"MATCH_FINISHED"};let t=this.kernel.getSnapshot(),o=this.kernel.dispatch(r,n);try{if(o.status==="applied"){let a=n,s=this.kernel.getSnapshot(),l=(i=this.producers.get(a.type))!=null?i:[],u=cr({type:a.type,caller:r.playerId,params:a.payload,before:t,after:s},l,s.tick,o.revision,this.events.length+1);this.events.push(...u);let d=Ie(this.conditions,{state:s,revision:o.revision});d.status==="finished"&&this.events.push(Pe(d.outcome,d.condition,s.tick,o.revision,this.events.length+1))}}finally{this.syncTimeline()}return o}getSnapshot(){return this.kernel.getSnapshot()}getLog(){return this.kernel.getLog()}getRevision(){return this.kernel.getRevision()}getTick(){return this.kernel.getSnapshot().tick}getStateHash(){return Ve(this.kernel.getSnapshot())}getTimeline(){return[...this.timeline]}getEvents(){return[...this.events]}getVerdict(){let r=this.kernel.getSnapshot();return Ie(this.conditions,{state:r,revision:this.kernel.getRevision()})}syncTimeline(){let r=this.kernel.getLog().slice(this.timeline.length);if(r.length===0)return;let n=this.kernel.getSnapshot(),t=Ve(n);for(let o of r){let i={seq:this.timeline.length+1,revision:o.revision,tick:n.tick,requestId:o.requestId,playerId:o.playerId,type:o.type,applied:o.applied,detail:o.detail,stateHash:t};this.timeline.push(y(i))}}};function Ct(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0&&e<=4294967295}function Qr(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0}function Mt(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;return A(r.viewer)&&Qr(r.col)&&Qr(r.row)&&Ct(r.range)}function Tt(e){return typeof e!="object"||e===null||Array.isArray(e)?!1:typeof e.blocksVision=="boolean"}function Ot(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=Object.entries(e);if(r.length!==ne.length)return!1;for(let[n,t]of r)if(!te(n)||!Tt(t))return!1;return!0}var _t={field:{blocksVision:!1},forest:{blocksVision:!0},mountain:{blocksVision:!0},river:{blocksVision:!1},road:{blocksVision:!1},bridge:{blocksVision:!1},resource:{blocksVision:!1},village:{blocksVision:!1},city:{blocksVision:!1}},vt=y(_t);function Yr(e,r,n=vt){if(!Ot(n))throw new Error("computeVisibility: invalid fog config.");if(!Array.isArray(r))throw new Error("computeVisibility: invalid sources (expected array).");for(let i of r)if(!Mt(i))throw new Error("computeVisibility: invalid vision source.");let t=[...new Set(r.map(i=>i.viewer))].sort(),o={};for(let i of t){let a=new Set;for(let s of r)s.viewer===i&&Nt(e,s,n,a);o[i]=[...a].sort((s,l)=>s-l)}return y(o)}function Nt(e,r,n,t){if(v(e,r.col,r.row)===void 0)return;let o=r.row*e.width+r.col,i=new Set([o]);t.add(o);let a=[{col:r.col,row:r.row}];for(let s=0;s<r.range;s+=1){let l=[];for(let u of a)for(let d of H(e,u.col,u.row)){let c=d.row*e.width+d.col;i.has(c)||(i.add(c),t.add(c),n[d.terrain].blocksVision||l.push({col:d.col,row:d.row}))}a=l}}function Jr(e,r){if(!he(e))throw new Error("markExplored: invalid current explored data.");if(typeof r!="object"||r===null||Array.isArray(r))throw new Error("markExplored: invalid visibility.");let n={};for(let[o,i]of Object.entries(e.viewers))n[o]=[...i];for(let[o,i]of Object.entries(r)){if(!Array.isArray(i))throw new Error("markExplored: invalid visibility.");let a=n[o];a===void 0&&(a=[],n[o]=a);for(let s of i){if(!je(s))throw new Error("markExplored: invalid visibility.");a.push(s)}}let t={};for(let[o,i]of Object.entries(n))t[o]=[...new Set(i)].sort((a,s)=>a-s);return y({schemaVersion:1,viewers:t})}return an(Ut);})();
+"use strict";var AIWLEngine=(()=>{var pe=Object.defineProperty;var pn=Object.getOwnPropertyDescriptor;var yn=Object.getOwnPropertyNames;var mn=Object.prototype.hasOwnProperty;var gn=(e,r,n)=>r in e?pe(e,r,{enumerable:!0,configurable:!0,writable:!0,value:n}):e[r]=n;var wn=(e,r)=>{for(var n in r)pe(e,n,{get:r[n],enumerable:!0})},hn=(e,r,n,t)=>{if(r&&typeof r=="object"||typeof r=="function")for(let o of yn(r))!mn.call(e,o)&&o!==n&&pe(e,o,{get:()=>r[o],enumerable:!(t=pn(r,o))||t.enumerable});return e};var bn=e=>hn(pe({},"__esModule",{value:!0}),e);var x=(e,r,n)=>gn(e,typeof r!="symbol"?r+"":r,n);var zt={};wn(zt,{DEFAULT_TERRAIN_CONFIG:()=>Te,Match:()=>Ue,STANDARD_RULESET:()=>ln,WORLD_SCHEMA_VERSION:()=>Ae,computeVisibility:()=>un,createMatchId:()=>Ze,createWorldState:()=>Or,markExplored:()=>cn,markUntrusted:()=>yr,modifiersFor:()=>le,neighborsOf:()=>j});var xn=[1116352408,1899447441,3049323471,3921009573,961987163,1508970993,2453635748,2870763221,3624381080,310598401,607225278,1426881987,1925078388,2162078206,2614888103,3248222580,3835390401,4022224774,264347078,604807628,770255983,1249150122,1555081692,1996064986,2554220882,2821834349,2952996808,3210313671,3336571891,3584528711,113926993,338241895,666307205,773529912,1294757372,1396182291,1695183700,1986661051,2177026350,2456956037,2730485921,2820302411,3259730800,3345764771,3516065817,3600352804,4094571909,275423344,430227734,506948616,659060556,883997877,958139571,1322822218,1537002063,1747873779,1955562222,2024104815,2227730452,2361852424,2428436474,2756734187,3204031479,3329325298];function En(e){let r=e instanceof Uint8Array?e:new Uint8Array(e),n=r.length*8,t=[r.length+1+8],o=r.length+1;for(;o%64!==56;)o+=1;o+=8;let i=new Uint8Array(o);i.set(r,0),i[r.length]=128;let a=new DataView(i.buffer);a.setUint32(o-8,Math.floor(n/4294967296),!1),a.setUint32(o-4,n>>>0,!1);let s=1779033703,l=3144134277,u=1013904242,d=2773480762,c=1359893119,f=2600822924,p=528734635,y=1541459225,w=new Uint32Array(64),b=(C,E)=>C>>>E|C<<32-E;for(let C=0;C<o;C+=64){for(let m=0;m<16;m+=1)w[m]=a.getUint32(C+m*4,!1);for(let m=16;m<64;m+=1){let J=(b(w[m-15],7)^b(w[m-15],18)^w[m-15]>>>3)>>>0,Z=(b(w[m-2],17)^b(w[m-2],19)^w[m-2]>>>10)>>>0;w[m]=w[m-16]+J+w[m-7]+Z>>>0}let E=s,T=l,D=u,Q=d,M=c,U=f,B=p,V=y;for(let m=0;m<64;m+=1){let J=(b(M,6)^b(M,11)^b(M,25))>>>0,Z=(M&U^~M&B)>>>0,ue=V+J+Z+xn[m]+w[m]>>>0,ee=(b(E,2)^b(E,13)^b(E,22))>>>0,re=(E&T^E&D^T&D)>>>0,ce=ee+re>>>0;V=B,B=U,U=M,M=Q+ue>>>0,Q=D,D=T,T=E,E=ue+ce>>>0}s=s+E>>>0,l=l+T>>>0,u=u+D>>>0,d=d+Q>>>0,c=c+M>>>0,f=f+U>>>0,p=p+B>>>0,y=y+V>>>0}let Ve=new Uint8Array(32),A=new DataView(Ve.buffer);return A.setUint32(0,s,!1),A.setUint32(4,l,!1),A.setUint32(8,u,!1),A.setUint32(12,d,!1),A.setUint32(16,c,!1),A.setUint32(20,f,!1),A.setUint32(24,p,!1),A.setUint32(28,y,!1),Ve}function ur(e){if(e!=="sha256")throw new Error("shim createHash supports sha256 only");let r=[];return{update(n,t){return typeof n=="string"?r.push(new TextEncoder().encode(n)):n instanceof Uint8Array?r.push(n):r.push(new Uint8Array(n)),this},digest(n){let t=0;for(let s of r)t+=s.length;let o=new Uint8Array(t),i=0;for(let s of r)o.set(s,i),i+=s.length;let a=En(o);return n==="hex"?[...a].map(s=>s.toString(16).padStart(2,"0")).join(""):a}}}function ye(){return globalThis.crypto.randomUUID()}function yr(e){return e}var _=64,Sn=64,In=65536;function k(e){return typeof e=="string"&&e.length>=1&&e.length<=_}function An(e){return typeof e=="string"&&e.length>=1&&e.length<=_}function kn(e){if(typeof e!="object"||e===null)return{ok:!1,error:"MALFORMED_REQUEST"};let r=e,n=r.requestId;if(!An(n))return{ok:!1,error:"MALFORMED_REQUEST"};let t=r.playerId;if(!k(t))return{ok:!1,error:"MALFORMED_REQUEST"};let o=r.type;if(typeof o!="string"||o.length===0||o.length>Sn)return{ok:!1,error:"MALFORMED_REQUEST"};let i=r.payload;if(i===void 0)return{ok:!1,error:"MALFORMED_REQUEST"};let a;try{a=JSON.stringify(i)}catch{return{ok:!1,error:"MALFORMED_REQUEST"}}return a===void 0?{ok:!1,error:"MALFORMED_REQUEST"}:a.length>In?{ok:!1,error:"PAYLOAD_TOO_LARGE"}:{ok:!0,envelope:{requestId:n,playerId:t,type:o,payload:i}}}var cr="AuthorityKernel state must be plain JSON-style data (objects, arrays, primitives).",fr="freezeState: non-finite number (state must be exactly serializable).",Rn="freezeState: circular structure (state must be a tree).",pr=new WeakSet;function g(e,r){return mr(e,(r==null?void 0:r.allowNonFinite)===!0,new Set)}function mr(e,r,n){let t=typeof e;if(e===null||t==="string"||t==="boolean")return e;if(t==="number"){if(Number.isNaN(e))throw new Error(fr);if(!r&&!Number.isFinite(e))throw new Error(fr);return e}if(t!=="object")throw new Error(cr);let o=e,i=Object.getPrototypeOf(o);if(i!==Object.prototype&&i!==null&&!Array.isArray(o))throw new Error(cr);if(pr.has(o))return o;if(n.has(o))throw new Error(Rn);n.add(o);for(let a of Reflect.ownKeys(o))mr(o[a],r,n);return n.delete(o),Object.freeze(o),pr.add(o),o}var me=class{constructor(r){x(this,"canonical");x(this,"handlers");x(this,"players");x(this,"sessions",new Map);x(this,"seen",new Map);x(this,"log",[]);x(this,"revision",0);if(r.players.length===0)throw new Error("AuthorityKernel needs at least one player.");let n=new Set(r.players);if(n.size!==r.players.length)throw new Error("AuthorityKernel players must be unique.");this.players=n,this.handlers=new Map(r.handlers),this.canonical=g(structuredClone(r.initialState))}join(r){if(!this.players.has(r))throw new Error("AuthorityKernel.join: unknown player.");let n=ye();return this.sessions.set(n,r),{sessionId:n,playerId:r}}getSnapshot(){return this.canonical}getLog(){return[...this.log]}getRevision(){return this.revision}record(r,n,t,o,i){return g({revision:this.revision,requestId:r,playerId:n,type:t,applied:o,detail:i})}dispatch(r,n){let t=this.sessions.get(r.sessionId);if(t===void 0||t!==r.playerId)return{status:"error",code:"INVALID_SESSION"};let o=kn(n);if(!o.ok)return{status:"error",code:o.error};let{requestId:i,playerId:a,type:s,payload:l}=o.envelope;if(a!==t)return{status:"error",code:"SPOOFED_SENDER"};let u=this.seen.get(i);if(u!==void 0)return{status:"duplicate",original:u};let d=this.handlers.get(s);if(d===void 0)return{status:"error",code:"UNKNOWN_TRANSITION"};try{let c=d({state:this.canonical,caller:t,params:l});if(c.applied!==!0){let y={status:"rejected",reason:c.reason};return this.seen.set(i,y),this.log.push(this.record(i,a,s,!1,c.reason)),y}let f=g(c.state);this.revision+=1,this.canonical=f;let p={status:"applied",revision:this.revision,summary:c.summary};return this.seen.set(i,p),this.log.push(this.record(i,a,s,!0,c.summary)),p}catch{return{status:"error",code:"HANDLER_FAULT"}}}};function gr(){let e=[];return new Map(e)}function wr(e,r,n,t){return g({seq:1,revision:0,type:"match.started",priority:"normal",payload:t===void 0?{seed:e,players:r,ruleset:n}:{seed:e,players:r,ruleset:n,map:t}})}function je(e,r,n,t){return g({seq:t,revision:n,type:"match.finished",priority:"high",payload:{outcome:e,condition:r}})}function Dn(e,r,n){if(typeof e.type!="string"||e.type.length===0||e.type.length>_)throw new Error(`invalid event fact for ${r} (producer ${n}): bad type`);if(e.priority!=="low"&&e.priority!=="normal"&&e.priority!=="high"&&e.priority!=="critical")throw new Error(`invalid event fact for ${r} (producer ${n}): bad priority`)}function Mn(e,r,n,t,o){let i=n instanceof Error?n.message:"non-error thrown";return g({seq:o,revision:t,type:"system.event-fault",priority:"high",payload:{transition:e,producer:r,message:i}})}function hr(e,r,n,t){let o=[];for(let[i,a]of r.entries())try{let s=a(e);for(let l of s)Dn(l,e.type,i),o.push(g({seq:t+o.length,revision:n,type:l.type,priority:l.priority,payload:l.payload}))}catch(s){o.push(Mn(e.type,i,s,n,t+o.length))}return o}var ge="stableStringify: unserializable value.";function F(e){return We(e,new Set)}function We(e,r){if(e===null||typeof e!="object"){if(typeof e=="number"&&!Number.isFinite(e))throw new Error(ge);let o;try{o=JSON.stringify(e)}catch{throw new Error(ge)}if(o===void 0)throw new Error(ge);return o}let n=e;if(r.has(n))throw new Error(ge);r.add(n);let t;if(Array.isArray(e))t=`[${e.map(i=>We(i,r)).join(",")}]`;else{let o=e;t=`{${Object.keys(o).sort().map(s=>`${JSON.stringify(s)}:${We(o[s],r)}`).join(",")}}`}return r.delete(n),t}function Be(e){return ur("sha256").update(F(e),"utf8").digest("hex")}var we=class{constructor(r){x(this,"state");if(!Number.isInteger(r)||r<0||r>4294967295)throw new Error("SeededRng: seed must be a uint32.");this.state=r}nextUint32(){this.state=this.state+1831565813>>>0;let r=Math.imul(this.state^this.state>>>15,1|this.state);return r=r+Math.imul(r^r>>>7,61|r)^r,(r^r>>>14)>>>0}nextInt(r){if(!Number.isInteger(r)||r<1)throw new Error("SeededRng.nextInt: bound must be a positive integer.");return Math.floor(this.nextUint32()/4294967296*r)}nextFloat(){return this.nextUint32()/4294967296}getState(){return this.state}};function br(e,r){if(!Number.isInteger(e)||e<0||e>4294967295)throw new Error("deriveSeed: seed must be a uint32.");if(!Number.isInteger(r)||r<1||r>4294967295)throw new Error("deriveSeed: seq must be a positive uint32.");let n=Math.imul(e^2654435769,2246822507);return n=Math.imul(n^r,3266489909),n^=n>>>13,n>>>0}function xr(e){return typeof e=="string"&&e.length>=1&&e.length<=64}function Er(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0&&e<=4294967295}function Sr(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;if(r.schemaVersion!==1)return!1;let n=r.remaining;if(typeof n!="object"||n===null||Array.isArray(n))return!1;for(let[t,o]of Object.entries(n))if(!xr(t)||!Er(o))return!1;return!0}function he(e,r){var n;return(n=e==null?void 0:e.remaining[r])!=null?n:0}function Ir(e,r){if(!Array.isArray(e)||e.length===0)throw new Error("seedPrompts: invalid holders.");for(let t of e)if(!xr(t))throw new Error("seedPrompts: invalid holders.");if(!Er(r)||r<1)throw new Error("seedPrompts: invalid budget (expected positive uint32).");let n={};for(let t of e)n[t]=r;return{schemaVersion:1,remaining:n}}function Ar(e,r){var t;if(e===void 0)throw new Error("spendPrompt: no prompts data.");let n=(t=e.remaining[r])!=null?t:0;if(n<=0)throw new Error("spendPrompt: no prompts left.");return{schemaVersion:e.schemaVersion,remaining:{...e.remaining,[r]:n-1}}}var be=Object.freeze(["town-center","house","storage","barracks","wall","tower"]);function X(e){return typeof e=="string"&&be.includes(e)}var Cn=64,Tn=4294967295;function On(e){return typeof e=="string"&&e.length>=1&&e.length<=Cn}function q(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0&&e<=Tn}function _n(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;return q(r["town-center"])&&q(r.house)&&q(r.storage)&&q(r.barracks)&&q(r.wall)&&q(r.tower)}function ne(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;if(r.schemaVersion!==1)return!1;let n=r.buildings;if(typeof n!="object"||n===null||Array.isArray(n))return!1;for(let[t,o]of Object.entries(n))if(!On(t)||!_n(o))return!1;return!0}function G(e,r){let n=e==null?void 0:e.buildings[r];return n===void 0?{"town-center":0,house:0,storage:0,barracks:0,wall:0,tower:0}:{"town-center":n["town-center"],house:n.house,storage:n.storage,barracks:n.barracks,wall:n.wall,tower:n.tower}}var Pn=Object.freeze(["town-center","house","storage","barracks","wall","tower"]),vn=64,Nn=4294967295;function Un(e){return typeof e=="string"&&e.length>=1&&e.length<=vn}function Vn(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0&&e<=Nn}function Hn(e){return typeof e=="string"&&Pn.includes(e)}function jn(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;return Hn(r.type)&&Vn(r.remaining)}function Wn(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e,n=r.level;if(n!==1&&n!==2&&n!==3)return!1;let t=r.queue;return Array.isArray(t)?t.every(jn):!1}function kr(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;if(r.schemaVersion!==1)return!1;let n=r.cities;if(typeof n!="object"||n===null||Array.isArray(n))return!1;for(let[t,o]of Object.entries(n))if(!Un(t)||!Wn(o))return!1;return!0}function Le(e,r){let n=e==null?void 0:e.cities[r];return n===void 0?{level:1,queue:[]}:{level:n.level,queue:n.queue.map(t=>({...t}))}}function Bn(e){return typeof e=="string"&&e.length>=1&&e.length<=64}function Ln(e){return typeof e=="string"&&e.length>=1&&e.length<=64}function $n(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0&&e<=4294967295}function Fn(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;return Ln(r.id)&&Bn(r.owner)&&typeof r.active=="boolean"}function Rr(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;if(r.schemaVersion!==1||!$n(r.nextId))return!1;let n=r.commanders;if(!Array.isArray(n))return!1;let t=new Set;for(let o of n){if(!Fn(o)||t.has(o.id))return!1;t.add(o.id)}return!0}function qn(e){return typeof e=="string"&&e.length>=1&&e.length<=64}function $e(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0&&e<=4294967295}function xe(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;if(r.schemaVersion!==1)return!1;let n=r.viewers;if(typeof n!="object"||n===null||Array.isArray(n))return!1;for(let[t,o]of Object.entries(n)){if(!qn(t)||!Array.isArray(o))return!1;let i=-1;for(let a of o){if(!$e(a)||a<=i)return!1;i=a}}return!0}function Xn(e){return typeof e=="string"&&e.length>=1&&e.length<=64}var te=Object.freeze(["field","forest","mountain","river","road","bridge","resource","village","city"]);function oe(e){return typeof e=="string"&&te.includes(e)}var ie=Object.freeze(["food","wood","stone","gold"]);function H(e){return typeof e=="string"&&ie.includes(e)}function z(e,r){return Object.freeze({q:e,r})}var Gn=Object.freeze([z(1,0),z(1,-1),z(0,-1),z(-1,0),z(-1,1),z(0,1)]);function zn(e,r,n){let t=n==="odd"?(r-(r&1))/2:(r+(r&1))/2;return{q:e-t,r}}function Yn(e,r,n){let t=n==="odd"?(r-(r&1))/2:(r+(r&1))/2;return{col:e+t,row:r}}function Dr(e){return typeof e=="number"&&Number.isInteger(e)&&e>=1&&e<=64}function Mr(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0&&e<=4294967295}function Cr(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;if(r.schemaVersion!==1||!Xn(r.id))return!1;let n=r.width,t=r.height;if(!Dr(n)||!Dr(t)||r.stagger!=="odd"&&r.stagger!=="even")return!1;let o=r.cells;if(!Array.isArray(o)||o.length!==n*t)return!1;for(let l=0;l<o.length;l+=1){let u=o[l];if(typeof u!="object"||u===null||Array.isArray(u)||u.col!==l%n||u.row!==Math.floor(l/n)||!oe(u.terrain))return!1;let d=u.resource;if(u.terrain==="resource"){if(typeof d!="object"||d===null||Array.isArray(d)||!H(d.type)||!Mr(d.amount))return!1}else if(d!==void 0)return!1}let i=r.spawns;if(!Array.isArray(i)||i.length>16)return!1;let a=new Set,s=new Set;for(let l of i){if(typeof l!="object"||l===null||Array.isArray(l))return!1;let u=l,d=u.playerIndex,c=u.col,f=u.row;if(!Mr(d)||typeof c!="number"||!Number.isInteger(c)||c<0||c>=n||typeof f!="number"||!Number.isInteger(f)||f<0||f>=t||s.has(d))return!1;s.add(d);let p=`${c},${f}`;if(a.has(p))return!1;a.add(p)}return!0}function P(e,r,n){if(!(!Number.isInteger(r)||!Number.isInteger(n))&&!(r<0||r>=e.width||n<0||n>=e.height))return e.cells[n*e.width+r]}function Kn(e,r,n){let{col:t,row:o}=Yn(r,n,e.stagger);return P(e,t,o)}function j(e,r,n){if(P(e,r,n)===void 0)return[];let t=zn(r,n,e.stagger),o=[];for(let i of Gn){let a=Kn(e,t.q+i.q,t.r+i.r);a!==void 0&&o.push(a)}return o}function Qn(e){return typeof e=="string"&&e.length>=1&&e.length<=64}function Ee(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0&&e<=4294967295}function Jn(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;return Ee(r.food)&&Ee(r.wood)&&Ee(r.stone)&&Ee(r.gold)}function Y(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;if(r.schemaVersion!==1)return!1;let n=r.stockpiles;if(typeof n!="object"||n===null||Array.isArray(n))return!1;for(let[t,o]of Object.entries(n))if(!Qn(t)||!Jn(o))return!1;return!0}function v(e,r){let n=e==null?void 0:e.stockpiles[r];return n===void 0?{food:0,wood:0,stone:0,gold:0}:{food:n.food,wood:n.wood,stone:n.stone,gold:n.gold}}var Fe=Object.freeze(["worker","warrior","archer"]),Zn=64,et=64,rt=4294967295;function nt(e){return typeof e=="string"&&e.length>=1&&e.length<=Zn}function tt(e){return typeof e=="string"&&e.length>=1&&e.length<=et}function Se(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0&&e<=rt}function ae(e){return typeof e=="string"&&Fe.includes(e)}function ot(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;return tt(r.id)&&nt(r.owner)&&ae(r.type)&&Se(r.hp)&&Se(r.col)&&Se(r.row)}function Ie(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;if(r.schemaVersion!==1||!Se(r.nextId))return!1;let n=r.units;if(!Array.isArray(n))return!1;let t=new Set;for(let o of n){if(!ot(o)||t.has(o.id))return!1;t.add(o.id)}return!0}function Tr(e,r){return e===void 0?[]:e.units.filter(n=>n.owner===r).map(n=>({...n}))}function W(e,r){let n=e==null?void 0:e.units.find(t=>t.id===r);if(n!==void 0)return{...n}}var Ae=1;function se(e){if(typeof e!="object"||e===null)return!1;let r=e;if(r.schemaVersion!==Ae)return!1;let n=r.players;if(!Array.isArray(n)||n.length===0)return!1;let t=new Set;for(let f of n){if(typeof f!="object"||f===null)return!1;let p=f.id;if(!k(p)||t.has(p))return!1;t.add(p)}let o=r.map;if(o!==void 0&&!Cr(o))return!1;let i=r.explored;if(i!==void 0){if(o===void 0||!xe(i))return!1;let f=o.width*o.height;for(let p of Object.values(i.viewers))for(let y of p)if(y>=f)return!1}let a=r.stockpiles;if(a!==void 0&&!Y(a))return!1;let s=r.buildings;if(s!==void 0&&!ne(s))return!1;let l=r.cities;if(l!==void 0&&!kr(l))return!1;let u=r.units;if(u!==void 0&&!Ie(u))return!1;let d=r.commanders;if(d!==void 0&&!Rr(d))return!1;let c=r.prompts;return!(c!==void 0&&!Sr(c))}function Or(e){let r={schemaVersion:Ae,players:e.players.map(n=>({id:n})),...e.map===void 0?{}:{map:e.map},...e.explored===void 0?{}:{explored:e.explored},...e.stockpiles===void 0?{}:{stockpiles:e.stockpiles},...e.buildings===void 0?{}:{buildings:e.buildings},...e.cities===void 0?{}:{cities:e.cities},...e.units===void 0?{}:{units:e.units},...e.commanders===void 0?{}:{commanders:e.commanders},...e.prompts===void 0?{}:{prompts:e.prompts}};if(!se(r))throw new Error("createWorldState: invalid initial world.");return r}function _r(){let e=[["world.noop",r=>({applied:!0,state:r.state,summary:"world-noop"})]];return new Map(e)}var Pr=1e6;function vr(e){return(r,n)=>{let t;try{t=F(n)}catch{return{rule:"no-params",detail:`${e} payload is not serializable`}}return t!=="{}"?{rule:"no-params",detail:`${e} takes no parameters`}:null}}function it(e,r){return se(r)?null:{rule:"state-shape",detail:"applied state failed the WorldState guard"}}function at(e,r){let n=JSON.stringify(e.players.map(o=>o.id)),t=JSON.stringify(r.players.map(o=>o.id));return n===t?null:{rule:"roster-preserved",detail:`expected ${n} got ${t}`}}function ke(e,r,n){return he(n.prompts,e)>0?null:{rule:"prompts-exhausted",detail:"no prompts left"}}function st(e,r){var a,s,l,u,d,c;let n=(s=(a=e.prompts)==null?void 0:a.remaining)!=null?s:{},t=(u=(l=r.prompts)==null?void 0:l.remaining)!=null?u:{},o=[...new Set([...Object.keys(n),...Object.keys(t)])].sort(),i=0;for(let f of o){let p=(d=n[f])!=null?d:0,y=(c=t[f])!=null?c:0;if(y>p)return{rule:"prompts-ledger",detail:`prompts ${f} refilled ${p} -> ${y}`};i+=p-y}return i!==1?{rule:"prompts-ledger",detail:`prompts spent ${i} (expected 1)`}:null}function lt(e,r){let n=F(r).length;return n<=Pr?null:{rule:"state-size",detail:`${n} bytes (max ${Pr})`}}function dt(e,r){if(e===void 0||r===void 0||e.id!==r.id||e.width!==r.width||e.height!==r.height||e.stagger!==r.stagger||e.cells.length!==r.cells.length||F(e.spawns)!==F(r.spawns))return!1;let n=new Map;for(let t of e.cells)n.set(t.row*e.width+t.col,t);return r.cells.every(t=>{let o=n.get(t.row*r.width+t.col);if(o===void 0||o.terrain!==t.terrain)return!1;let i=o.resource,a=t.resource;return i===void 0||a===void 0?i===a:i.type!==a.type?!1:a.amount<=i.amount})}function ut(e,r){return e.map===r.map||dt(e.map,r.map)?null:{rule:"map-preserved",detail:"map changed beyond resource depletion"}}function ct(e,r){if(e.explored===r.explored||e.explored===void 0)return null;let n=r.explored;if(n===void 0)return{rule:"explored-monotonic",detail:"explored memory wiped"};for(let[t,o]of Object.entries(e.explored.viewers)){let i=n.viewers[t];if(i===void 0||i.length<o.length)return{rule:"explored-monotonic",detail:`viewer ${t} lost memory`};for(let a of o)if(!i.includes(a))return{rule:"explored-monotonic",detail:`viewer ${t} lost cell ${a}`}}return null}function Nr(){return{pre:[],postShape:it,post:[at,st,lt,ut,ct]}}function qe(e,r){return`${e}: ${r.map(n=>`[${n.rule}] ${n.detail}`).join("; ")}`}function Ur(e,r,n,t,o){return i=>{let a=t(),s=[];for(let p of r.pre){let y=p(i.caller,i.params,i.state);y!==null&&s.push(y)}if(s.length>0)return{applied:!1,reason:qe("validation",s)};let l=new we(br(n,a)),u=e({...i,rng:l});if(!u.applied)return u;let d=o===void 0?u.state:o(i.state,i.caller,u.state),c=r.postShape(i.state,d);if(c!==null)throw new Error(qe("postcondition",[c]));let f=[];for(let p of r.post){let y=p(i.state,d);y!==null&&f.push(y)}if(f.length>0)throw new Error(qe("postcondition",f));return{...u,state:d}}}var ft=g({status:"ongoing"});function pt(){return e=>{for(let r of e.state.players)if(he(e.state.prompts,r.id)>0)return null;return{outcome:{kind:"draw"},condition:"prompts-exhausted"}}}function Vr(){return[pt()]}function yt(e,r,n){let t=e.outcome;if(t.kind!=="win"&&t.kind!=="draw")throw new Error(`invalid victory decision (condition ${r}): bad outcome`);if(t.kind==="win"&&(!k(t.winner)||!n.includes(t.winner)))throw new Error(`invalid victory decision (condition ${r}): bad winner`);if(typeof e.condition!="string"||e.condition.length===0||e.condition.length>_)throw new Error(`invalid victory decision (condition ${r}): bad condition`)}function Re(e,r){let n=r.state.players.map(t=>t.id);for(let[t,o]of e.entries()){let i;try{i=o(r)}catch{throw new Error(`invalid victory decision (condition ${t}): threw`)}if(i!==null)return yt(i,t,n),g({status:"finished",outcome:i.outcome,condition:i.condition,revision:r.revision})}return ft}function S(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0&&e<=4294967295}function mt(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;return S(r.value)&&S(r.gatherYield)}function Ge(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=Object.entries(e);if(r.length!==ie.length)return!1;for(let[n,t]of r)if(!H(n)||!mt(t))return!1;return!0}var Wr=g({food:{value:1,gatherYield:1},wood:{value:1,gatherYield:1},stone:{value:1,gatherYield:1},gold:{value:1,gatherYield:1}});function De(e,r){let n=e!=null?e:0;if(!S(n))throw new Error(`${r}: invalid cost.`);return n}function ze(e,r){if(typeof e!="object"||e===null||Array.isArray(e))throw new Error(`${r}: invalid cost.`);let n=e;return{food:De(n.food,r),wood:De(n.wood,r),stone:De(n.stone,r),gold:De(n.gold,r)}}function gt(e,r,n,t){let i={...v(e,r),[n]:t};return g({schemaVersion:1,stockpiles:{...e.stockpiles,[r]:i}})}function wt(e,r,n,t){if(!Y(e))throw new Error("credit: invalid stockpiles data.");if(!H(n))throw new Error("credit: invalid resource type.");if(!S(t))throw new Error("credit: invalid amount.");let o=v(e,r)[n]+t;if(o>4294967295)throw new Error("credit: overflow.");return gt(e,r,n,o)}function Ye(e,r,n){if(!Y(e))throw new Error("canAfford: invalid stockpiles data.");let t=ze(n,"canAfford"),o=v(e,r);return o.food>=t.food&&o.wood>=t.wood&&o.stone>=t.stone&&o.gold>=t.gold}var Me="economy.gather";function Br(e,r){if(typeof r!="object"||r===null||Array.isArray(r))return{rule:"gather-params",detail:"gather takes { col, row }"};let n=r;return!S(n.col)||!S(n.row)?{rule:"gather-params",detail:"gather takes { col, row } uint32"}:null}function ht(e,r){if(!Ge(e))throw new Error("createGatherHandler: invalid economy config.");let n=r!=null?r:Ke;if(!N(n))throw new Error("createGatherHandler: invalid buildings config.");return t=>{var w;let{col:o,row:i}=t.params,a=t.state.map;if(a===void 0)return{applied:!1,reason:"gather: no map."};let s=a.cells.find(b=>b.col===o&&b.row===i);if(s===void 0)return{applied:!1,reason:"gather: out of bounds."};let l=s.resource;if(l===void 0)return{applied:!1,reason:"gather: no node here."};if(l.amount===0)return{applied:!1,reason:"gather: node depleted."};if(!Tr(t.state.units,t.caller).some(b=>b.type==="worker"&&b.col===o&&b.row===i))return{applied:!1,reason:"gather: no worker here."};let d=Math.min(e[l.type].gatherYield,l.amount);if(d===0)return{applied:!1,reason:"gather: yield is zero."};let c=Fr(t.state.buildings,t.caller,n)-v(t.state.stockpiles,t.caller)[l.type];if(d>c)return{applied:!1,reason:"gather: storage full."};let f=a.cells.map(b=>b===s?{...b,resource:{type:l.type,amount:l.amount-d}}:b),p=(w=t.state.stockpiles)!=null?w:{schemaVersion:1,stockpiles:{}},y=wt(p,t.caller,l.type,d);return{applied:!0,state:{...t.state,map:{...a,cells:f},stockpiles:y},summary:`gathered ${d} ${l.type} at ${o},${i}`}}}function Lr(e,r){return new Map([[Me,ht(e,r)]])}function $r(e){var l,u;if(typeof e.params!="object"||e.params===null)throw new Error("gatherProducer: invalid params.");let r=e.params,n=r.col,t=r.row;if(!S(n)||!S(t))throw new Error("gatherProducer: invalid params.");let o=e.before.map,i=e.after.map;if(o===void 0||i===void 0)throw new Error("gatherProducer: map missing.");let a=(l=P(o,n,t))==null?void 0:l.resource,s=(u=P(i,n,t))==null?void 0:u.resource;if(a===void 0||s===void 0)throw new Error("gatherProducer: node missing.");return[{type:"resource.gathered",priority:"normal",payload:{player:e.caller,col:n,row:t,resource:a.type,amount:a.amount-s.amount}}]}function bt(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;for(let[r,n]of Object.entries(e))if(!H(r)||!S(n))return!1;return!0}function xt(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;return bt(r.cost)&&S(r.buildTime)}function Et(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;return S(r.base)&&S(r.perStorage)}function N(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=Object.entries(e);if(r.length!==be.length+1)return!1;for(let[n,t]of r)if(n==="caps"){if(!Et(t))return!1}else if(!X(n)||!xt(t))return!1;return!0}var Ke=g({"town-center":{cost:{},buildTime:0},house:{cost:{},buildTime:0},storage:{cost:{},buildTime:0},barracks:{cost:{},buildTime:0},wall:{cost:{},buildTime:0},tower:{cost:{},buildTime:0},caps:{base:4294967295,perStorage:0}});function St(e,r){if(!N(e))throw new Error("costOf: invalid buildings config.");if(!X(r))throw new Error("costOf: invalid building type.");return ze(e[r].cost,"costOf")}function It(e,r){if(!N(e))throw new Error("buildTimeOf: invalid buildings config.");if(!X(r))throw new Error("buildTimeOf: invalid building type.");return e[r].buildTime}var At=["food","wood","stone","gold"];function Qe(e,r,n){if(!Y(e))throw new Error("payCost: invalid stockpiles data.");let t=ze(n,"payCost"),o=v(e,r);for(let i of At)if(o[i]<t[i])throw new Error(`payCost: insufficient ${i}.`);return g({schemaVersion:1,stockpiles:{...e.stockpiles,[r]:{food:o.food-t.food,wood:o.wood-t.wood,stone:o.stone-t.stone,gold:o.gold-t.gold}}})}function kt(e,r,n,t){let i={...G(e,r),[n]:t};return g({schemaVersion:1,buildings:{...e.buildings,[r]:i}})}function Rt(e,r,n){if(!ne(e))throw new Error("addBuilding: invalid buildings data.");if(!X(n))throw new Error("addBuilding: invalid building type.");let t=G(e,r)[n]+1;if(t>4294967295)throw new Error("addBuilding: overflow.");return kt(e,r,n,t)}function Fr(e,r,n){if(e!==void 0&&!ne(e))throw new Error("capOf: invalid buildings data.");if(!N(n))throw new Error("capOf: invalid buildings config.");let t=G(e,r).storage,o=n.caps.base+t*n.caps.perStorage;if(!S(o))throw new Error("capOf: overflow.");return o}var Ce="city.build",Je="city.upgrade";function qr(e,r){return typeof r!="object"||r===null||Array.isArray(r)?{rule:"build-params",detail:"build takes { type }"}:typeof r.type!="string"?{rule:"build-params",detail:"build takes a string type"}:null}function Dt(e){if(!N(e))throw new Error("createBuildHandler: invalid buildings config.");return r=>{var d,c,f;let{type:n}=r.params;if(!X(n))return{applied:!1,reason:"build: unknown building."};let t=St(e,n),o=(d=r.state.stockpiles)!=null?d:{schemaVersion:1,stockpiles:{}};if(!Ye(o,r.caller,t))return{applied:!1,reason:"build: cannot afford."};let i=Qe(o,r.caller,t),a=It(e,n),s=Le(r.state.cities,r.caller),l=(f=(c=r.state.cities)==null?void 0:c.cities)!=null?f:{},u={schemaVersion:1,cities:{...l,[r.caller]:{level:s.level,queue:[...s.queue,{type:n,remaining:a}]}}};return{applied:!0,state:{...r.state,cities:u,stockpiles:i},summary:`started ${n} (${a} prompts)`}}}function Mt(){return e=>{var i,a;let r=Le(e.state.cities,e.caller);if(r.level>=3)return{applied:!1,reason:"upgrade: already max level."};let n=r.level===1?2:3,t=(a=(i=e.state.cities)==null?void 0:i.cities)!=null?a:{},o={schemaVersion:1,cities:{...t,[e.caller]:{level:n,queue:r.queue}}};return{applied:!0,state:{...e.state,cities:o},summary:`upgraded to level ${n}`}}}function Xr(e){return new Map([[Ce,Dt(e)],[Je,Mt()]])}function Gr(e,r,n){let t={},o=[];for(let[a,s]of Object.entries(e.cities)){if(a!==n){t[a]=s;continue}let l=[];for(let u of s.queue){let d=u.remaining-1;d<=0?o.push({holder:a,type:u.type}):l.push({type:u.type,remaining:d})}t[a]={level:s.level,queue:l}}let i=r;for(let a of o){let s=i!=null?i:{schemaVersion:1,buildings:{}};i=Rt(s,a.holder,a.type)}return{cities:{schemaVersion:1,cities:t},buildings:i}}function zr(e){if(typeof e.params!="object"||e.params===null)throw new Error("buildStartedProducer: invalid params.");let r=e.params;if(typeof r.type!="string")throw new Error("buildStartedProducer: invalid params.");return[{type:"build.started",priority:"normal",payload:{player:e.caller,building:r.type}}]}function Yr(e){var i,a,s,l;let r=[],n=(a=(i=e.before.buildings)==null?void 0:i.buildings)!=null?a:{},t=(l=(s=e.after.buildings)==null?void 0:s.buildings)!=null?l:{},o=[...new Set([...Object.keys(n),...Object.keys(t)])].sort();for(let u of o){let d=G(e.before.buildings,u),c=G(e.after.buildings,u);for(let f of be){let p=f,y=c[p]-d[p];for(let w=0;w<y;w+=1)r.push({type:"build.completed",priority:"normal",payload:{player:u,building:p}})}}return r}function Kr(e){if(!N(e))throw new Error("createEconomyRule: invalid buildings config.");return(r,n)=>{let t=n.stockpiles;if(t!==void 0)for(let o of Object.keys(t.stockpiles).sort()){let i=Fr(n.buildings,o,e),a=v(t,o);for(let s of ie){let l=s;if(a[l]>i)return{rule:"economy-cap",detail:`${o}.${l} ${a[l]} exceeds cap ${i}`}}}for(let o of ie){let i=o,a=Hr(r,i),s=Hr(n,i);if(s>a)return{rule:"economy-conservation",detail:`${i} ${a} -> ${s}`}}return null}}function Hr(e,r){let n=0,t=e.stockpiles;if(t!==void 0)for(let i of Object.keys(t.stockpiles))n+=v(t,i)[r];let o=e.map;if(o!==void 0)for(let i of o.cells){let a=i.resource;a!==void 0&&a.type===r&&(n+=a.amount)}return n}function Ct(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e,n=r.move;if(typeof n!="number"||!(n>=0))return!1;for(let t of["defense","stealth","ranged"]){let o=r[t];if(typeof o!="number"||!Number.isFinite(o))return!1}return!0}function Qr(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=Object.entries(e);if(r.length!==te.length)return!1;for(let[n,t]of r)if(!oe(n)||!Ct(t))return!1;return!0}var Tt={field:{move:1,defense:0,stealth:0,ranged:0},forest:{move:2,defense:1,stealth:2,ranged:0},mountain:{move:3,defense:2,stealth:0,ranged:1},river:{move:1/0,defense:0,stealth:0,ranged:0},road:{move:.5,defense:0,stealth:0,ranged:0},bridge:{move:1,defense:0,stealth:0,ranged:0},resource:{move:1,defense:0,stealth:0,ranged:0},village:{move:1,defense:0,stealth:0,ranged:0},city:{move:1,defense:0,stealth:0,ranged:0}},Te=g(Tt,{allowNonFinite:!0});function le(e,r){let n=e[r];if(n===void 0)throw new Error(`modifiersFor: unknown terrain "${String(r)}".`);return n}function I(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0&&e<=4294967295}function Ot(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;for(let[r,n]of Object.entries(e))if(!H(r)||!I(n))return!1;return!0}function _t(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e,n=r.maxHp;return Ot(r.cost)&&I(n)&&n>=1&&I(r.damage)}function de(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=Object.entries(e);if(r.length!==Fe.length)return!1;for(let[n,t]of r)if(!ae(n)||!_t(t))return!1;return!0}var Jr=g({worker:{cost:{},maxHp:1,damage:0},warrior:{cost:{},maxHp:1,damage:0},archer:{cost:{},maxHp:1,damage:0}});function Pt(e,r,n,t,o,i){if(e!==void 0&&!Ie(e))throw new Error("spawnUnit: invalid units data.");if(!k(r))throw new Error("spawnUnit: invalid owner.");if(!ae(n))throw new Error("spawnUnit: invalid unit type.");if(!I(t)||!I(o))throw new Error("spawnUnit: invalid cell.");if(!de(i))throw new Error("spawnUnit: invalid units config.");let a=e!=null?e:{schemaVersion:1,nextId:0,units:[]};if(a.nextId>=4294967295)throw new Error("spawnUnit: id space exhausted.");let s=`u${a.nextId}`;if(a.units.some(l=>l.id===s))throw new Error("spawnUnit: id collision.");return{schemaVersion:1,nextId:a.nextId+1,units:[...a.units,{id:s,owner:r,type:n,hp:i[n].maxHp,col:t,row:o}]}}var _e="unit.move";function Zr(e,r){if(typeof r!="object"||r===null||Array.isArray(r))return{rule:"move-params",detail:"move takes { id, col, row }"};let n=r;return typeof n.id!="string"||!I(n.col)||!I(n.row)?{rule:"move-params",detail:"move takes { id string, col/row uint32 }"}:null}function vt(e){if(typeof e!="function")throw new Error("createMoveHandler: invalid passable predicate.");return r=>{let{id:n,col:t,row:o}=r.params,i=r.state.units;if(i===void 0)return{applied:!1,reason:"move: no units."};let a=W(i,n);if(a===void 0)return{applied:!1,reason:"move: unknown unit."};if(a.owner!==r.caller)return{applied:!1,reason:"move: not your unit."};let s=r.state.map;if(s===void 0)return{applied:!1,reason:"move: no map."};let l=s.cells.find(d=>d.col===t&&d.row===o);return l===void 0?{applied:!1,reason:"move: out of bounds."}:j(s,a.col,a.row).some(d=>d.col===t&&d.row===o)?e(l.terrain)?{applied:!0,state:{...r.state,units:{schemaVersion:1,nextId:i.nextId,units:i.units.map(d=>d.id===n?{...d,col:t,row:o}:d)}},summary:`moved ${n} to ${t},${o}`}:{applied:!1,reason:"move: impassable."}:{applied:!1,reason:"move: not adjacent."}}}var Pe="unit.attack";function en(e,r){if(typeof r!="object"||r===null||Array.isArray(r))return{rule:"attack-params",detail:"attack takes { id, target }"};let n=r;return typeof n.id!="string"||typeof n.target!="string"?{rule:"attack-params",detail:"attack takes { id string, target string }"}:null}function Nt(e,r){if(!de(e))throw new Error("createAttackHandler: invalid units config.");if(typeof r!="function")throw new Error("createAttackHandler: invalid defense predicate.");return n=>{let{id:t,target:o}=n.params,i=n.state.units;if(i===void 0)return{applied:!1,reason:"attack: no units."};let a=W(i,t);if(a===void 0)return{applied:!1,reason:"attack: unknown unit."};if(a.owner!==n.caller)return{applied:!1,reason:"attack: not your unit."};if(a.hp<=0)return{applied:!1,reason:"attack: unit down."};let s=W(i,o);if(s===void 0)return{applied:!1,reason:"attack: unknown target."};if(s.owner===n.caller)return{applied:!1,reason:"attack: not an enemy."};if(s.hp<=0)return{applied:!1,reason:"attack: target down."};let l=n.state.map;if(l===void 0)return{applied:!1,reason:"attack: no map."};let u=j(l,a.col,a.row).find(w=>w.col===s.col&&w.row===s.row);if(u===void 0)return{applied:!1,reason:"attack: out of range."};let d=e[a.type].damage,c=r(u.terrain),f=Math.max(0,d-c),p=Math.max(0,s.hp-f),y=p<=0;return{applied:!0,state:{...n.state,units:{schemaVersion:1,nextId:i.nextId,units:y?i.units.filter(w=>w.id!==o):i.units.map(w=>w.id===o?{...w,hp:p}:w)}},summary:`attacked ${o} for ${f} (hp ${s.hp}\u2192${p})${y?", slain":""}`}}}function rn(e,r,n,t){return new Map([[_e,vt(e)],[Pe,Nt(r,n)],[ve,Ut(r,t)]])}var ve="unit.train";function nn(e,r){if(typeof r!="object"||r===null||Array.isArray(r))return{rule:"train-params",detail:"train takes { type, col, row }"};let n=r;return typeof n.type!="string"||!I(n.col)||!I(n.row)?{rule:"train-params",detail:"train takes { type string, col/row uint32 }"}:null}function Ut(e,r){if(!de(e))throw new Error("createTrainHandler: invalid units config.");if(typeof(r==null?void 0:r.pay)!="function"||typeof(r==null?void 0:r.canAfford)!="function")throw new Error("createTrainHandler: invalid treasury.");return n=>{var p,y;let{type:t,col:o,row:i}=n.params;if(!ae(t))return{applied:!1,reason:"train: unknown unit type."};let a=n.state.map;if(a===void 0)return{applied:!1,reason:"train: no map."};if(a.cells.find(w=>w.col===o&&w.row===i)===void 0)return{applied:!1,reason:"train: out of bounds."};let s=e[t].cost,l=(p=n.state.stockpiles)!=null?p:{schemaVersion:1,stockpiles:{}};if(!r.canAfford(l,n.caller,s))return{applied:!1,reason:"train: cannot afford."};let u=r.pay(l,n.caller,s),d=n.state.units,c=`u${(y=d==null?void 0:d.nextId)!=null?y:0}`,f=Pt(d,n.caller,t,o,i,e);return{applied:!0,state:{...n.state,units:f,stockpiles:u},summary:`trained ${t} ${c} at ${o},${i}`}}}function tn(e){let r=e.params;if(typeof r!="object"||r===null||Array.isArray(r))throw new Error("moveProducer: invalid params.");let n=r,{id:t,col:o,row:i}=n;if(typeof t!="string"||!I(o)||!I(i))throw new Error("moveProducer: invalid params.");return[{type:"unit.moved",priority:"low",payload:{player:e.caller,unit:t,col:o,row:i}}]}function on(e){let r=e.params;if(typeof r!="object"||r===null||Array.isArray(r))throw new Error("attackProducer: invalid params.");let n=r,{id:t,target:o}=n;if(typeof t!="string"||typeof o!="string")throw new Error("attackProducer: invalid params.");let i=e.before.units,a=e.after.units;if(i===void 0||a===void 0)throw new Error("attackProducer: missing units.");let s=W(i,o),l=W(a,o);if(s===void 0)throw new Error("attackProducer: missing target.");let u=[{type:"unit.attacked",priority:"normal",payload:{player:e.caller,unit:t,target:o,damage:s.hp-(l===void 0?0:l.hp)}}];return l===void 0&&u.push({type:"unit.slain",priority:"normal",payload:{player:e.caller,unit:t,target:o}}),u}function an(e){var u,d;let r=e.params;if(typeof r!="object"||r===null||Array.isArray(r))throw new Error("trainProducer: invalid params.");let n=r,{type:t,col:o,row:i}=n;if(typeof t!="string"||!I(o)||!I(i))throw new Error("trainProducer: invalid params.");let a=e.after.units;if(a===void 0)throw new Error("trainProducer: missing unit.");let s=`u${(d=(u=e.before.units)==null?void 0:u.nextId)!=null?d:0}`,l=W(a,s);if(l===void 0)throw new Error("trainProducer: missing unit.");return[{type:"unit.trained",priority:"normal",payload:{player:e.caller,unit:s,type:l.type,col:l.col,row:l.row}}]}function Vt(e){return typeof e=="string"&&e.length>=1&&e.length<=_}function Ze(){return ye()}function sn(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0&&e<=4294967295}var Ne=1,Ht=10,jt={id:"standard",version:Ne},ln=g(jt),Ue=class{constructor(r){x(this,"id");x(this,"seed");x(this,"ruleset");x(this,"players");x(this,"kernel");x(this,"timeline",[]);x(this,"producers");x(this,"events",[]);x(this,"conditions");var ce,er,rr,nr,tr,or,ir,ar,sr;if(r.matchId===void 0)this.id=Ze();else if(Vt(r.matchId))this.id=r.matchId;else throw new Error("Match: invalid matchId.");if(!sn(r.seed))throw new Error("Match: invalid seed (expected uint32).");this.seed=r.seed;let n;if(r.promptsPerPlayer===void 0)n=Ht;else{if(!sn(r.promptsPerPlayer)||r.promptsPerPlayer===0)throw new Error("Match: invalid promptsPerPlayer (expected positive uint32).");n=r.promptsPerPlayer}let t=r.ruleset;if(typeof t!="object"||t===null)throw new Error("Match: invalid ruleset (not an object).");let o=t;if(o.id!=="standard")throw new Error("Match: unknown ruleset id.");if(o.version!==Ne)throw new Error(`Match: unsupported ruleset version (engine: ${Ne}).`);let i={id:"standard",version:Ne};this.ruleset=g(i);for(let h of r.players)if(!k(h))throw new Error("Match: invalid player id in roster.");if(!se(r.initialState))throw new Error("Match: invalid initialState.");let a=new Set(r.initialState.players.map(h=>h.id));if(a.size!==r.players.length||!r.players.every(h=>a.has(h)))throw new Error("Match: roster does not match initialState players.");let s=r.initialState.prompts===void 0?{...r.initialState,prompts:Ir(r.players,n)}:r.initialState,l=(ce=r.economyConfig)!=null?ce:Wr;if(!Ge(l))throw new Error("Match: invalid economy config.");let u=(er=r.buildingsConfig)!=null?er:Ke;if(!N(u))throw new Error("Match: invalid buildings config.");let d=(rr=r.terrainConfig)!=null?rr:Te;if(!Qr(d))throw new Error("Match: invalid terrain config.");let c=(nr=r.unitsConfig)!=null?nr:Jr;if(!de(c))throw new Error("Match: invalid units config.");let f=_r(),p=Lr(l,u),y=Xr(u),A=rn(h=>Number.isFinite(le(d,h).move),c,h=>le(d,h).defense,{canAfford:(h,O,L)=>Ye(h,O,L),pay:(h,O,L)=>Qe(h,O,L)}),C=(tr=r.extraHandlers)!=null?tr:new Map,E=new Map([...f,...p,...y,...A,...C]);if(E.size!==f.size+p.size+y.size+A.size+C.size)throw new Error("Match: duplicate handler names.");let T=Nr(),D={...T,post:[...T.post,Kr(u)]},Q=new Set([...f.keys(),Je]),M=new Map([[Me,Br],[Ce,qr],[_e,Zr],[Pe,en],[ve,nn]]),U=0,B=()=>(U+=1,U),V=new Map;for(let[h,O]of E){if(h.length===0||typeof O!="function")throw new Error("Match: invalid handler registration.");let L=M.get(h),fe;L!==void 0?fe=[ke,L,...D.pre]:Q.has(h)?fe=[ke,vr(h),...D.pre]:fe=[ke,...D.pre];let fn=(Yt,lr,$)=>{let dr=Ar($.prompts,lr);if($.cities===void 0)return{...$,prompts:dr};let He=Gr($.cities,$.buildings,lr);return{...$,prompts:dr,cities:He.cities,...He.buildings===void 0?{}:{buildings:He.buildings}}};V.set(h,Ur(O,{...D,pre:fe},this.seed,B,fn))}let m=new Map(gr());m.set(Me,[$r]),m.set(Ce,[zr]),m.set(_e,[tn]),m.set(Pe,[on]),m.set(ve,[an]);let J=(or=r.extraProducers)!=null?or:new Map;for(let h of V.keys())m.set(h,[...(ir=m.get(h))!=null?ir:[],Yr]);let Z=[...J];for(let[h,O]of Z)m.set(h,[...(ar=m.get(h))!=null?ar:[],...O]);this.producers=m;let ue=(sr=r.extraConditions)!=null?sr:[];this.conditions=[...ue,...Vr()],this.players=g([...r.players]),this.kernel=new me({players:r.players,initialState:s,handlers:V});let ee=s.map;this.events.push(wr(this.seed,this.players,this.ruleset,ee===void 0?void 0:{id:ee.id,version:ee.schemaVersion}));let re=Re(this.conditions,{state:s,revision:0});re.status==="finished"&&this.events.push(je(re.outcome,re.condition,0,this.events.length+1)),Object.freeze(this)}join(r){return this.kernel.join(r)}dispatch(r,n){if(this.getVerdict().status==="finished")return{status:"error",code:"MATCH_FINISHED"};let t=this.kernel.getSnapshot(),o=this.kernel.dispatch(r,n);try{if(o.status==="applied"){let i=n,a=this.kernel.getSnapshot(),s=this.producers.get(i.type),l=hr({type:i.type,caller:r.playerId,params:i.payload,before:t,after:a},s,o.revision,this.events.length+1);this.events.push(...l);let u=Re(this.conditions,{state:a,revision:o.revision});u.status==="finished"&&this.events.push(je(u.outcome,u.condition,o.revision,this.events.length+1))}}finally{this.syncTimeline()}return o}getSnapshot(){return this.kernel.getSnapshot()}getLog(){return this.kernel.getLog()}getRevision(){return this.kernel.getRevision()}getStateHash(){return Be(this.kernel.getSnapshot())}getTimeline(){return[...this.timeline]}getEvents(){return[...this.events]}getVerdict(){let r=this.kernel.getSnapshot();return Re(this.conditions,{state:r,revision:this.kernel.getRevision()})}syncTimeline(){let r=this.kernel.getLog().slice(this.timeline.length);if(r.length===0)return;let n=this.kernel.getSnapshot(),t=Be(n);for(let o of r){let i={seq:this.timeline.length+1,revision:o.revision,requestId:o.requestId,playerId:o.playerId,type:o.type,applied:o.applied,detail:o.detail,stateHash:t};this.timeline.push(g(i))}}};function Wt(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0&&e<=4294967295}function dn(e){return typeof e=="number"&&Number.isInteger(e)&&e>=0}function Bt(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=e;return k(r.viewer)&&dn(r.col)&&dn(r.row)&&Wt(r.range)}function Lt(e){return typeof e!="object"||e===null||Array.isArray(e)?!1:typeof e.blocksVision=="boolean"}function $t(e){if(typeof e!="object"||e===null||Array.isArray(e))return!1;let r=Object.entries(e);if(r.length!==te.length)return!1;for(let[n,t]of r)if(!oe(n)||!Lt(t))return!1;return!0}var Ft={field:{blocksVision:!1},forest:{blocksVision:!0},mountain:{blocksVision:!0},river:{blocksVision:!1},road:{blocksVision:!1},bridge:{blocksVision:!1},resource:{blocksVision:!1},village:{blocksVision:!1},city:{blocksVision:!1}},qt=g(Ft);function un(e,r,n=qt){if(!$t(n))throw new Error("computeVisibility: invalid fog config.");if(!Array.isArray(r))throw new Error("computeVisibility: invalid sources (expected array).");for(let i of r)if(!Bt(i))throw new Error("computeVisibility: invalid vision source.");let t=[...new Set(r.map(i=>i.viewer))].sort(),o={};for(let i of t){let a=new Set;for(let s of r)s.viewer===i&&Xt(e,s,n,a);o[i]=[...a].sort((s,l)=>s-l)}return g(o)}function Xt(e,r,n,t){if(P(e,r.col,r.row)===void 0)return;let o=r.row*e.width+r.col,i=new Set([o]);t.add(o);let a=[{col:r.col,row:r.row}];for(let s=0;s<r.range;s+=1){let l=[];for(let u of a)for(let d of j(e,u.col,u.row)){let c=d.row*e.width+d.col;i.has(c)||(i.add(c),t.add(c),n[d.terrain].blocksVision||l.push({col:d.col,row:d.row}))}a=l}}function cn(e,r){if(!xe(e))throw new Error("markExplored: invalid current explored data.");if(typeof r!="object"||r===null||Array.isArray(r))throw new Error("markExplored: invalid visibility.");let n={};for(let[o,i]of Object.entries(e.viewers))n[o]=[...i];for(let[o,i]of Object.entries(r)){if(!Array.isArray(i))throw new Error("markExplored: invalid visibility.");let a=n[o];a===void 0&&(a=[],n[o]=a);for(let s of i){if(!$e(s))throw new Error("markExplored: invalid visibility.");a.push(s)}}let t={};for(let[o,i]of Object.entries(n))t[o]=[...new Set(i)].sort((a,s)=>a-s);return g({schemaVersion:1,viewers:t})}return bn(zt);})();
 
 //__ENGINE_END__
 </script>
@@ -8827,7 +8796,7 @@
     $('tPlay').textContent = '▶';
     const E = AIWLEngine, fork = cloneSnap(S.snapshots[fr]);
     const match = new E.Match({ seed: 7, ruleset: E.STANDARD_RULESET, players: ['p1', 'p2'],
-      initialState: E.createWorldState({ players: ['p1', 'p2'], tick: fork.tick, map: fork.map,
+      initialState: E.createWorldState({ players: ['p1', 'p2'], prompts: fork.prompts, map: fork.map,
         stockpiles: fork.stockpiles, buildings: fork.buildings, cities: fork.cities, units: fork.units }),
       economyConfig: S.configs.economy, buildingsConfig: S.configs.buildings, unitsConfig: S.configs.unitsScenario });
     CMD = { E, match, s1: match.join('p1'), s2: match.join('p2'), forkRev: fr, rid: 0,
@@ -8883,7 +8852,7 @@
       buildOrders(); buildStops();
       playing = true; $('tPlay').textContent = '⏸';
       toast(`✓ ${out.summary || type}`, false);
-      const snd = { 'economy.gather': 'coin', 'unit.move': 'step', 'city.build': 'hammer', 'match.advance': 'whoosh', 'city.upgrade': 'fanfare' }[type];
+      const snd = { 'economy.gather': 'coin', 'unit.move': 'step', 'city.build': 'hammer', 'world.noop': 'whoosh', 'city.upgrade': 'fanfare' }[type];
       if (snd) sfx(snd);
     } else {
       toast(`✗ ${out.reason || out.code || out.status}`, true);
@@ -8909,12 +8878,12 @@
     'economy.gather': 'Thy workers toil, sire — the stores grow heavy.',
     'unit.move': 'Thy host marches. Steel yourselves!',
     'city.build': 'Masons to work! Stone upon stone!',
-    'match.advance': 'Time flows ever onward…',
+    'world.noop': 'A quiet moment passes…',
     'city.upgrade': 'Thy city grows in splendor!',
   };
   const SCRIPT = [null, 'economy.gather', 'unit.move', 'unit.move', 'economy.gather', 'city.build',
-    'match.advance', 'unit.move', 'city.build', 'match.advance', 'unit.move', 'unit.move',
-    'match.advance', 'city.upgrade', 'match.advance', 'economy.gather'];
+    'world.noop', 'unit.move', 'city.build', 'world.noop', 'unit.move', 'unit.move',
+    'world.noop', 'city.upgrade', 'world.noop', 'economy.gather'];
 
   function kf(i) { return S.snapshots[clamp(i, 0, N - 1)]; }
   function frac() { const k = Math.min(Math.floor(pos), N - 1); return pos >= N - 1 ? 0 : pos - k; }
@@ -9611,12 +9580,13 @@
     $('res').innerHTML = ['food', 'wood', 'stone', 'gold'].map((res) =>
       `<span>${RES[res]} <b>${Math.round(lerp(pa[res] || 0, pb[res] || 0, e))}</b></span>`).join('') +
       `<span title="real unit count; cap ungrounded">⚔ <b>${(kf(r).units ? kf(r).units.units : []).filter((u) => u.owner === 'p1').length}</b>/200*</span>`;
-    $('tick').textContent = 'TICK ' + kf(r).tick;
+    const pr = (kf(r).prompts && kf(r).prompts.remaining) || { p1: '?', p2: '?' };
+    $('prompts').textContent = 'P1 ' + pr.p1 + ' · P2 ' + pr.p2;
     $('pop').textContent = `Population ${(kf(r).units ? kf(r).units.units : []).filter((u) => u.owner === 'p1').length} (cap 200: concept)`;
     $('fill').style.width = (100 * pos / (N - 1)).toFixed(1) + '%';
     document.querySelectorAll('#prog .stop').forEach((d, i) => d.classList.toggle('done', i < r));
     const c0 = kf(r).map.cells[sel], chov = hov >= 0 ? kf(r).map.cells[hov] : null;
-    $('statusline').innerHTML = `Tick <b>${kf(r).tick}</b> · Order <b>${r}/15</b> · ` +
+    $('statusline').innerHTML = `Order <b>${r}/15</b> · ` +
       `👁 <b>${vis.size}</b> seen · 🗺 <b>${(S.exploredBySnap[r] || []).length}</b> remembered · ` +
       `Selected <b>(${c0.col},${c0.row}) ${c0.terrain}</b>` +
       (chov && hov !== sel ? ` · hover <b>(${chov.col},${chov.row}) ${chov.terrain}</b>` : '') +
@@ -9663,7 +9633,7 @@
       shake = 1;
     }
     $('herald').textContent = `📯 Herald (CONCEPT): ${HERALDS[SCRIPT[to]] || '…'}`;
-    const sfxFor = { 'economy.gather': 'coin', 'unit.move': 'step', 'city.build': 'hammer', 'match.advance': 'whoosh', 'city.upgrade': 'fanfare' };
+    const sfxFor = { 'economy.gather': 'coin', 'unit.move': 'step', 'city.build': 'hammer', 'world.noop': 'whoosh', 'city.upgrade': 'fanfare' };
 
     for (const e of S.events) {
       if (e.revision !== to || e.type !== 'resource.gathered') continue;
@@ -9698,7 +9668,7 @@
       }
       if (killing) sfx('horn');
     }
-    if (SCRIPT[to] === 'match.advance') { const ac = B.map.cells.find((c) => c.terrain === 'city'); const [ax, ay] = center(ac.col, ac.row); burst(ax, ay - view.s, 8, ['#bcd2ff', '#ffffff'], view.s * 0.7, 1.4, -view.s * 0.3, Math.max(2, view.s * 0.04), false); }
+    if (SCRIPT[to] === 'world.noop') { const ac = B.map.cells.find((c) => c.terrain === 'city'); const [ax, ay] = center(ac.col, ac.row); burst(ax, ay - view.s, 8, ['#bcd2ff', '#ffffff'], view.s * 0.7, 1.4, -view.s * 0.3, Math.max(2, view.s * 0.04), false); }
     $('nowplay').textContent = `#${to} ${(S.outcomes[to - 1] && S.outcomes[to - 1].summary) || ''}`;
     renderPanels();
     const log = document.querySelector('#tab-log .log');
@@ -9733,11 +9703,11 @@
       (city.queue.length ? city.queue.map((q) => {
         const total = bcfg[q.type].buildTime || 1;
         const done = 100 * (1 - q.remaining / total);
-        return `<div>${BICON[q.type]} ${q.type} — ${q.remaining}t left<div class="qbar"><i style="width:${done}%"></i></div></div>`;
+        return `<div>${BICON[q.type]} ${q.type} — ${q.remaining}p left<div class="qbar"><i style="width:${done}%"></i></div></div>`;
       }).join('') : '<div>Queue idle.</div>') + `<div style="margin-top:6px"><a href="city.html">open city view →</a></div></div>` : '<div class="card">No city.</div>';
     const evs = S.events.filter((e) => e.revision <= r);
     $('tab-log').innerHTML = `<div class="card log"><h5>Chronicle (real, ≤ order #${r})</h5>` +
-      evs.map((e) => `<div class="${e.revision === r && r > 0 ? 'fresh' : ''}"><span class="t">#${e.seq} t${e.tick}</span> <b>${e.type}</b> ${esc(JSON.stringify(e.payload))}</div>`).join('') + '</div>';
+      evs.map((e) => `<div class="${e.revision === r && r > 0 ? 'fresh' : ''}"><span class="t">#${e.seq} r${e.revision}</span> <b>${e.type}</b> ${esc(JSON.stringify(e.payload))}</div>`).join('') + '</div>';
     const T = { field:'#5d8a41', forest:'#2f5d33', mountain:'#8a8f98', river:'#3d6e9e', road:'#b0925e',
       bridge:'#7a5c3a', resource:'#6b6234', village:'#c9a86a', city:'#b03a3a' };
     let mh = '';
@@ -10052,7 +10022,7 @@
   });
   for (const [bid, btype] of [['cmdHouse', 'house'], ['cmdTower', 'tower'], ['cmdStorage', 'storage']])
     $(bid).addEventListener('click', () => cmdDispatch(cmdSide(), 'city.build', { type: btype }));
-  $('cmdAdvance').addEventListener('click', () => cmdDispatch(cmdSide(), 'match.advance', {}));
+  $('cmdWait').addEventListener('click', () => cmdDispatch(cmdSide(), 'world.noop', {}));
   $('cmdUpgrade').addEventListener('click', () => cmdDispatch(cmdSide(), 'city.upgrade', {}));
   document.querySelectorAll('.tabs button').forEach((b) => b.addEventListener('click', () => {
     document.querySelectorAll('.tabs button').forEach((x) => x.classList.remove('on'));

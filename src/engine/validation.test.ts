@@ -9,12 +9,14 @@ import {
 } from './authority.js';
 import { isMapData, type MapData } from './map.js';
 import { Match, STANDARD_RULESET } from './match.js';
+import { seedPrompts, spendPrompt } from './prompts.js';
 import { deriveSeed, SeededRng } from './rng.js';
 import {
   createWorldValidator,
   mapsDepletionOnly,
   MAX_STATE_BYTES,
   noParamsRule,
+  promptsAvailableRule,
   wrapWithValidation,
   type PostRule,
   type PreRule,
@@ -32,7 +34,19 @@ function raw(value: unknown): Untrusted<ClientRequest> {
 }
 
 function stdState(): WorldState {
-  return createWorldState({ players: [P1, P2] });
+  return createWorldState({ players: [P1, P2], prompts: seedPrompts([P1, P2], 10) });
+}
+
+/**
+ * Match post-step minus completions (cityless-identical): direct-wrapper
+ * tests mirror Match by spending exactly one prompt per applied outcome.
+ */
+function spendPostStep(
+  _before: WorldState,
+  caller: PlayerId,
+  applied: WorldState,
+): WorldState {
+  return { ...applied, prompts: spendPrompt(applied.prompts, caller) };
 }
 
 function stdMatch(handlers: ReadonlyMap<string, RngHandler<WorldState>> = new Map()): Match {
@@ -65,12 +79,13 @@ function kernelWithPre(pre: readonly PreRule[]): AuthorityKernel<WorldState> {
         validator,
         7,
         () => 1,
+        spendPostStep,
       ),
     ],
   ];
   return new AuthorityKernel<WorldState>({
     players: [P1],
-    initialState: createWorldState({ players: [P1] }),
+    initialState: createWorldState({ players: [P1], prompts: seedPrompts([P1], 10) }),
     handlers: new Map(entries),
   });
 }
@@ -78,17 +93,24 @@ function kernelWithPre(pre: readonly PreRule[]): AuthorityKernel<WorldState> {
 // Adversarial payload: bypasses the type system the way a buggy runtime value could.
 const garbageState = { not: 'a state' } as unknown as WorldState;
 
-function corruptCases(): Array<[string, RngHandler<WorldState>, RegExp, WorldState, boolean]> {
-  const tick1 = { ...stdState(), tick: 1 };
+function corruptCases(): Array<[string, RngHandler<WorldState>, RegExp, WorldState]> {
   // M015: secrets are gone — bigness floods the roster (100k ids ≈ 1.6MB).
   const flood = Array.from({ length: 100000 }, (_, n) => ({ id: `p${n}` as PlayerId }));
+  const budget = (remaining: { readonly [holder: string]: number }): WorldState['prompts'] => ({
+    schemaVersion: 1 as const,
+    remaining,
+  });
   return [
     [
       'shape',
-      () => ({ applied: true, state: garbageState, summary: 'evil' }),
+      // Evil-but-prompted: postStep spends clean, the shape gate fires.
+      (ctx) => ({
+        applied: true,
+        state: { ...ctx.state, players: 'x' } as unknown as WorldState,
+        summary: 'evil',
+      }),
       /\[state-shape\]/,
       stdState(),
-      false,
     ],
     [
       'roster-add',
@@ -102,7 +124,6 @@ function corruptCases(): Array<[string, RngHandler<WorldState>, RegExp, WorldSta
       }),
       /\[roster-preserved\]/,
       stdState(),
-      false,
     ],
     [
       'roster-reorder',
@@ -113,18 +134,56 @@ function corruptCases(): Array<[string, RngHandler<WorldState>, RegExp, WorldSta
       }),
       /\[roster-preserved\]/,
       stdState(),
-      false,
     ],
     [
-      'tick-back',
+      'prompts-refill',
       (ctx) => ({
         applied: true,
-        state: { ...ctx.state, tick: ctx.state.tick - 1 } as unknown as WorldState,
+        state: { ...ctx.state, prompts: budget({ p1: 12, p2: 10 }) },
         summary: 'evil',
       }),
-      /\[tick-monotonic\]/,
-      tick1,
-      true,
+      /\[prompts-ledger\] prompts p1 refilled 10 -> 11/,
+      stdState(),
+    ],
+    [
+      'prompts-mint',
+      (ctx) => ({
+        applied: true,
+        state: { ...ctx.state, prompts: budget({ p1: 11, p2: 10 }) },
+        summary: 'evil',
+      }),
+      /\[prompts-ledger\] prompts spent 0 \(expected 1\)/,
+      stdState(),
+    ],
+    [
+      'prompts-double-spend',
+      (ctx) => ({
+        applied: true,
+        state: { ...ctx.state, prompts: budget({ p1: 9, p2: 10 }) },
+        summary: 'evil',
+      }),
+      /\[prompts-ledger\] prompts spent 2 \(expected 1\)/,
+      stdState(),
+    ],
+    [
+      'prompts-add-holder',
+      (ctx) => ({
+        applied: true,
+        state: { ...ctx.state, prompts: budget({ p1: 10, p2: 10, zx: 5 }) },
+        summary: 'evil',
+      }),
+      /\[prompts-ledger\] prompts zx refilled 0 -> 5/,
+      stdState(),
+    ],
+    [
+      'prompts-drop-holder',
+      (ctx) => ({
+        applied: true,
+        state: { ...ctx.state, prompts: budget({ p1: 10 }) },
+        summary: 'evil',
+      }),
+      /\[prompts-ledger\] prompts spent 11 \(expected 1\)/,
+      stdState(),
     ],
     [
       'size',
@@ -137,7 +196,6 @@ function corruptCases(): Array<[string, RngHandler<WorldState>, RegExp, WorldSta
       }),
       new RegExp(`\\[state-size\\] \\d+ bytes \\(max ${MAX_STATE_BYTES}\\)`),
       stdState(),
-      false,
     ],
   ];
 }
@@ -211,19 +269,19 @@ describe('pre-validation mechanism (TEST MOCK rules, real kernel)', () => {
 });
 
 describe('no-params enforced (Match E2E)', () => {
-  it('rejects advance with a payload (recorded, state untouched)', () => {
+  it('rejects noop with a payload (recorded, state untouched, budget unspent)', () => {
     const match = stdMatch();
     const session = match.join(P1);
     expect(
       match.dispatch(
         session,
-        raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: { x: 1 } }),
+        raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: { x: 1 } }),
       ),
     ).toEqual({
       status: 'rejected',
-      reason: 'validation: [no-params] match.advance takes no parameters',
+      reason: 'validation: [no-params] world.noop takes no parameters',
     });
-    expect(match.getTick()).toBe(0);
+    expect(match.getSnapshot().prompts?.remaining).toEqual({ p1: 10, p2: 10 });
     const timeline = match.getTimeline();
     expect(timeline).toHaveLength(1);
     const entry = timeline[0];
@@ -253,11 +311,11 @@ describe('no-params enforced (Match E2E)', () => {
     expect(
       match.dispatch(
         session,
-        raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: { fn: () => 0 } }),
+        raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: { fn: () => 0 } }),
       ),
     ).toEqual({
       status: 'rejected',
-      reason: 'validation: [no-params] match.advance payload is not serializable',
+      reason: 'validation: [no-params] world.noop payload is not serializable',
     });
     expect(match.getRevision()).toBe(0);
   });
@@ -274,6 +332,75 @@ describe('no-params enforced (Match E2E)', () => {
         raw({ requestId: 'r1', playerId: 'p1', type: 'test.echo', payload: { x: 1 } }),
       ),
     ).toEqual({ status: 'applied', revision: 1, summary: 'echo' });
+  });
+});
+
+describe('promptsAvailableRule (unit)', () => {
+  it('passes a funded caller', () => {
+    expect(promptsAvailableRule(P1, {}, stdState())).toBeNull();
+  });
+
+  it('blocks a dry caller with the pinned reason', () => {
+    const dry = createWorldState({
+      players: [P1, P2],
+      prompts: seedPrompts([P1, P2], 10),
+    });
+    const none: WorldState = {
+      ...dry,
+      prompts: { schemaVersion: 1, remaining: { p1: 0, p2: 10 } },
+    };
+    expect(promptsAvailableRule(P1, {}, none)).toEqual({
+      rule: 'prompts-exhausted',
+      detail: 'no prompts left',
+    });
+    expect(promptsAvailableRule(P2, {}, none)).toBeNull();
+  });
+
+  it('blocks an absent slot (fail-closed)', () => {
+    const slotless = createWorldState({ players: [P1, P2] });
+    expect(promptsAvailableRule(P1, {}, slotless)).toEqual({
+      rule: 'prompts-exhausted',
+      detail: 'no prompts left',
+    });
+  });
+});
+
+describe('postStep injection (unit: direct wrapper)', () => {
+  it('spends via the injected postStep on applied outcomes', () => {
+    const wrapped = wrapWithValidation(
+      (ctx) => ({ applied: true, state: ctx.state, summary: 'echo' }),
+      createWorldValidator(),
+      7,
+      () => 1,
+      spendPostStep,
+    );
+    const out = wrapped({ state: stdState(), caller: P1, params: {} });
+    expect(out.applied).toBe(true);
+    if (!out.applied) {
+      throw new Error('test setup: expected applied');
+    }
+    expect(out.state.prompts?.remaining).toEqual({ p1: 9, p2: 10 });
+    expect(out.summary).toBe('echo');
+  });
+
+  it('skips postStep on rejected outcomes (TEST MOCK probe)', () => {
+    let called = false;
+    const probe = (_before: WorldState, _caller: PlayerId, applied: WorldState): WorldState => {
+      called = true;
+      return applied;
+    };
+    const wrapped = wrapWithValidation(
+      () => ({ applied: false, reason: 'nope' }),
+      createWorldValidator(),
+      7,
+      () => 1,
+      probe,
+    );
+    expect(wrapped({ state: stdState(), caller: P1, params: {} })).toEqual({
+      applied: false,
+      reason: 'nope',
+    });
+    expect(called).toBe(false);
   });
 });
 
@@ -299,24 +426,16 @@ describe('post shape gate', () => {
 
 describe('post-invariants, rule-specific (direct wrapper invocation)', () => {
   it.each(corruptCases())('faults with %s', (_name, handler, message, before) => {
-    const wrapped = wrapWithValidation(handler, createWorldValidator(), 7, () => 1);
+    const wrapped = wrapWithValidation(handler, createWorldValidator(), 7, () => 1, spendPostStep);
     expect(() => wrapped({ state: before, caller: P1, params: {} })).toThrow(message);
   });
 });
 
 describe('post-invariants contained end-to-end (Match)', () => {
-  it.each(corruptCases())(
-    'contains corrupt %s',
-    (_name, handler, _message, _before, preAdvance) => {
+  it.each(corruptCases())('contains corrupt %s', (_name, handler) => {
       const entries: Array<[string, RngHandler<WorldState>]> = [['test.corrupt', handler]];
       const match = stdMatch(new Map(entries));
       const session = match.join(P1);
-      if (preAdvance) {
-        match.dispatch(
-          session,
-          raw({ requestId: 'r0', playerId: 'p1', type: 'match.advance', payload: {} }),
-        );
-      }
       const before = match.getSnapshot();
       const logLength = match.getLog().length;
       const timelineLength = match.getTimeline().length;

@@ -1,4 +1,5 @@
 import { freezeState, isPlayerId, MAX_ID_LENGTH, type PlayerId } from './authority.js';
+import { promptsOf } from './prompts.js';
 import type { WorldState } from './world-state.js';
 
 /**
@@ -9,9 +10,10 @@ import type { WorldState } from './world-state.js';
  * (#40: never invent happenings). Engine-side only: validation guards
  * field-level corruption (the realistic bug class for typed seams).
  *
- * The only real condition today is the time limit over ticks (#46): with no
- * score tracked yet, an expired undecided match is a draw (a winner would
- * have to be invented). Score comparison upgrades this when scoring exists.
+ * The only real condition today is prompt exhaustion (D-022 reforms #46):
+ * with no score tracked yet, an undecided match where nobody can act is
+ * a draw (a winner would have to be invented). Score comparison upgrades
+ * this when scoring exists.
  */
 
 export type VerdictOutcome =
@@ -23,7 +25,6 @@ export type Verdict =
       readonly status: 'finished';
       readonly outcome: VerdictOutcome;
       readonly condition: string;
-      readonly tick: number;
       readonly revision: number;
     };
 
@@ -41,20 +42,19 @@ export type VictoryCondition = (input: ConditionInput) => ConditionDecision | nu
 
 const ONGOING: Verdict = freezeState<Verdict>({ status: 'ongoing' });
 
-export function timeLimitCondition(maxTicks: number): VictoryCondition {
+export function promptsExhaustedCondition(): VictoryCondition {
   return (input) => {
-    if (input.state.tick < maxTicks) {
-      return null;
+    for (const player of input.state.players) {
+      if (promptsOf(input.state.prompts, player.id) > 0) {
+        return null;
+      }
     }
-    return { outcome: { kind: 'draw' }, condition: 'time-limit' };
+    return { outcome: { kind: 'draw' }, condition: 'prompts-exhausted' };
   };
 }
 
-export function matchConditions(maxTicks: number | undefined): readonly VictoryCondition[] {
-  if (maxTicks === undefined) {
-    return [];
-  }
-  return [timeLimitCondition(maxTicks)];
+export function matchConditions(): readonly VictoryCondition[] {
+  return [promptsExhaustedCondition()];
 }
 
 function assertDecision(
@@ -96,7 +96,6 @@ export function evaluateVictory(
         status: 'finished',
         outcome: decision.outcome,
         condition: decision.condition,
-        tick: input.state.tick,
         revision: input.revision,
       });
     }

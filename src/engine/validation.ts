@@ -6,6 +6,7 @@ import type {
 } from './authority.js';
 import { stableStringify } from './hash.js';
 import type { MapCell, MapData } from './map.js';
+import { promptsOf } from './prompts.js';
 import { deriveSeed, SeededRng } from './rng.js';
 import { isWorldState, type WorldState } from './world-state.js';
 
@@ -85,11 +86,41 @@ function rosterRule(before: WorldState, after: WorldState): Violation | null {
   return { rule: 'roster-preserved', detail: `expected ${expected} got ${actual}` };
 }
 
-function tickRule(before: WorldState, after: WorldState): Violation | null {
-  if (after.tick >= before.tick) {
+/**
+ * Universal budget pre-rule (PROMPTS): the caller must hold a prompt.
+ * Rejected here = blocked, nothing spent (D-022: rejected are free).
+ */
+export function promptsAvailableRule(
+  caller: PlayerId,
+  _params: unknown,
+  state: WorldState,
+): Violation | null {
+  if (promptsOf(state.prompts, caller) > 0) {
     return null;
   }
-  return { rule: 'tick-monotonic', detail: `tick ${before.tick} -> ${after.tick}` };
+  return { rule: 'prompts-exhausted', detail: 'no prompts left' };
+}
+
+function promptsRule(before: WorldState, after: WorldState): Violation | null {
+  const was = before.prompts?.remaining ?? {};
+  const now = after.prompts?.remaining ?? {};
+  const holders = [...new Set([...Object.keys(was), ...Object.keys(now)])].sort();
+  let spent = 0;
+  for (const holder of holders) {
+    const beforeCount = was[holder] ?? 0;
+    const afterCount = now[holder] ?? 0;
+    if (afterCount > beforeCount) {
+      return {
+        rule: 'prompts-ledger',
+        detail: `prompts ${holder} refilled ${beforeCount} -> ${afterCount}`,
+      };
+    }
+    spent += beforeCount - afterCount;
+  }
+  if (spent !== 1) {
+    return { rule: 'prompts-ledger', detail: `prompts spent ${spent} (expected 1)` };
+  }
+  return null;
 }
 
 function sizeRule(_before: WorldState, after: WorldState): Violation | null {
@@ -199,7 +230,7 @@ export function createWorldValidator(): WorldValidator {
   return {
     pre: [],
     postShape: shapeRule,
-    post: [rosterRule, tickRule, sizeRule, mapRule, exploredRule],
+    post: [rosterRule, promptsRule, sizeRule, mapRule, exploredRule],
   };
 }
 
@@ -214,15 +245,18 @@ function formatViolations(prefix: string, violations: readonly Violation[]): str
 
 /**
  * Adapts a (possibly RNG-aware) handler to the kernel: pre-rules first,
- * then the per-dispatch stream, then post-invariants. `nextSeq` must yield
- * the 1-based ordinal of each wrapper invocation (deterministic per call
- * history; faults consume an ordinal without appending to the log).
+ * then the per-dispatch stream, then the optional injected post-step
+ * (PROMPTS: spend + completions, Match-owned), then post-invariants.
+ * `nextSeq` must yield the 1-based ordinal of each wrapper invocation
+ * (deterministic per call history; faults consume an ordinal without
+ * appending to the log).
  */
 export function wrapWithValidation(
   inner: RngHandler<WorldState>,
   validator: WorldValidator,
   seed: number,
   nextSeq: () => number,
+  postStep?: (before: WorldState, caller: PlayerId, applied: WorldState) => WorldState,
 ): TransitionHandler<WorldState> {
   return (ctx) => {
     const seq = nextSeq();
@@ -241,13 +275,15 @@ export function wrapWithValidation(
     if (!outcome.applied) {
       return outcome;
     }
-    const shapeViolation = validator.postShape(ctx.state, outcome.state);
+    const stepped =
+      postStep === undefined ? outcome.state : postStep(ctx.state, ctx.caller, outcome.state);
+    const shapeViolation = validator.postShape(ctx.state, stepped);
     if (shapeViolation !== null) {
       throw new Error(formatViolations('postcondition', [shapeViolation]));
     }
     const postFailures: Violation[] = [];
     for (const rule of validator.post) {
-      const violation = rule(ctx.state, outcome.state);
+      const violation = rule(ctx.state, stepped);
       if (violation !== null) {
         postFailures.push(violation);
       }
@@ -255,6 +291,6 @@ export function wrapWithValidation(
     if (postFailures.length > 0) {
       throw new Error(formatViolations('postcondition', postFailures));
     }
-    return outcome;
+    return { ...outcome, state: stepped };
   };
 }

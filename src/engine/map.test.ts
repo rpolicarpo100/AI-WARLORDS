@@ -601,10 +601,11 @@ describe('WorldState map extension (integration)', () => {
     ).toThrow(/invalid initial world/);
   });
 
-  it('map key omitted when absent (pre-M010 bytes unchanged)', () => {
+  it('map key omitted when absent (PROMPTS bytes: no map, no prompts until seeded)', () => {
     const state = createWorldState({ players: [P1] });
     expect('map' in state).toBe(false);
-    expect(state).toEqual({ schemaVersion: 1, tick: 0, players: [{ id: P1 }] });
+    expect('prompts' in state).toBe(false);
+    expect(state).toEqual({ schemaVersion: 1, players: [{ id: P1 }] });
   });
 });
 

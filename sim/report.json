@@ -25,7 +25,7 @@
    1018,
    1019
   ],
-  "ms": 794,
+  "ms": 916,
   "note": "Bots play heuristic candidates; legality comes from genuine engine outcomes. Deterministic per seed."
  },
  "totals": {
@@ -40,13 +40,13 @@
    "unit.train": 141,
    "unit.attack": 161,
    "unit.move": 381,
-   "match.advance": 61,
+   "world.noop": 61,
    "city.upgrade": 49,
    "economy.gather": 21
   }
  },
  "balance": {
-  "avgTicks": 3.05,
+  "avgPromptsLeft": 340,
   "avgFinalP1": {
    "food": 12.55,
    "wood": 30.75,
@@ -54,10 +54,10 @@
    "gold": 7.9
   },
   "avgFinalP1Buildings": {
-   "house": 3.6,
-   "tower": 1.35,
-   "storage": 2.35,
-   "barracks": 1.2
+   "house": 4.15,
+   "tower": 1.65,
+   "storage": 3.1,
+   "barracks": 1.75
   },
   "avgKills": 1.35,
   "avgDamageDealt": 20.7,
@@ -74,13 +74,13 @@
     "unit.train": 6,
     "unit.attack": 13,
     "unit.move": 22,
-    "match.advance": 3,
+    "world.noop": 3,
     "city.upgrade": 1
    },
    "kills": 2,
    "damageDealt": 38,
    "trained": 6,
-   "ticks": 3,
+   "promptsLeft": 340,
    "finalPiles": {
     "p1": {
      "food": 0,
@@ -107,7 +107,7 @@
     "p2": {
      "town-center": 1,
      "house": 1,
-     "storage": 2,
+     "storage": 3,
      "barracks": 2,
      "wall": 1,
      "tower": 2
@@ -125,13 +125,13 @@
     "city.upgrade": 3,
     "unit.train": 6,
     "economy.gather": 2,
-    "match.advance": 4,
+    "world.noop": 4,
     "unit.attack": 6
    },
    "kills": 0,
    "damageDealt": 11,
    "trained": 6,
-   "ticks": 4,
+   "promptsLeft": 340,
    "finalPiles": {
     "p1": {
      "food": 30,
@@ -176,12 +176,12 @@
     "city.upgrade": 3,
     "city.build": 18,
     "unit.move": 20,
-    "match.advance": 2
+    "world.noop": 2
    },
    "kills": 2,
    "damageDealt": 17,
    "trained": 9,
-   "ticks": 2,
+   "promptsLeft": 340,
    "finalPiles": {
     "p1": {
      "food": 10,
@@ -201,13 +201,13 @@
      "town-center": 1,
      "house": 3,
      "storage": 2,
-     "barracks": 1,
+     "barracks": 2,
      "wall": 2,
      "tower": 3
     },
     "p2": {
      "town-center": 1,
-     "house": 4,
+     "house": 5,
      "storage": 1,
      "barracks": 1,
      "wall": 3,
@@ -224,7 +224,7 @@
     "unit.move": 18,
     "city.build": 23,
     "unit.train": 7,
-    "match.advance": 2,
+    "world.noop": 2,
     "city.upgrade": 2,
     "economy.gather": 1,
     "unit.attack": 7
@@ -232,7 +232,7 @@
    "kills": 1,
    "damageDealt": 13,
    "trained": 7,
-   "ticks": 2,
+   "promptsLeft": 340,
    "finalPiles": {
     "p1": {
      "food": 10,
@@ -251,18 +251,18 @@
     "p1": {
      "town-center": 1,
      "house": 4,
-     "storage": 1,
+     "storage": 5,
      "barracks": 0,
-     "wall": 0,
-     "tower": 1
+     "wall": 4,
+     "tower": 3
     },
     "p2": {
      "town-center": 1,
-     "house": 1,
-     "storage": 0,
-     "barracks": 1,
-     "wall": 0,
-     "tower": 1
+     "house": 3,
+     "storage": 1,
+     "barracks": 3,
+     "wall": 1,
+     "tower": 4
     }
    },
    "explored": 38
@@ -278,12 +278,12 @@
     "unit.move": 17,
     "economy.gather": 2,
     "unit.attack": 12,
-    "match.advance": 2
+    "world.noop": 2
    },
    "kills": 2,
    "damageDealt": 42,
    "trained": 6,
-   "ticks": 2,
+   "promptsLeft": 340,
    "finalPiles": {
     "p1": {
      "food": 0,
@@ -301,7 +301,7 @@
    "finalBuildings": {
     "p1": {
      "town-center": 1,
-     "house": 3,
+     "house": 4,
      "storage": 2,
      "barracks": 2,
      "wall": 1,
@@ -312,7 +312,7 @@
      "house": 2,
      "storage": 1,
      "barracks": 2,
-     "wall": 3,
+     "wall": 4,
      "tower": 3
     }
    },
@@ -327,14 +327,14 @@
     "unit.train": 4,
     "city.upgrade": 3,
     "city.build": 28,
-    "match.advance": 3,
+    "world.noop": 3,
     "economy.gather": 2,
     "unit.attack": 2
    },
    "kills": 0,
    "damageDealt": 8,
    "trained": 4,
-   "ticks": 3,
+   "promptsLeft": 340,
    "finalPiles": {
     "p1": {
      "food": 51,
@@ -375,7 +375,7 @@
    "rejected": 16,
    "appliedByType": {
     "city.build": 20,
-    "match.advance": 4,
+    "world.noop": 4,
     "unit.move": 17,
     "economy.gather": 1,
     "unit.attack": 9,
@@ -385,7 +385,7 @@
    "kills": 2,
    "damageDealt": 26,
    "trained": 7,
-   "ticks": 4,
+   "promptsLeft": 340,
    "finalPiles": {
     "p1": {
      "food": 10,
@@ -404,17 +404,17 @@
     "p1": {
      "town-center": 1,
      "house": 4,
-     "storage": 2,
+     "storage": 4,
      "barracks": 1,
      "wall": 1,
      "tower": 4
     },
     "p2": {
      "town-center": 1,
-     "house": 1,
+     "house": 2,
      "storage": 2,
      "barracks": 2,
-     "wall": 2,
+     "wall": 4,
      "tower": 1
     }
    },
@@ -430,13 +430,13 @@
     "economy.gather": 1,
     "unit.attack": 12,
     "city.build": 18,
-    "match.advance": 6,
+    "world.noop": 6,
     "city.upgrade": 1
    },
    "kills": 2,
    "damageDealt": 30,
    "trained": 6,
-   "ticks": 6,
+   "promptsLeft": 340,
    "finalPiles": {
     "p1": {
      "food": 30,
@@ -478,7 +478,7 @@
    "appliedByType": {
     "unit.move": 23,
     "unit.train": 7,
-    "match.advance": 4,
+    "world.noop": 4,
     "city.build": 12,
     "unit.attack": 9,
     "city.upgrade": 3,
@@ -487,7 +487,7 @@
    "kills": 2,
    "damageDealt": 21,
    "trained": 7,
-   "ticks": 4,
+   "promptsLeft": 340,
    "finalPiles": {
     "p1": {
      "food": 0,
@@ -527,7 +527,7 @@
    "applied": 60,
    "rejected": 29,
    "appliedByType": {
-    "match.advance": 5,
+    "world.noop": 5,
     "city.build": 15,
     "unit.move": 18,
     "unit.train": 8,
@@ -537,7 +537,7 @@
    "kills": 3,
    "damageDealt": 28,
    "trained": 8,
-   "ticks": 5,
+   "promptsLeft": 340,
    "finalPiles": {
     "p1": {
      "food": 20,
@@ -556,18 +556,18 @@
     "p1": {
      "town-center": 1,
      "house": 4,
-     "storage": 1,
+     "storage": 2,
      "barracks": 1,
      "wall": 0,
-     "tower": 0
+     "tower": 1
     },
     "p2": {
      "town-center": 1,
      "house": 4,
      "storage": 1,
      "barracks": 1,
-     "wall": 3,
-     "tower": 1
+     "wall": 4,
+     "tower": 2
     }
    },
    "explored": 45
@@ -582,12 +582,12 @@
     "city.build": 21,
     "city.upgrade": 3,
     "unit.attack": 6,
-    "match.advance": 2
+    "world.noop": 2
    },
    "kills": 1,
    "damageDealt": 16,
    "trained": 7,
-   "ticks": 2,
+   "promptsLeft": 340,
    "finalPiles": {
     "p1": {
      "food": 0,
@@ -606,17 +606,17 @@
     "p1": {
      "town-center": 1,
      "house": 3,
-     "storage": 3,
-     "barracks": 2,
+     "storage": 4,
+     "barracks": 5,
      "wall": 2,
      "tower": 0
     },
     "p2": {
      "town-center": 1,
-     "house": 2,
-     "storage": 1,
+     "house": 4,
+     "storage": 2,
      "barracks": 2,
-     "wall": 2,
+     "wall": 3,
      "tower": 1
     }
    },
@@ -628,7 +628,7 @@
    "rejected": 37,
    "appliedByType": {
     "city.build": 22,
-    "match.advance": 6,
+    "world.noop": 6,
     "unit.move": 15,
     "unit.train": 7,
     "city.upgrade": 3,
@@ -637,7 +637,7 @@
    "kills": 1,
    "damageDealt": 19,
    "trained": 7,
-   "ticks": 6,
+   "promptsLeft": 340,
    "finalPiles": {
     "p1": {
      "food": 20,
@@ -655,8 +655,8 @@
    "finalBuildings": {
     "p1": {
      "town-center": 1,
-     "house": 4,
-     "storage": 1,
+     "house": 5,
+     "storage": 2,
      "barracks": 2,
      "wall": 1,
      "tower": 3
@@ -664,10 +664,10 @@
     "p2": {
      "town-center": 1,
      "house": 3,
-     "storage": 3,
-     "barracks": 2,
-     "wall": 1,
-     "tower": 0
+     "storage": 4,
+     "barracks": 3,
+     "wall": 2,
+     "tower": 2
     }
    },
    "explored": 41
@@ -679,7 +679,7 @@
    "appliedByType": {
     "unit.move": 19,
     "city.build": 22,
-    "match.advance": 3,
+    "world.noop": 3,
     "unit.train": 7,
     "unit.attack": 8,
     "city.upgrade": 1
@@ -687,7 +687,7 @@
    "kills": 1,
    "damageDealt": 17,
    "trained": 7,
-   "ticks": 3,
+   "promptsLeft": 340,
    "finalPiles": {
     "p1": {
      "food": 0,
@@ -705,17 +705,17 @@
    "finalBuildings": {
     "p1": {
      "town-center": 1,
-     "house": 4,
+     "house": 5,
      "storage": 1,
-     "barracks": 2,
+     "barracks": 4,
      "wall": 1,
-     "tower": 1
+     "tower": 2
     },
     "p2": {
      "town-center": 1,
-     "house": 2,
-     "storage": 1,
-     "barracks": 1,
+     "house": 7,
+     "storage": 2,
+     "barracks": 2,
      "wall": 0,
      "tower": 3
     }
@@ -731,13 +731,13 @@
     "unit.move": 24,
     "city.build": 11,
     "city.upgrade": 3,
-    "match.advance": 5,
+    "world.noop": 5,
     "unit.attack": 8
    },
    "kills": 1,
    "damageDealt": 21,
    "trained": 9,
-   "ticks": 5,
+   "promptsLeft": 340,
    "finalPiles": {
     "p1": {
      "food": 0,
@@ -764,7 +764,7 @@
     "p2": {
      "town-center": 1,
      "house": 3,
-     "storage": 0,
+     "storage": 1,
      "barracks": 1,
      "wall": 2,
      "tower": 1
@@ -783,12 +783,12 @@
     "city.upgrade": 3,
     "unit.move": 20,
     "unit.attack": 5,
-    "match.advance": 1
+    "world.noop": 1
    },
    "kills": 1,
    "damageDealt": 14,
    "trained": 8,
-   "ticks": 1,
+   "promptsLeft": 340,
    "finalPiles": {
     "p1": {
      "food": 40,
@@ -806,19 +806,19 @@
    "finalBuildings": {
     "p1": {
      "town-center": 1,
-     "house": 3,
+     "house": 4,
      "storage": 1,
-     "barracks": 1,
-     "wall": 2,
+     "barracks": 2,
+     "wall": 4,
      "tower": 1
     },
     "p2": {
      "town-center": 1,
      "house": 5,
      "storage": 2,
-     "barracks": 0,
-     "wall": 2,
-     "tower": 1
+     "barracks": 1,
+     "wall": 4,
+     "tower": 2
     }
    },
    "explored": 36
@@ -831,7 +831,7 @@
     "city.build": 24,
     "unit.train": 8,
     "unit.move": 17,
-    "match.advance": 1,
+    "world.noop": 1,
     "city.upgrade": 2,
     "unit.attack": 4,
     "economy.gather": 4
@@ -839,7 +839,7 @@
    "kills": 1,
    "damageDealt": 7,
    "trained": 8,
-   "ticks": 1,
+   "promptsLeft": 340,
    "finalPiles": {
     "p1": {
      "food": 10,
@@ -857,19 +857,19 @@
    "finalBuildings": {
     "p1": {
      "town-center": 1,
-     "house": 3,
-     "storage": 2,
-     "barracks": 0,
+     "house": 4,
+     "storage": 5,
+     "barracks": 2,
      "wall": 0,
-     "tower": 0
+     "tower": 2
     },
     "p2": {
      "town-center": 1,
-     "house": 1,
-     "storage": 0,
-     "barracks": 0,
-     "wall": 1,
-     "tower": 0
+     "house": 4,
+     "storage": 4,
+     "barracks": 2,
+     "wall": 5,
+     "tower": 1
     }
    },
    "explored": 40
@@ -884,12 +884,12 @@
     "city.build": 18,
     "unit.attack": 8,
     "city.upgrade": 3,
-    "match.advance": 1
+    "world.noop": 1
    },
    "kills": 1,
    "damageDealt": 10,
    "trained": 9,
-   "ticks": 1,
+   "promptsLeft": 340,
    "finalPiles": {
     "p1": {
      "food": 0,
@@ -907,19 +907,19 @@
    "finalBuildings": {
     "p1": {
      "town-center": 1,
-     "house": 4,
+     "house": 5,
      "storage": 4,
-     "barracks": 2,
+     "barracks": 3,
      "wall": 2,
      "tower": 0
     },
     "p2": {
      "town-center": 1,
      "house": 1,
-     "storage": 1,
+     "storage": 2,
      "barracks": 1,
      "wall": 2,
-     "tower": 2
+     "tower": 3
     }
    },
    "explored": 41
@@ -929,7 +929,7 @@
    "applied": 60,
    "rejected": 24,
    "appliedByType": {
-    "match.advance": 4,
+    "world.noop": 4,
     "city.build": 17,
     "unit.move": 16,
     "unit.train": 7,
@@ -939,7 +939,7 @@
    "kills": 3,
    "damageDealt": 34,
    "trained": 7,
-   "ticks": 4,
+   "promptsLeft": 340,
    "finalPiles": {
     "p1": {
      "food": 20,
@@ -957,18 +957,18 @@
    "finalBuildings": {
     "p1": {
      "town-center": 1,
-     "house": 4,
-     "storage": 2,
+     "house": 5,
+     "storage": 3,
      "barracks": 1,
-     "wall": 1,
+     "wall": 2,
      "tower": 0
     },
     "p2": {
      "town-center": 1,
      "house": 3,
-     "storage": 1,
+     "storage": 2,
      "barracks": 1,
-     "wall": 1,
+     "wall": 2,
      "tower": 3
     }
    },
@@ -984,13 +984,13 @@
     "city.build": 23,
     "unit.move": 16,
     "city.upgrade": 3,
-    "match.advance": 2,
+    "world.noop": 2,
     "unit.attack": 7
    },
    "kills": 1,
    "damageDealt": 28,
    "trained": 5,
-   "ticks": 2,
+   "promptsLeft": 340,
    "finalPiles": {
     "p1": {
      "food": 0,
@@ -1008,19 +1008,19 @@
    "finalBuildings": {
     "p1": {
      "town-center": 1,
-     "house": 3,
-     "storage": 1,
-     "barracks": 2,
+     "house": 5,
+     "storage": 3,
+     "barracks": 3,
      "wall": 2,
      "tower": 1
     },
     "p2": {
      "town-center": 1,
-     "house": 2,
-     "storage": 1,
+     "house": 4,
+     "storage": 2,
      "barracks": 0,
-     "wall": 0,
-     "tower": 1
+     "wall": 4,
+     "tower": 4
     }
    },
    "explored": 45
@@ -1035,12 +1035,12 @@
     "unit.train": 8,
     "unit.attack": 6,
     "city.upgrade": 1,
-    "match.advance": 1
+    "world.noop": 1
    },
    "kills": 0,
    "damageDealt": 14,
    "trained": 8,
-   "ticks": 1,
+   "promptsLeft": 340,
    "finalPiles": {
     "p1": {
      "food": 0,
@@ -1058,7 +1058,7 @@
    "finalBuildings": {
     "p1": {
      "town-center": 1,
-     "house": 2,
+     "house": 4,
      "storage": 2,
      "barracks": 0,
      "wall": 1,
@@ -1066,8 +1066,8 @@
     },
     "p2": {
      "town-center": 1,
-     "house": 5,
-     "storage": 0,
+     "house": 6,
+     "storage": 2,
      "barracks": 0,
      "wall": 2,
      "tower": 1

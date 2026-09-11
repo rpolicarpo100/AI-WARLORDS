@@ -57,10 +57,9 @@ function at(events: readonly GameEvent[], index: number): GameEvent {
 
 describe('matchStartedEvent (unit)', () => {
   it('builds the exact frozen genesis fact', () => {
-    const event = matchStartedEvent(999, [P1, P2], { id: 'standard', version: 1 }, 0);
+    const event = matchStartedEvent(999, [P1, P2], { id: 'standard', version: 1 });
     expect(event).toEqual({
       seq: 1,
-      tick: 0,
       revision: 0,
       type: 'match.started',
       priority: 'normal',
@@ -76,28 +75,27 @@ describe('matchStartedEvent (unit)', () => {
 });
 
 describe('matchProducers registry (fence lock)', () => {
-  it('registers exactly match.advance (noop is deliberately silent)', () => {
+  it('registers no built-ins (empty map; noop is deliberately silent)', () => {
     const registry = matchProducers();
-    expect([...registry.keys()]).toEqual(['match.advance']);
+    expect([...registry.keys()]).toEqual([]);
     expect(registry.get('world.noop')).toBeUndefined();
   });
 });
 
 describe('runProducers (unit)', () => {
   it('emits nothing without producers', () => {
-    expect(runProducers(stdInput(stdState()), [], 0, 0, 1)).toEqual([]);
+    expect(runProducers(stdInput(stdState()), [], 0, 1)).toEqual([]);
   });
 
-  it('stamps seq/tick/revision and freezes the fact', () => {
+  it('stamps seq/revision and freezes the fact', () => {
     const facts: readonly EventInput[] = [
       { type: 'test.fact', priority: 'normal', payload: { n: 1 } },
     ];
     const producer: EventProducer = () => facts;
-    const emitted = runProducers(stdInput(stdState()), [producer], 5, 3, 10);
+    const emitted = runProducers(stdInput(stdState()), [producer], 3, 10);
     expect(emitted).toHaveLength(1);
     expect(at(emitted, 0)).toEqual({
       seq: 10,
-      tick: 5,
       revision: 3,
       type: 'test.fact',
       priority: 'normal',
@@ -111,26 +109,25 @@ describe('runProducers (unit)', () => {
       (priority) => ({ type: `test.${priority}`, priority, payload: {} }),
     );
     const producer: EventProducer = () => facts;
-    const emitted = runProducers(stdInput(stdState()), [producer], 0, 0, 1);
+    const emitted = runProducers(stdInput(stdState()), [producer], 0, 1);
     expect(emitted.map((e) => e.priority)).toEqual(['low', 'normal', 'high', 'critical']);
     expect(seqs(emitted)).toEqual([1, 2, 3, 4]);
   });
 
   it('emits nothing when the producer returns no facts', () => {
     const none: EventProducer = () => [];
-    expect(runProducers(stdInput(stdState()), [none], 0, 0, 1)).toEqual([]);
+    expect(runProducers(stdInput(stdState()), [none], 0, 1)).toEqual([]);
   });
 
   it.each([[42], [''], ['x'.repeat(65)]] as Array<[unknown]>)(
     'surrogates bad fact type %j',
     (type) => {
       const bad: EventProducer = () => [{ type: type as string, priority: 'low', payload: {} }];
-      const emitted = runProducers(stdInput(stdState()), [bad], 0, 0, 1);
+      const emitted = runProducers(stdInput(stdState()), [bad], 0, 1);
       expect(emitted).toHaveLength(1);
       expect(at(emitted, 0)).toEqual({
         seq: 1,
-        tick: 0,
-        revision: 0,
+          revision: 0,
         type: 'system.event-fault',
         priority: 'high',
         payload: {
@@ -146,7 +143,7 @@ describe('runProducers (unit)', () => {
     const bad: EventProducer = () => [
       { type: 'test.x', priority: 'urgent' as unknown as EventInput['priority'], payload: {} },
     ];
-    const emitted = runProducers(stdInput(stdState()), [bad], 0, 0, 1);
+    const emitted = runProducers(stdInput(stdState()), [bad], 0, 1);
     expect(emitted).toHaveLength(1);
     expect(at(emitted, 0).payload).toEqual({
       transition: 'test.x',
@@ -159,7 +156,7 @@ describe('runProducers (unit)', () => {
     const bad: EventProducer = () => [
       { type: 'test.x', priority: 'low', payload: { fn: () => 0 } },
     ];
-    const emitted = runProducers(stdInput(stdState()), [bad], 0, 0, 1);
+    const emitted = runProducers(stdInput(stdState()), [bad], 0, 1);
     expect(emitted).toHaveLength(1);
     const payload = at(emitted, 0).payload as Record<string, unknown>;
     expect(at(emitted, 0).type).toBe('system.event-fault');
@@ -173,7 +170,7 @@ describe('runProducers (unit)', () => {
       throw new Error('producer boom');
     };
     const good: EventProducer = () => [{ type: 'test.ok', priority: 'low', payload: {} }];
-    const emitted = runProducers(stdInput(stdState()), [boom, good], 2, 1, 5);
+    const emitted = runProducers(stdInput(stdState()), [boom, good], 1, 5);
     expect(emitted.map((e) => e.type)).toEqual(['system.event-fault', 'test.ok']);
     expect(seqs(emitted)).toEqual([5, 6]);
     expect(at(emitted, 0).payload).toEqual({
@@ -188,7 +185,7 @@ describe('runProducers (unit)', () => {
     const bad: EventProducer = () => {
       throw notAnError;
     };
-    const emitted = runProducers(stdInput(stdState()), [bad], 0, 0, 1);
+    const emitted = runProducers(stdInput(stdState()), [bad], 0, 1);
     expect(at(emitted, 0).payload).toEqual({
       transition: 'test.x',
       producer: 0,
@@ -198,7 +195,7 @@ describe('runProducers (unit)', () => {
 
   it('surrogates null facts', () => {
     const bad: EventProducer = () => [null as unknown as EventInput];
-    const emitted = runProducers(stdInput(stdState()), [bad], 0, 0, 1);
+    const emitted = runProducers(stdInput(stdState()), [bad], 0, 1);
     expect(emitted).toHaveLength(1);
     expect(at(emitted, 0).type).toBe('system.event-fault');
     const payload = at(emitted, 0).payload as Record<string, unknown>;
@@ -209,7 +206,7 @@ describe('runProducers (unit)', () => {
 
   it('surrogates non-array producer returns', () => {
     const bad: EventProducer = () => 42 as unknown as readonly EventInput[];
-    const emitted = runProducers(stdInput(stdState()), [bad], 0, 0, 1);
+    const emitted = runProducers(stdInput(stdState()), [bad], 0, 1);
     expect(emitted).toHaveLength(1);
     expect(at(emitted, 0).type).toBe('system.event-fault');
   });
@@ -221,7 +218,6 @@ describe('genesis (Match E2E)', () => {
     expect(events).toHaveLength(1);
     expect(at(events, 0)).toEqual({
       seq: 1,
-      tick: 0,
       revision: 0,
       type: 'match.started',
       priority: 'normal',
@@ -242,23 +238,14 @@ describe('genesis (Match E2E)', () => {
 });
 
 describe('dispatch emission (Match E2E)', () => {
-  it('emits match.advanced with the new tick', () => {
+  it('emits nothing for bare dispatches (empty built-ins, cityless)', () => {
     const match = stdMatch();
     const session = match.join(P1);
     match.dispatch(
       session,
-      raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} }),
+      raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: {} }),
     );
-    const events = match.getEvents();
-    expect(events).toHaveLength(2);
-    expect(at(events, 1)).toEqual({
-      seq: 2,
-      tick: 1,
-      revision: 1,
-      type: 'match.advanced',
-      priority: 'low',
-      payload: { tick: 1 },
-    });
+    expect(match.getEvents()).toHaveLength(1);
   });
 
   it('emits nothing for noop (restraint proof)', () => {
@@ -278,7 +265,7 @@ describe('dispatch emission (Match E2E)', () => {
     const session = match.join(P1);
     match.dispatch(
       session,
-      raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: { x: 1 } }),
+      raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: { x: 1 } }),
     );
     expect(match.getEvents()).toHaveLength(1);
   });
@@ -301,10 +288,10 @@ describe('dispatch emission (Match E2E)', () => {
   it('emits nothing for duplicates', () => {
     const match = stdMatch();
     const session = match.join(P1);
-    const request = { requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} };
+    const request = { requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: {} };
     match.dispatch(session, raw(request));
     match.dispatch(session, raw(request));
-    expect(match.getEvents()).toHaveLength(2);
+    expect(match.getEvents()).toHaveLength(1);
   });
 
   it('runs custom producers with caller + params', () => {
@@ -335,7 +322,6 @@ describe('dispatch emission (Match E2E)', () => {
     expect(events).toHaveLength(2);
     expect(at(events, 1)).toEqual({
       seq: 2,
-      tick: 0,
       revision: 1,
       type: 'test.ponged',
       priority: 'normal',
@@ -343,18 +329,60 @@ describe('dispatch emission (Match E2E)', () => {
     });
   });
 
-  it('appends extras after built-ins (observation composes)', () => {
+  it('ignores extra producers for unknown transitions (lenient registration)', () => {
     const producerEntries: Array<[string, readonly EventProducer[]]> = [
-      ['match.advance', [() => [{ type: 'test.appended', priority: 'low', payload: {} }]]],
+      ['test.ghost', [() => [{ type: 'test.ghosted', priority: 'low', payload: {} }]]],
     ];
     const match = stdMatch(new Map(), new Map(producerEntries));
     const session = match.join(P1);
     match.dispatch(
       session,
-      raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} }),
+      raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: {} }),
+    );
+    expect(match.getEvents().map((e) => e.type)).toEqual(['match.started']);
+  });
+
+  it('orders completion before caller extras on every transition (universal)', () => {
+    const handlerEntries: Array<[string, RngHandler<WorldState>]> = [
+      [
+        'test.raise',
+        (ctx) => ({
+          applied: true,
+          state: {
+            ...ctx.state,
+            buildings: {
+              schemaVersion: 1 as const,
+              buildings: {
+                p1: {
+                  'town-center': 0,
+                  house: 0,
+                  storage: 0,
+                  barracks: 0,
+                  wall: 0,
+                  tower: 1,
+                },
+              },
+            },
+          },
+          summary: 'raised',
+        }),
+      ],
+    ];
+    const producerEntries: Array<[string, readonly EventProducer[]]> = [
+      ['test.raise', [() => [{ type: 'test.appended', priority: 'low', payload: {} }]]],
+    ];
+    const match = stdMatch(new Map(handlerEntries), new Map(producerEntries));
+    const session = match.join(P1);
+    match.dispatch(
+      session,
+      raw({ requestId: 'r1', playerId: 'p1', type: 'test.raise', payload: {} }),
     );
     const events = match.getEvents();
-    expect(events.map((e) => e.type)).toEqual(['match.started', 'match.advanced', 'test.appended']);
+    expect(events.map((e) => e.type)).toEqual([
+      'match.started',
+      'build.completed',
+      'test.appended',
+    ]);
   });
 
   it('keeps the dispatch applied when a producer throws (surrogate E2E)', () => {
@@ -383,11 +411,10 @@ describe('dispatch emission (Match E2E)', () => {
     expect(events).toHaveLength(2);
     expect(at(events, 1)).toEqual({
       seq: 2,
-      tick: 0,
       revision: 1,
       type: 'system.event-fault',
       priority: 'high',
-      payload: { transition: 'test.ping', producer: 0, message: 'e2e boom' },
+      payload: { transition: 'test.ping', producer: 1, message: 'e2e boom' },
     });
   });
 
@@ -406,7 +433,7 @@ describe('dispatch emission (Match E2E)', () => {
       const session = match.join(P1);
       match.dispatch(
         session,
-        raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} }),
+        raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: {} }),
       );
       match.dispatch(
         session,
@@ -423,18 +450,27 @@ describe('dispatch emission (Match E2E)', () => {
 
 describe('event integrity (security)', () => {
   it('freezes entries and payloads', () => {
-    const match = stdMatch();
+    const handlerEntries: Array<[string, RngHandler<WorldState>]> = [
+      ['test.ping', (ctx) => ({ applied: true, state: ctx.state, summary: 'pong' })],
+    ];
+    const producerEntries: Array<[string, readonly EventProducer[]]> = [
+      [
+        'test.ping',
+        [(input) => [{ type: 'test.ponged', priority: 'normal', payload: { by: input.caller } }]],
+      ],
+    ];
+    const match = stdMatch(new Map(handlerEntries), new Map(producerEntries));
     const session = match.join(P1);
     match.dispatch(
       session,
-      raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} }),
+      raw({ requestId: 'r1', playerId: 'p1', type: 'test.ping', payload: {} }),
     );
     const event = at(match.getEvents(), 1);
     expect(() => {
       (event as { type: string }).type = 'x';
     }).toThrow(TypeError);
     expect(() => {
-      (event.payload as { tick: number }).tick = 99;
+      (event.payload as { by: string }).by = 'x';
     }).toThrow(TypeError);
   });
 
@@ -450,7 +486,7 @@ describe('event integrity (security)', () => {
     const session = match.join(P1);
     match.dispatch(
       session,
-      raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} }),
+      raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: {} }),
     );
     expect(JSON.stringify(match.getEvents())).not.toContain(session.sessionId);
   });

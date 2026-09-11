@@ -4,6 +4,7 @@ import { cityOf, type CityState } from './city.js';
 import { commandersOf, type CommanderRecord } from './commanders.js';
 import { isCellIndex } from './explored.js';
 import type { TerrainId } from './map.js';
+import { promptsOf } from './prompts.js';
 import { stockpileOf, type StockpileAmounts } from './stockpiles.js';
 import { unitsOf, type UnitInstance } from './units.js';
 import type { WorldPlayer, WorldState } from './world-state.js';
@@ -38,7 +39,11 @@ export interface PerceivedMap {
 }
 
 export interface PerceivedState {
-  readonly tick: number;
+  /**
+   * Own remaining prompts (PROMPTS; 0 when absent). Other holders'
+   * budgets stay out — fail-closed (no owning module for foe intel).
+   */
+  readonly prompts: number;
   /** Roster is public (no roster-fog until an owning module exists). */
   readonly players: readonly WorldPlayer[];
   readonly viewer: PlayerId;
@@ -155,7 +160,7 @@ export function perceive(
     }
   }
   const perceived: PerceivedState = {
-    tick: state.tick,
+    prompts: promptsOf(state.prompts, viewer),
     players: [...state.players],
     viewer,
     visibleCells,

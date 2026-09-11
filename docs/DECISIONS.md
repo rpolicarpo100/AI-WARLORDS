@@ -651,3 +651,42 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
   novo (D-006 preservado).
 - IMPLEMENTATION: `views.ts` + `views.test.ts` + `resources.test.ts` (M028).
 - ESTADO: `ACCEPTED`.
+
+## D-022 — Ticks morrem, prompts mandam (redesign user-mandatado, pré-M029)
+
+- DECISION: cada applied dispatch gasta 1 prompt do caller
+  (rejeitados grátis); `match.advance`+tick removidos TOTAL
+  (WorldState, envelope, veredicto, percepção, sim, página —
+  precedente remoção M015); budget `promptsPerPlayer` (defeito
+  10, uint32 ≥1; sem unlimited — free-mode M09X owns);
+  Match semeia slot ausente; sem prompts = dispatch rejeitado
+  `validation: [prompts-exhausted]` (só observa); todos
+  bloqueados + indeciso = draw `prompts-exhausted` (#46
+  reformado); filas city descem 1/applied SÓ do dono
+  (owner-only votado); completion+spend em postStep injectado
+  no wrapper (precedente treasury; kernel M003 intocado);
+  `prompts-ledger` substitui tickRule no base-5 (pin rewrite
+  declarado); PerceivedState -tick +prompts own-only; página
+  -Advance -tick +header budget; sim sem advance (passes,
+  budget fixture 200, csv step); selo cirúrgico estilo M015.
+  Out-of-band (sem renumeração); pacing "15min" = nota, não
+  mecânica (motor sem relógios).
+- MOTIVE: 4 votos explícitos do utilizador 2026-09-11
+  (cada-dispatch; remover; jogador-bloqueia; X=10≈15min;
+  owner-only; sem unlimited; header) + M015 (remoção total
+  + selo cirúrgico) + M020 (pin rewrite + conservação) +
+  M022 (injecção) + M016/M021/M027 (molde L0).
+- ALTERNATIVES: ticks convivem (rejeitado pelo user);
+  relógio global filas (preterido — user votou owner-only);
+  unlimited já (rejeitado — M09X); completion por-handler
+  (rejeitado: 8+ handlers); completion no kernel (rejeitado:
+  M003 intocado); spend trusted sem regra (rejeitado: ledger
+  poroso); tick congelado a 0 (rejeitado: podridão M015).
+- ADVANTAGES: tempo==acção (design legível); budget
+  configurável salva testes/escala; exaustão drillável.
+- DISADVANTAGES: churn gigante (testes+selo+página);
+  X=10 + filas owner-only = forbidding (tuning é #92).
+- RISKS: médio — núcleo tocado (mitiga: suite+selo+sim);
+  residual: tuning 10 por validar em jogo real (#92).
+- IMPLEMENTATION: PROMPTS out-of-band (P1–P8).
+- ESTADO: `ACCEPTED`.

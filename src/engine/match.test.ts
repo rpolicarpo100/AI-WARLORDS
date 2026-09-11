@@ -8,10 +8,10 @@ import {
 } from './authority.js';
 import {
   createMatchId,
+  DEFAULT_PROMPTS_PER_PLAYER,
   isMatchId,
   isSeed,
   Match,
-  matchHandlers,
   STANDARD_RULESET,
   type MatchInit,
 } from './match.js';
@@ -170,20 +170,91 @@ describe('constructor validation (failure)', () => {
 
   it('rejects extra handlers colliding with built-ins (fail loud, never shadow)', () => {
     const entries: Array<[string, TransitionHandler<WorldState>]> = [
-      ['match.advance', (ctx) => ({ applied: true, state: ctx.state, summary: 'evil' })],
+      ['world.noop', (ctx) => ({ applied: true, state: ctx.state, summary: 'evil' })],
     ];
     expect(() => makeMatch({ extraHandlers: new Map(entries) })).toThrow(/duplicate handler/);
   });
 });
 
-describe('matchHandlers registry (fence lock)', () => {
-  it('registers exactly match.advance (mutations arrive with domains)', () => {
-    expect([...matchHandlers().keys()]).toEqual(['match.advance']);
+describe('prompt budget (PROMPTS E2E)', () => {
+  it('defaults to 10 prompts per player', () => {
+    expect(DEFAULT_PROMPTS_PER_PLAYER).toBe(10);
+  });
+
+  it('seeds the default budget when the slot is absent', () => {
+    expect(makeMatch().getSnapshot().prompts).toEqual({
+      schemaVersion: 1,
+      remaining: { p1: 10, p2: 10 },
+    });
+  });
+
+  it('respects a present slot (no reseed)', () => {
+    const match = makeMatch({
+      initialState: createWorldState({
+        players: [P1, P2],
+        prompts: { schemaVersion: 1, remaining: { p1: 3, p2: 7 } },
+      }),
+      promptsPerPlayer: 1,
+    });
+    expect(match.getSnapshot().prompts?.remaining).toEqual({ p1: 3, p2: 7 });
+  });
+
+  it('honors a custom promptsPerPlayer on absent slots', () => {
+    expect(makeMatch({ promptsPerPlayer: 2 }).getSnapshot().prompts?.remaining).toEqual({
+      p1: 2,
+      p2: 2,
+    });
+  });
+
+  it('spends one per applied dispatch (caller only)', () => {
+    const match = makeMatch();
+    const s1 = match.join(P1);
+    const s2 = match.join(P2);
+    match.dispatch(s1, raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: {} }));
+    match.dispatch(s1, raw({ requestId: 'r2', playerId: 'p1', type: 'world.noop', payload: {} }));
+    match.dispatch(s2, raw({ requestId: 'r3', playerId: 'p2', type: 'world.noop', payload: {} }));
+    expect(match.getSnapshot().prompts?.remaining).toEqual({ p1: 8, p2: 9 });
+  });
+
+  it('blocks dry callers (pinned reason, state untouched, foe unaffected)', () => {
+    const match = makeMatch({ promptsPerPlayer: 1 });
+    const s1 = match.join(P1);
+    const s2 = match.join(P2);
+    match.dispatch(s1, raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: {} }));
+    const before = match.getSnapshot();
+    expect(
+      match.dispatch(
+        s1,
+        raw({ requestId: 'r2', playerId: 'p1', type: 'world.noop', payload: {} }),
+      ),
+    ).toEqual({
+      status: 'rejected',
+      reason: 'validation: [prompts-exhausted] no prompts left',
+    });
+    expect(match.getSnapshot()).toEqual(before);
+    expect(match.getRevision()).toBe(1);
+    expect(
+      match.dispatch(
+        s2,
+        raw({ requestId: 'r3', playerId: 'p2', type: 'world.noop', payload: {} }),
+      ),
+    ).toMatchObject({ status: 'applied' });
+  });
+
+  it('rejects the retired match.advance as unknown', () => {
+    const match = makeMatch();
+    const session = match.join(P1);
+    expect(
+      match.dispatch(
+        session,
+        raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} }),
+      ),
+    ).toEqual({ status: 'error', code: 'UNKNOWN_TRANSITION' });
   });
 });
 
-describe('advance + timeline (integration)', () => {
-  it('advances the tick, shares immutable subtrees, and logs exactly', () => {
+describe('dispatch + timeline (integration)', () => {
+  it('spends the caller prompt, shares immutable subtrees, and logs exactly', () => {
     const match = makeMatch();
     const session = match.join(P1);
     const before = match.getSnapshot();
@@ -191,39 +262,34 @@ describe('advance + timeline (integration)', () => {
     expect(
       match.dispatch(
         session,
-        raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} }),
+        raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: {} }),
       ),
-    ).toEqual({ status: 'applied', revision: 1, summary: 'tick=1' });
+    ).toEqual({ status: 'applied', revision: 1, summary: 'world-noop' });
 
     const after = match.getSnapshot();
     expect(after).toEqual({
       schemaVersion: 1,
-      tick: 1,
       players: [{ id: 'p1' }, { id: 'p2' }],
+      prompts: { schemaVersion: 1, remaining: { p1: 9, p2: 10 } },
     });
     expect(after.players).toBe(before.players);
-    expect(match.getTick()).toBe(1);
     expect(match.getRevision()).toBe(1);
   });
 
-  it('records tick-at-outcome per entry (advance, noop, advance → 1, 1, 2)', () => {
+  it('records revision-at-outcome per entry (noop ×3 → revisions 1, 2, 3)', () => {
     const match = makeMatch();
     const session = match.join(P1);
-    const advance = (id: string): void => {
+    const noop = (id: string): void => {
       match.dispatch(
         session,
-        raw({ requestId: id, playerId: 'p1', type: 'match.advance', payload: {} }),
+        raw({ requestId: id, playerId: 'p1', type: 'world.noop', payload: {} }),
       );
     };
-    advance('r1');
-    match.dispatch(
-      session,
-      raw({ requestId: 'r2', playerId: 'p1', type: 'world.noop', payload: {} }),
-    );
-    advance('r3');
+    noop('r1');
+    noop('r2');
+    noop('r3');
 
     const timeline = match.getTimeline();
-    expect(timeline.map((entry) => entry.tick)).toEqual([1, 1, 2]);
     expect(timeline.map((entry) => entry.seq)).toEqual([1, 2, 3]);
     expect(timeline.map((entry) => entry.revision)).toEqual([1, 2, 3]);
     for (const entry of timeline) {
@@ -242,26 +308,25 @@ describe('advance + timeline (integration)', () => {
     const session = match.join(P1);
     match.dispatch(
       session,
-      raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} }),
+      raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: {} }),
     );
 
     expect(match.getTimeline()).toEqual([
       {
         seq: 1,
         revision: 1,
-        tick: 1,
         requestId: 'r1',
         playerId: 'p1',
-        type: 'match.advance',
+        type: 'world.noop',
         applied: true,
-        detail: 'tick=1',
-        // M015 regen: secrets-field removal (shape + algorithm unchanged).
-        stateHash: 'e53bd4030868f488640f76df69b7a1b686e1b0835d272d4d5a257ac6c0884c18',
+        detail: 'world-noop',
+        // PROMPTS regen: budget replaces clock (tick field removed, prompts seeded).
+        stateHash: 'fdf3325cd1cc4b020b0db96551f90aaa04aeee39e6daa8819602eb13b39d2e93',
       },
     ]);
   });
 
-  it('records rejections with the current tick and unchanged hash', () => {
+  it('records rejections with revision 0, budget unspent, hash unchanged', () => {
     const match = makeMatch({ extraHandlers: testHandlers() });
     const session = match.join(P1);
     const hashBefore = match.getStateHash();
@@ -279,8 +344,8 @@ describe('advance + timeline (integration)', () => {
       throw new Error('test setup: expected one timeline entry');
     }
     expect(entry.applied).toBe(false);
-    expect(entry.tick).toBe(0);
     expect(entry.revision).toBe(0);
+    expect(match.getSnapshot().prompts?.remaining).toEqual({ p1: 10, p2: 10 });
     expect(entry.stateHash).toBe(hashBefore);
   });
 
@@ -302,13 +367,13 @@ describe('advance + timeline (integration)', () => {
     const session = match.join(P1);
     match.dispatch(
       session,
-      raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} }),
+      raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: {} }),
     );
     const before = match.getTimeline();
 
     match.dispatch(
       session,
-      raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} }),
+      raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: {} }),
     );
     match.dispatch(session, raw({ requestId: 'r2', playerId: 'p1', type: 'nope', payload: {} }));
 
@@ -320,7 +385,7 @@ describe('advance + timeline (integration)', () => {
     const session = match.join(P1);
     match.dispatch(
       session,
-      raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} }),
+      raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: {} }),
     );
     match.dispatch(
       session,
@@ -328,7 +393,7 @@ describe('advance + timeline (integration)', () => {
     );
     match.dispatch(
       session,
-      raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} }),
+      raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: {} }),
     );
     match.dispatch(session, raw({ requestId: 'r3', playerId: 'p1', type: 'nope', payload: {} }));
 
@@ -356,7 +421,7 @@ describe('advance + timeline (integration)', () => {
       const session = match.join(P1);
       match.dispatch(
         session,
-        raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} }),
+        raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: {} }),
       );
       match.dispatch(
         session,
@@ -364,7 +429,7 @@ describe('advance + timeline (integration)', () => {
       );
       match.dispatch(
         session,
-        raw({ requestId: 'r3', playerId: 'p1', type: 'match.advance', payload: {} }),
+        raw({ requestId: 'r3', playerId: 'p1', type: 'world.noop', payload: {} }),
       );
       return match;
     };
@@ -376,13 +441,13 @@ describe('advance + timeline (integration)', () => {
     expect(second.getTimeline()).toEqual(first.getTimeline());
   });
 
-  it('changes the state hash on advance', () => {
+  it('changes the state hash on dispatch', () => {
     const match = makeMatch();
     const session = match.join(P1);
     const before = match.getStateHash();
     match.dispatch(
       session,
-      raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} }),
+      raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: {} }),
     );
     expect(match.getStateHash()).not.toBe(before);
   });
@@ -392,7 +457,7 @@ describe('advance + timeline (integration)', () => {
     const session = match.join(P1);
     match.dispatch(
       session,
-      raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} }),
+      raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: {} }),
     );
 
     const serialized = JSON.stringify({
@@ -408,7 +473,7 @@ describe('advance + timeline (integration)', () => {
     const session = match.join(P1);
     match.dispatch(
       session,
-      raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} }),
+      raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: {} }),
     );
 
     const copy = match.getTimeline();
@@ -425,14 +490,15 @@ describe('advance + timeline (integration)', () => {
 describe('match integrity (failure/security)', () => {
   it('detaches setup input: later mutations cannot corrupt the match', () => {
     const players: PlayerId[] = [P1, P2];
-    const initial = createWorldState({ players: [P1, P2] });
+    const budget = { schemaVersion: 1 as const, remaining: { p1: 5, p2: 5 } };
+    const initial = createWorldState({ players: [P1, P2], prompts: budget });
     const match = new Match({ seed: 1, ruleset: STANDARD_RULESET, players, initialState: initial });
 
     players.push(P3);
-    (initial as { tick: number }).tick = 99;
+    budget.remaining['p1'] = 99;
 
     expect(match.players).toEqual([P1, P2]);
-    expect(match.getSnapshot().tick).toBe(0);
+    expect(match.getSnapshot().prompts?.remaining).toEqual({ p1: 5, p2: 5 });
   });
 
   it('freezes provenance: id, players and ruleset cannot be reassigned', () => {

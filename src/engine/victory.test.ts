@@ -1,10 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { markUntrusted, type ClientRequest, type PlayerId, type Untrusted } from './authority.js';
+import {
+  markUntrusted,
+  type ClientRequest,
+  type PlayerId,
+  type SessionHandle,
+  type Untrusted,
+} from './authority.js';
 import { Match, STANDARD_RULESET } from './match.js';
+import { seedPrompts } from './prompts.js';
 import {
   evaluateVictory,
   matchConditions,
-  timeLimitCondition,
+  promptsExhaustedCondition,
   type ConditionDecision,
   type ConditionInput,
   type VictoryCondition,
@@ -21,11 +28,18 @@ function raw(value: unknown): Untrusted<ClientRequest> {
 }
 
 function stdState(): WorldState {
+  return createWorldState({ players: [P1, P2], prompts: seedPrompts([P1, P2], 10) });
+}
+
+function slotless(): WorldState {
   return createWorldState({ players: [P1, P2] });
 }
 
-function tickState(tick: number): WorldState {
-  return { ...stdState(), tick };
+function promptState(p1: number, p2: number): WorldState {
+  return createWorldState({
+    players: [P1, P2],
+    prompts: { schemaVersion: 1, remaining: { p1, p2 } },
+  });
 }
 
 function stdInput(state: WorldState = stdState(), revision = 0): ConditionInput {
@@ -34,7 +48,7 @@ function stdInput(state: WorldState = stdState(), revision = 0): ConditionInput 
 
 function stdMatch(
   options: {
-    readonly maxTicks?: unknown;
+    readonly promptsPerPlayer?: unknown;
     readonly conditions?: readonly VictoryCondition[];
     readonly initialState?: WorldState;
   } = {},
@@ -43,15 +57,15 @@ function stdMatch(
     seed: 999,
     ruleset: STANDARD_RULESET,
     players: [P1, P2],
-    initialState: options.initialState ?? stdState(),
-    maxTicks: options.maxTicks,
+    initialState: options.initialState ?? slotless(),
+    promptsPerPlayer: options.promptsPerPlayer,
     extraConditions: options.conditions,
   });
 }
 
-// TEST condition: crowns P1 past tick 0 (mechanism test, not game logic).
+// TEST condition: crowns P1 past revision 0 (mechanism test, not game logic).
 const crownP1: VictoryCondition = (input) =>
-  input.state.tick > 0 ? { outcome: { kind: 'win', winner: P1 }, condition: 'test.crown' } : null;
+  input.revision > 0 ? { outcome: { kind: 'win', winner: P1 }, condition: 'test.crown' } : null;
 
 // TEST condition: always undecided.
 const neverFires: VictoryCondition = () => null;
@@ -67,41 +81,40 @@ const throwing: VictoryCondition = () => {
   throw new Error('condition boom');
 };
 
-describe('timeLimitCondition (unit)', () => {
-  it('stays undecided before the limit', () => {
-    expect(timeLimitCondition(5)(stdInput(tickState(4)))).toBeNull();
+describe('promptsExhaustedCondition (unit)', () => {
+  it('stays undecided while anyone holds prompts', () => {
+    expect(promptsExhaustedCondition()(stdInput(promptState(0, 5)))).toBeNull();
+    expect(promptsExhaustedCondition()(stdInput(promptState(3, 0)))).toBeNull();
   });
 
-  it('draws exactly at the limit', () => {
-    expect(timeLimitCondition(5)(stdInput(tickState(5)))).toEqual({
+  it('draws when every holder is dry', () => {
+    expect(promptsExhaustedCondition()(stdInput(promptState(0, 0)))).toEqual({
       outcome: { kind: 'draw' },
-      condition: 'time-limit',
+      condition: 'prompts-exhausted',
     });
   });
 
-  it('draws past the limit', () => {
-    expect(timeLimitCondition(5)(stdInput(tickState(9)))).toEqual({
+  it('draws on an absent slot (fail-closed dry)', () => {
+    const slotless = createWorldState({ players: [P1, P2] });
+    expect(promptsExhaustedCondition()(stdInput(slotless))).toEqual({
       outcome: { kind: 'draw' },
-      condition: 'time-limit',
+      condition: 'prompts-exhausted',
     });
   });
 });
 
 describe('matchConditions (unit)', () => {
-  it('registers nothing without maxTicks (untimed)', () => {
-    expect(matchConditions(undefined)).toEqual([]);
-  });
-
-  it('registers the time limit with maxTicks', () => {
-    const conditions = matchConditions(5);
+  it('registers prompt exhaustion unconditionally', () => {
+    const conditions = matchConditions();
     expect(conditions).toHaveLength(1);
     const first = conditions[0];
     if (first === undefined) {
       throw new Error('test setup: expected one condition');
     }
-    expect(first(stdInput(tickState(5)))).toEqual({
+    expect(first(stdInput(stdState()))).toBeNull();
+    expect(first(stdInput(promptState(0, 0)))).toEqual({
       outcome: { kind: 'draw' },
-      condition: 'time-limit',
+      condition: 'prompts-exhausted',
     });
   });
 });
@@ -111,15 +124,14 @@ describe('evaluateVictory (unit)', () => {
     const verdict = evaluateVictory([], stdInput());
     expect(verdict).toEqual({ status: 'ongoing' });
     expect(Object.isFrozen(verdict)).toBe(true);
-    expect(evaluateVictory([], stdInput(tickState(3), 7))).toBe(verdict);
+    expect(evaluateVictory([], stdInput(promptState(0, 0), 7))).toBe(verdict);
   });
 
-  it('skips nulls and takes the first decisive verdict with locators', () => {
-    expect(evaluateVictory([neverFires, crownP1, alwaysDraws], stdInput(tickState(3), 7))).toEqual({
+  it('skips nulls and takes the first decisive verdict with the revision locator', () => {
+    expect(evaluateVictory([neverFires, crownP1, alwaysDraws], stdInput(stdState(), 7))).toEqual({
       status: 'finished',
       outcome: { kind: 'win', winner: 'p1' },
       condition: 'test.crown',
-      tick: 3,
       revision: 7,
     });
   });
@@ -165,110 +177,96 @@ describe('decision validation (failure)', () => {
   );
 });
 
-describe('maxTicks validation (failure)', () => {
+describe('promptsPerPlayer validation (failure)', () => {
   it.each([[1.5], [-1], [4294967296], ['x'], [NaN], [0]] as Array<[unknown]>)(
-    'rejects maxTicks %j',
-    (maxTicks) => {
-      expect(() => stdMatch({ maxTicks })).toThrow(/invalid maxTicks/);
+    'rejects promptsPerPlayer %j',
+    (promptsPerPlayer) => {
+      expect(() => stdMatch({ promptsPerPlayer })).toThrow(/invalid promptsPerPlayer/);
     },
   );
 });
 
 describe('terminality (Match E2E)', () => {
-  it('never finishes untimed matches', () => {
+  function noop(match: Match, rid: string, player: PlayerId, session: SessionHandle): unknown {
+    return match.dispatch(
+      session,
+      raw({ requestId: rid, playerId: player, type: 'world.noop', payload: {} }),
+    );
+  }
+
+  it('stays ongoing while prompts remain', () => {
     const match = stdMatch();
     const session = match.join(P1);
     for (const id of ['r1', 'r2', 'r3']) {
-      match.dispatch(
-        session,
-        raw({ requestId: id, playerId: 'p1', type: 'match.advance', payload: {} }),
-      );
+      noop(match, id, P1, session);
     }
-    expect(match.getTick()).toBe(3);
+    expect(match.getSnapshot().prompts?.remaining).toEqual({ p1: 7, p2: 10 });
     expect(match.getVerdict()).toEqual({ status: 'ongoing' });
   });
 
-  it('finishes exactly at the limit with verdict + event', () => {
-    const match = stdMatch({ maxTicks: 2 });
-    const session = match.join(P1);
-    match.dispatch(
-      session,
-      raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} }),
-    );
+  it('finishes when the last prompt dies (draw + event)', () => {
+    const match = stdMatch({ promptsPerPlayer: 1 });
+    const s1 = match.join(P1);
+    const s2 = match.join(P2);
+    noop(match, 'r1', P1, s1);
     expect(match.getVerdict()).toEqual({ status: 'ongoing' });
-    match.dispatch(
-      session,
-      raw({ requestId: 'r2', playerId: 'p1', type: 'match.advance', payload: {} }),
-    );
+    noop(match, 'r2', P2, s2);
     expect(match.getVerdict()).toEqual({
       status: 'finished',
       outcome: { kind: 'draw' },
-      condition: 'time-limit',
-      tick: 2,
+      condition: 'prompts-exhausted',
       revision: 2,
     });
     const events = match.getEvents();
-    expect(events.map((e) => e.type)).toEqual([
-      'match.started',
-      'match.advanced',
-      'match.advanced',
-      'match.finished',
-    ]);
+    expect(events.map((e) => e.type)).toEqual(['match.started', 'match.finished']);
     const last = events[events.length - 1];
     if (last === undefined) {
       throw new Error('test setup: expected finished event');
     }
     expect(last).toEqual({
-      seq: 4,
-      tick: 2,
+      seq: 2,
       revision: 2,
       type: 'match.finished',
       priority: 'high',
-      payload: { outcome: { kind: 'draw' }, condition: 'time-limit' },
+      payload: { outcome: { kind: 'draw' }, condition: 'prompts-exhausted' },
     });
   });
 
   it('blocks dispatches after the finish (state untouched)', () => {
-    const match = stdMatch({ maxTicks: 1 });
-    const session = match.join(P1);
-    match.dispatch(
-      session,
-      raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} }),
-    );
+    const match = stdMatch({ promptsPerPlayer: 1 });
+    const s1 = match.join(P1);
+    const s2 = match.join(P2);
+    noop(match, 'r1', P1, s1);
+    noop(match, 'r2', P2, s2);
     expect(match.getVerdict().status).toBe('finished');
     const logLength = match.getLog().length;
     const timelineLength = match.getTimeline().length;
     const eventsLength = match.getEvents().length;
-    expect(
-      match.dispatch(
-        session,
-        raw({ requestId: 'r2', playerId: 'p1', type: 'match.advance', payload: {} }),
-      ),
-    ).toEqual({ status: 'error', code: 'MATCH_FINISHED' });
-    expect(match.getTick()).toBe(1);
-    expect(match.getRevision()).toBe(1);
+    expect(noop(match, 'r3', P1, s1)).toEqual({ status: 'error', code: 'MATCH_FINISHED' });
+    expect(match.getSnapshot().prompts?.remaining).toEqual({ p1: 0, p2: 0 });
+    expect(match.getRevision()).toBe(2);
     expect(match.getLog()).toHaveLength(logLength);
     expect(match.getTimeline()).toHaveLength(timelineLength);
     expect(match.getEvents()).toHaveLength(eventsLength);
   });
 
-  it('leaves rejected dispatches undecided', () => {
-    const match = stdMatch({ maxTicks: 1 });
+  it('leaves rejected dispatches undecided (rejected are free)', () => {
+    const match = stdMatch({ promptsPerPlayer: 1 });
     const session = match.join(P1);
     match.dispatch(
       session,
-      raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: { x: 1 } }),
+      raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: { x: 1 } }),
     );
+    expect(match.getSnapshot().prompts?.remaining).toEqual({ p1: 1, p2: 1 });
     expect(match.getVerdict()).toEqual({ status: 'ongoing' });
   });
 
   it('supports born-finished matches (imported states)', () => {
-    const match = stdMatch({ maxTicks: 50, initialState: tickState(100) });
+    const match = stdMatch({ initialState: promptState(0, 0) });
     expect(match.getVerdict()).toEqual({
       status: 'finished',
       outcome: { kind: 'draw' },
-      condition: 'time-limit',
-      tick: 100,
+      condition: 'prompts-exhausted',
       revision: 0,
     });
     const events = match.getEvents();
@@ -277,7 +275,7 @@ describe('terminality (Match E2E)', () => {
     expect(
       match.dispatch(
         session,
-        raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} }),
+        raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: {} }),
       ),
     ).toEqual({ status: 'error', code: 'MATCH_FINISHED' });
   });
@@ -285,15 +283,11 @@ describe('terminality (Match E2E)', () => {
   it('crowns TEST winners end-to-end (mechanism proof)', () => {
     const match = stdMatch({ conditions: [crownP1] });
     const session = match.join(P1);
-    match.dispatch(
-      session,
-      raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} }),
-    );
+    noop(match, 'r1', P1, session);
     expect(match.getVerdict()).toEqual({
       status: 'finished',
       outcome: { kind: 'win', winner: 'p1' },
       condition: 'test.crown',
-      tick: 1,
       revision: 1,
     });
     const events = match.getEvents();
@@ -307,18 +301,16 @@ describe('terminality (Match E2E)', () => {
     });
   });
 
-  it('ranks extras before built-ins on same-tick ties', () => {
-    const match = stdMatch({ maxTicks: 1, conditions: [crownP1] });
-    const session = match.join(P1);
-    match.dispatch(
-      session,
-      raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} }),
-    );
+  it('ranks extras before built-ins on exhaustion ties', () => {
+    const match = stdMatch({ promptsPerPlayer: 1, conditions: [crownP1] });
+    const s1 = match.join(P1);
+    const s2 = match.join(P2);
+    noop(match, 'r1', P1, s1);
+    noop(match, 'r2', P2, s2);
     expect(match.getVerdict()).toEqual({
       status: 'finished',
       outcome: { kind: 'win', winner: 'p1' },
       condition: 'test.crown',
-      tick: 1,
       revision: 1,
     });
   });
@@ -326,7 +318,7 @@ describe('terminality (Match E2E)', () => {
   it('keeps log/timeline coherent when a condition throws (fail-stop)', () => {
     // TEST condition: quiet at genesis, throws mid-match (fail-stop proof).
     const lateThrower: VictoryCondition = (input) => {
-      if (input.state.tick === 0) {
+      if (input.revision === 0) {
         return null;
       }
       throw new Error('condition boom');
@@ -336,23 +328,22 @@ describe('terminality (Match E2E)', () => {
     expect(() =>
       match.dispatch(
         session,
-        raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} }),
+        raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: {} }),
       ),
     ).toThrow(/invalid victory decision \(condition 0\): threw/);
     expect(match.getRevision()).toBe(1);
     expect(match.getTimeline()).toHaveLength(match.getLog().length);
-    expect(match.getEvents().map((e) => e.type)).toEqual(['match.started', 'match.advanced']);
+    expect(match.getEvents().map((e) => e.type)).toEqual(['match.started']);
   });
 });
 
 describe('verdict integrity', () => {
   it('freezes verdicts and recomputes finished ones per call', () => {
-    const match = stdMatch({ maxTicks: 1 });
-    const session = match.join(P1);
-    match.dispatch(
-      session,
-      raw({ requestId: 'r1', playerId: 'p1', type: 'match.advance', payload: {} }),
-    );
+    const match = stdMatch({ promptsPerPlayer: 1 });
+    const s1 = match.join(P1);
+    const s2 = match.join(P2);
+    match.dispatch(s1, raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: {} }));
+    match.dispatch(s2, raw({ requestId: 'r2', playerId: 'p2', type: 'world.noop', payload: {} }));
     const first = match.getVerdict();
     expect(() => {
       (first as { status: string }).status = 'x';

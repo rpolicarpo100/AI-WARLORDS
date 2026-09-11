@@ -550,7 +550,6 @@ describe('move E2E (real Match)', () => {
     expect(match.getEvents().map((e) => e.type)).toEqual(['match.started', 'unit.moved']);
     expect(match.getEvents()[1]).toEqual({
       seq: 2,
-      tick: 0,
       revision: 1,
       type: 'unit.moved',
       priority: 'low',
@@ -1138,7 +1137,6 @@ describe('attack E2E (real Match)', () => {
     expect(match.getEvents().map((e) => e.type)).toEqual(['match.started', 'unit.attacked']);
     expect(match.getEvents()[1]).toEqual({
       seq: 2,
-      tick: 0,
       revision: 1,
       type: 'unit.attacked',
       priority: 'normal',

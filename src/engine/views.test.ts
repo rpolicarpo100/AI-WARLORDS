@@ -39,7 +39,7 @@ function mixedMap(): MapData {
 function makeState(): WorldState {
   return createWorldState({
     players: [P1, P2],
-    tick: 4,
+    prompts: { schemaVersion: 1, remaining: { p1: 4, p2: 9 } },
     map: mixedMap(),
     explored: { schemaVersion: 1, viewers: { p1: [0, 4], p2: [8] } },
   });
@@ -74,7 +74,7 @@ describe('perceive (unit: membership + validation)', () => {
 describe('perceive (integration: knowledge assembly)', () => {
   it('assembles sight + memory + sparse terrain (golden)', () => {
     expect(perceive(makeState(), P1, { p1: [4, 8] })).toEqual({
-      tick: 4,
+      prompts: 4,
       players: [{ id: 'p1' }, { id: 'p2' }],
       viewer: 'p1',
       visibleCells: [4, 8],
@@ -130,11 +130,16 @@ describe('perceive (integration: knowledge assembly)', () => {
     expect(known.map?.explored).toEqual([]);
   });
 
-  it('mapless: roster + tick only, visibility ignored', () => {
-    const state = createWorldState({ players: [P1, P2], tick: 4 });
+  it('prompts are own-only (foe budget hidden)', () => {
+    expect(perceive(makeState(), P1, { p1: [4] }).prompts).toBe(4);
+    expect(perceive(makeState(), P2, { p2: [8] }).prompts).toBe(9);
+  });
+
+  it('mapless: roster + zero prompts (absent slot), visibility ignored', () => {
+    const state = createWorldState({ players: [P1, P2] });
     const known = perceive(state, P1, { p1: [0] });
     expect(known).toEqual({
-      tick: 4,
+      prompts: 0,
       players: [{ id: 'p1' }, { id: 'p2' }],
       viewer: 'p1',
       visibleCells: [],
@@ -262,8 +267,8 @@ describe('F-09 key tripwire (updated M015: perception keys)', () => {
       'exploredCells',
       'map',
       'players',
+      'prompts',
       'stockpile',
-      'tick',
       'units',
       'viewer',
       'visibleCells',
@@ -275,8 +280,8 @@ describe('F-09 key tripwire (updated M015: perception keys)', () => {
       'commanders',
       'exploredCells',
       'players',
+      'prompts',
       'stockpile',
-      'tick',
       'units',
       'viewer',
       'visibleCells',

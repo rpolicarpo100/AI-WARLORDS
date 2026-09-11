@@ -19,7 +19,6 @@ function raw(value: unknown): Untrusted<ClientRequest> {
 function rawState(patch: Record<string, unknown>): unknown {
   return {
     schemaVersion: 1,
-    tick: 0,
     players: [{ id: 'p1' }],
     ...patch,
   };
@@ -30,11 +29,15 @@ describe('isWorldState (unit: single-path schema guard)', () => {
     expect(
       isWorldState(
         rawState({
-          tick: 7,
           players: [{ id: 'p1' }, { id: 'p2' }],
+          prompts: { schemaVersion: 1, remaining: { p1: 10, p2: 0 } },
         }),
       ),
     ).toBe(true);
+  });
+
+  it('accepts absent prompts (Match seeds at construction)', () => {
+    expect(isWorldState(rawState({}))).toBe(true);
   });
 
   it('ignores the legacy secrets key (M015 migration leniency)', () => {
@@ -46,10 +49,9 @@ describe('isWorldState (unit: single-path schema guard)', () => {
     ['number', 42],
     ['string', 'x'],
     ['bad version', rawState({ schemaVersion: 2 })],
-    ['string tick', rawState({ tick: 'x' })],
-    ['float tick', rawState({ tick: 1.5 })],
-    ['negative tick', rawState({ tick: -1 })],
-    ['missing tick', rawState({ tick: undefined })],
+    ['non-object prompts', rawState({ prompts: 42 })],
+    ['bad prompts version', rawState({ prompts: { schemaVersion: 2, remaining: {} } })],
+    ['negative prompts', rawState({ prompts: { schemaVersion: 1, remaining: { p1: -1 } } })],
     ['non-array players', rawState({ players: 'x' })],
     ['empty players', rawState({ players: [] })],
     ['numeric player', rawState({ players: [42] })],
@@ -62,19 +64,19 @@ describe('isWorldState (unit: single-path schema guard)', () => {
 });
 
 describe('createWorldState (unit: validated constructor)', () => {
-  it('applies the default tick', () => {
+  it('builds the minimal world (no prompts slot until Match seeds)', () => {
     expect(createWorldState({ players: [P1] })).toEqual({
       schemaVersion: 1,
-      tick: 0,
       players: [{ id: 'p1' }],
     });
   });
 
-  it('echoes an explicit tick', () => {
-    expect(createWorldState({ players: [P1], tick: 9 })).toEqual({
+  it('echoes an explicit prompts slot', () => {
+    const prompts = { schemaVersion: 1 as const, remaining: { p1: 5 } };
+    expect(createWorldState({ players: [P1], prompts })).toEqual({
       schemaVersion: 1,
-      tick: 9,
       players: [{ id: 'p1' }],
+      prompts,
     });
   });
 
@@ -85,12 +87,17 @@ describe('createWorldState (unit: validated constructor)', () => {
     },
   );
 
-  it.each([[-1], [2.5]] as Array<[number]>)(
-    'throws for invalid tick %j (single guard path)',
-    (tick) => {
-      expect(() => createWorldState({ players: [P1], tick })).toThrow(/invalid initial world/);
-    },
-  );
+  it.each(
+    [
+      [{ schemaVersion: 2, remaining: {} }],
+      [{ schemaVersion: 1, remaining: { p1: -1 } }],
+      [42],
+    ] as Array<[unknown]>,
+  )('throws for invalid prompts %j (single guard path)', (prompts) => {
+    expect(() => createWorldState({ players: [P1], prompts: prompts as never })).toThrow(
+      /invalid initial world/,
+    );
+  });
 });
 
 describe('WorldState inside AuthorityKernel (integration)', () => {
@@ -104,7 +111,7 @@ describe('WorldState inside AuthorityKernel (integration)', () => {
     });
   }
 
-  it('plumbs through dispatch: noop applies, tick untouched (M004 advances no time)', () => {
+  it('plumbs through dispatch: noop applies, Match seeds no prompts (M004 owns no budget)', () => {
     const kernel = makeWorldKernel();
     const session = kernel.join(P1);
     const before = kernel.getSnapshot();
@@ -117,7 +124,7 @@ describe('WorldState inside AuthorityKernel (integration)', () => {
     ).toEqual({ status: 'applied', revision: 1, summary: 'world-noop' });
 
     expect(kernel.getSnapshot()).toBe(before);
-    expect(kernel.getSnapshot().tick).toBe(0);
+    expect(kernel.getSnapshot().prompts).toBeUndefined();
     expect(kernel.getLog()).toEqual([
       {
         revision: 1,
