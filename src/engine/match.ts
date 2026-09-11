@@ -12,6 +12,8 @@ import {
   type TransitionHandler,
   type Untrusted,
 } from './authority.js';
+import { assessPlayer, type PlayerAssessment, type StatsOf } from './assessment.js';
+import { commandersOf } from './commanders.js';
 import {
   matchFinishedEvent,
   matchProducers,
@@ -77,16 +79,21 @@ import {
   attackProducer,
   DEFAULT_UNITS_CONFIG,
   isUnitsConfig,
+  maxHpOf,
   MOVE_TRANSITION,
   moveParamsRule,
   moveProducer,
   TRAIN_TRANSITION,
   trainParamsRule,
   trainProducer,
+  unitDamageOf,
   warfareHandlers,
+  type UnitsConfig,
   type UnitTreasury,
 } from './warfare.js';
 import { seedPrompts, spendPrompt } from './prompts.js';
+import { stanceOf, type CommanderStance } from './stance.js';
+import { type UnitType } from './units.js';
 
 declare const matchBrand: unique symbol;
 declare const seedBrand: unique symbol;
@@ -166,6 +173,7 @@ export class Match {
   readonly ruleset: MatchRuleset;
   readonly players: readonly PlayerId[];
   private readonly kernel: AuthorityKernel<WorldState>;
+  private readonly unitsConfig: UnitsConfig;
   private readonly timeline: TimelineEntry[] = [];
   private readonly producers: ReadonlyMap<string, readonly EventProducer[]>;
   private readonly events: GameEvent[] = [];
@@ -239,6 +247,7 @@ export class Match {
     if (!isUnitsConfig(unitsConfig)) {
       throw new Error('Match: invalid units config.');
     }
+    this.unitsConfig = unitsConfig;
     const world = worldHandlers();
     const economy = economyHandlers(economyConfig, buildingsConfig);
     const city = cityHandlers(buildingsConfig);
@@ -483,6 +492,29 @@ export class Match {
 
   getStateHash(): string {
     return hashState(this.kernel.getSnapshot());
+  }
+
+  /**
+   * M038 — live strategic assessment of one holder (read-only query over
+   * the current snapshot; units stats come from this Match's validated
+   * unitsConfig). The `as UnitType` casts document the validated-state
+   * seam (M029 precedent): Match states always validate (M006), and the
+   * warfare lookups re-guard fail-loud.
+   */
+  assessmentOf(holder: string): PlayerAssessment {
+    const statsOf: StatsOf = (type: string) => ({
+      damage: unitDamageOf(this.unitsConfig, type as UnitType),
+      maxHp: maxHpOf(this.unitsConfig, type as UnitType),
+    });
+    return assessPlayer(this.kernel.getSnapshot(), holder, statsOf);
+  }
+
+  /** M038 — live per-commander stances of one holder, in roster order (read-only). */
+  stancesOf(holder: string): ReadonlyArray<CommanderStance> {
+    return commandersOf(this.kernel.getSnapshot().commanders, holder).map((record) => ({
+      id: record.id,
+      stance: stanceOf(record),
+    }));
   }
 
   getTimeline(): readonly TimelineEntry[] {

@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 37 (M001–M037)  |
-| `PLANNED`  | 128 (M038–M165) |
+| `VERIFIED` | 38 (M001–M038)  |
+| `PLANNED`  | 127 (M039–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -147,6 +147,10 @@ Checkpoints `VERIFIED`:
   DECISION votada: dominante-margem-15, pura L2,
   1.º consumer M035); 1397/1397 testes, 100.
   Registo em `docs/modules/M037.md`.
+- **M038 @ 2026-09-11** — Match Assessment Wiring
+  (1.º wiring votado: queries read-only; IA no
+  bundle); 1402/1402 testes, 100 global.
+  Registo em `docs/modules/M038.md`.
 
 ---
 
@@ -216,7 +220,8 @@ Checkpoints `VERIFIED`:
 | M035 | Strategic AI — Effective DNA | `VERIFIED` |
 | M036 | Strategic AI — Player Assessment | `VERIFIED` |
 | M037 | Strategic AI — Commander Stance | `VERIFIED` |
-| M038–M042 | Strategic AI                                                        | `PLANNED` |
+| M038 | Strategic AI — Match Wiring | `VERIFIED` |
+| M039–M042 | Strategic AI                                                        | `PLANNED` |
 | M043–M045 | Player → AI Command                                                 | `PLANNED` |
 | M046–M047 | AI Refutation + Override                                            | `PLANNED` |
 | M048      | Confidence Engine                                                   | `PLANNED` |

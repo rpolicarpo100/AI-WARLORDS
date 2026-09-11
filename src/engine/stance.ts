@@ -33,6 +33,12 @@ export function isStanceId(value: unknown): value is Stance {
   return typeof value === 'string' && STANCE_IDS.includes(value);
 }
 
+/** Per-commander stance reading (M038 Match wiring shape). */
+export interface CommanderStance {
+  readonly id: string;
+  readonly stance: Stance;
+}
+
 /** Posture of a commander (D-031, voted). Total: every record reads exactly one stance. */
 export function stanceOf(record: CommanderRecord): Stance {
   const effective: DnaTraits = effectiveDnaOf(record);

@@ -1063,3 +1063,31 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
 - DISADVANTAGES: set-4 fixo (molde vocab fixo);
   folha L2 sem importadores até M038+.
 - RISKS: baixo — pura+total; residual: tuning (#92).
+
+## D-032 — Match query wiring assessment+stance (M038 voto)
+
+- DECISION: match.ts (L4) ganha `unitsConfig`
+  field (privado, pós-validação) + 2 queries
+  READ-ONLY: assessmentOf(holder) (statsOf adapter
+  sobre unitsConfig; `as UnitType` seguro por
+  invariante estado-validado — precedente M029;
+  lookups re-guardam, fail-loud) + stancesOf
+  (commandersOf + stanceOf, ordem roster).
+  stance.ts ganha CommanderStance {id, stance}.
+  Zero estado/eventos/schema; selo sem pins
+  (sem ficheiro novo; edges downward).
+- MOTIVE: voto wiring 2026-09-11 + #5/#6 (AI
+  propõe via servidor; Match é o agregado) +
+  M006 (estados validados) + M029 (cast em seam
+  validado) + M036/M037 (substrato pronto).
+- ALTERNATIVES: producers por-dispatch (rejeitado:
+  ruído + semântica inventada); snapshot enrich
+  (rejeitado: churn F-09/schema); adapter c/
+  isUnitType branch (rejeitado: lado-unknown
+  imensurável via Match — cast documentado).
+- ADVANTAGES: 1.º wiring real; bundle embarca
+  IA pela 1.ª vez; queries puras delegadas.
+- DISADVANTAGES: match.ts +2 métodos; cast
+  (mitiga: invariante + re-guard).
+- RISKS: médio-baixo — read-only; residual:
+  superfície API (documentada).
