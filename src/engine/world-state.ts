@@ -1,4 +1,5 @@
 import { isPlayerId, type PlayerId, type TransitionHandler } from './authority.js';
+import { isExploredData, type ExploredData } from './explored.js';
 import { isMapData, type MapData } from './map.js';
 
 export const WORLD_SCHEMA_VERSION = 1;
@@ -26,6 +27,13 @@ export interface WorldState {
    * (`redactFor` builds explicitly) until fog/perception arrive (M013/M015).
    */
   readonly map?: MapData;
+  /**
+   * Per-viewer explored-cell memory (M014, optional compatible extension).
+   * Requires the map (coherence, one direction — explored⇒map); indices
+   * bounds-checked against it. Monotonic under post-invariants; consumed
+   * by views (M015).
+   */
+  readonly explored?: ExploredData;
 }
 
 export interface WorldStateInit {
@@ -33,6 +41,7 @@ export interface WorldStateInit {
   readonly secrets?: { readonly [playerId: string]: readonly string[] };
   readonly tick?: number;
   readonly map?: MapData;
+  readonly explored?: ExploredData;
 }
 
 /**
@@ -91,6 +100,20 @@ export function isWorldState(value: unknown): value is WorldState {
   if (map !== undefined && !isMapData(map)) {
     return false;
   }
+  const explored = fields['explored'];
+  if (explored !== undefined) {
+    if (map === undefined || !isExploredData(explored)) {
+      return false;
+    }
+    const limit = map.width * map.height;
+    for (const indices of Object.values(explored.viewers)) {
+      for (const index of indices) {
+        if (index >= limit) {
+          return false;
+        }
+      }
+    }
+  }
   return true;
 }
 
@@ -101,6 +124,7 @@ export function createWorldState(init: WorldStateInit): WorldState {
     players: init.players.map((id) => ({ id })),
     secrets: init.secrets ?? {},
     ...(init.map === undefined ? {} : { map: init.map }),
+    ...(init.explored === undefined ? {} : { explored: init.explored }),
   };
   if (!isWorldState(candidate)) {
     throw new Error('createWorldState: invalid initial world.');

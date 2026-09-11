@@ -80,3 +80,27 @@
 - DISADVANTAGES: sem elevation, montanha é muro (rever se elevation existir).
 - RISKS: baixo — sem consumidores ainda; M014/M015 validam o desenho.
 - IMPLEMENTATION: `fog.ts` L2 (M013). ESTADO: `ACCEPTED`.
+
+## D-007 — Explored em WorldState; monotónico; guard em leaf (M014 pré-análise)
+
+- DECISION: memória explored vive em `WorldState.explored?` (extensão
+  compatível D-004, sem bump); acumulador puro `markExplored`; invariante
+  `explored-monotonic` (viewers persistem, conjuntos só crescem);
+  guard `isExploredData` em leaf L0 (`explored.ts`) + operações em
+  `exploration.ts` L2; `explored` exige `map` (coerência 1 direcção).
+- MOTIVE: memória tem de persistir entre ticks ⇒ estado canónico.
+  Monotonicidade é o máximo enforceable agora (anti-forge de "add só o
+  genuíno" exige sources stateful — M021+; L-28). Viewers persistem mesmo
+  após eliminação futura (simplicidade; M023 pode revisitar com rationale).
+  Sem output `fog.ts`→leaf (aresta L2→L2 proibida): `VisibilitySets` é
+  gémeo estrutural, compatibilidade provada por teste de integração.
+  WorldState (L1) só importa L0 ⇒ guard OBRIGATORIAMENTE em leaf.
+- ALTERNATIVES: explored fora do estado (rejeitado: memória sem persistência
+  é contraditória); guard em `map.ts` (rejeitado: memória≠geografia);
+  viewers removíveis (rejeitado: complexidade sem dono).
+- ADVANTAGES: forma canónica (ordenado+único ⇒ hash-estável); regra O(1)
+  no caso comum (ref-equal); tri-state `explorationStatus` pronto p/ M015.
+- DISADVANTAGES: 2 ficheiros p/ 1 módulo (forçado pela lei de camadas M009).
+- RISKS: baixo — sem consumidores; M015 valida o desenho.
+- IMPLEMENTATION: `explored.ts` L0 + `exploration.ts` L2 (M014).
+- ESTADO: `ACCEPTED`.

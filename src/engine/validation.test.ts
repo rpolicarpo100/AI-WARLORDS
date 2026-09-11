@@ -138,10 +138,10 @@ function corruptCases(): Array<[string, RngHandler<WorldState>, RegExp, WorldSta
 }
 
 describe('validator composition (unit)', () => {
-  it('ships empty domain pre-rules with the shape gate + 4 post-invariants', () => {
+  it('ships empty domain pre-rules with the shape gate + 5 post-invariants', () => {
     const validator = createWorldValidator();
     expect(validator.pre).toEqual([]);
-    expect(validator.post).toHaveLength(4);
+    expect(validator.post).toHaveLength(5);
     expect(typeof validator.postShape).toBe('function');
   });
 });

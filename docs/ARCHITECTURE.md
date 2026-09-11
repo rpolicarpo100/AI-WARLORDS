@@ -11,7 +11,8 @@
 > Terrain: `EXISTS` (M011 — VERIFIED)
 > Resources: `EXISTS` (M012 — VERIFIED)
 > Fog of War: `EXISTS` (M013 — VERIFIED)
-> Domínio do jogo (economia, militar, AI): `NONE` (M014+; mapa+terreno+recursos+fog EXISTS)
+> Exploration memory: `EXISTS` (M014 — VERIFIED)
+> Domínio do jogo (economia, militar, AI): `NONE` (M015+; mapa+terreno+recursos+fog+explored EXISTS)
 > Arquitectura-alvo: `PLANNED` (transcrita do documento-mestre)
 > Data: 2026-09-11
 
@@ -70,22 +71,23 @@ geografia validada — loader estrito, fail-closed, sem leaks (M010);
 terreno jogável — valores configuráveis, fail-stop, balanceable (M011);
 recursos como geografia — coerência dupla, amounts uint32 (M012);
 nevoeiro computado — visibilidade determinística por viewer sobre hex (M013);
+memória explored — acumulação monótona por viewer, tri-state (M014);
 chain nunca substitui o engine (M101); dinheiro só após gate Fase 28.
 
 ## 3. Mapa de fases → camadas (PLANNED)
 
-| Fase(s) | Camada                      | Módulos                          |
-| ------- | --------------------------- | -------------------------------- |
-| 0       | Foundation                  | M001–M002 (VERIFIED)             |
-| 1       | Game Engine                 | M003–M009 (VERIFIED)             |
-| 2       | World                       | M010–M013 (VERIFIED) → M014–M015 |
-| 3–4     | Economy + Military          | M016–M026                        |
-| 5–8     | AI Foundation → Commands    | M027–M045                        |
-| 9–16    | Refutation → AI Arena       | M046–M068                        |
-| 17–20   | Multiplayer → Observability | M069–M093                        |
-| 21–22   | Economic sim → Free mode    | M094–M097                        |
-| 23–28   | Solana → Rewards            | M098–M124 (+gates)               |
-| 29–36   | Advanced                    | M125–M165                        |
+| Fase(s) | Camada                      | Módulos                     |
+| ------- | --------------------------- | --------------------------- |
+| 0       | Foundation                  | M001–M002 (VERIFIED)        |
+| 1       | Game Engine                 | M003–M009 (VERIFIED)        |
+| 2       | World                       | M010–M014 (VERIFIED) → M015 |
+| 3–4     | Economy + Military          | M016–M026                   |
+| 5–8     | AI Foundation → Commands    | M027–M045                   |
+| 9–16    | Refutation → AI Arena       | M046–M068                   |
+| 17–20   | Multiplayer → Observability | M069–M093                   |
+| 21–22   | Economic sim → Free mode    | M094–M097                   |
+| 23–28   | Solana → Rewards            | M098–M124 (+gates)          |
+| 29–36   | Advanced                    | M125–M165                   |
 
 ## 4. Decisões pendentes (`UNKNOWN` até ao módulo próprio)
 
@@ -111,12 +113,13 @@ chain nunca substitui o engine (M101); dinheiro só após gate Fase 28.
 - [x] Sistema de mapas (M010: hex+MapData+loader — VERIFIED)
 - [x] Semântica de terreno (M011: config+consultas — VERIFIED)
 - [x] Recursos-nós (M012: coerência+loader+consultas — VERIFIED)
+- [x] Memória explored (M014: leaf+mark+monotonic — VERIFIED)
 
-## 5. Repo layout (actual, M012)
+## 5. Repo layout (actual, M014)
 
 ```text
 ai-warlords/
-  package.json / package-lock.json  scripts + deps pinned (intocados M003–M013)
+  package.json / package-lock.json  scripts + deps pinned (intocados M003–M014)
   tsconfig.json / tsconfig.build.json
   vitest.config.ts / eslint.config.js / .prettierrc.json
   src/
@@ -136,19 +139,21 @@ ai-warlords/
       terrain.ts        semântica de terreno (VERIFIED, load-bearing)
       resources.ts      nós de recursos (VERIFIED, load-bearing)
       fog.ts            visibilidade pura (VERIFIED, load-bearing)
+      explored.ts       memória explored + guard (VERIFIED, load-bearing)
+      exploration.ts    acumulação + tri-state (VERIFIED, load-bearing)
       phase1-gate.test.ts  selo transversal M009 (14 testes, prova)
-      *.test.ts         558 testes colocados
+      *.test.ts         621 testes colocados
     *.test.ts           28 testes M002 (regressão)
   dist/              build (gitignored)
   docs/              audit, stack, riscos, status, tools, testes, decisões, processo
-  docs/modules/      registos por módulo (M002.md … M013.md)
+  docs/modules/      registos por módulo (M002.md … M014.md)
 ```
 
 AVISOS: `src/dev-server.ts` (M002) e `src/engine/harness.ts` (M003) são
 provas sem contrato. `WorldState.secrets` é placeholder de mecanismo M004
 (morre até M015). Streams RNG wired mas sem consumidor de domínio.
 Load-bearing: authority, world-state, views, match, rng, hash, validation,
-events, victory, map, terrain, resources, fog.
+events, victory, map, terrain, resources, fog, explored, exploration.
 
 ## 6. Registo de alterações
 
@@ -168,3 +173,4 @@ events, victory, map, terrain, resources, fog.
 | 2026-09-11 | M012      | Recursos EXISTS; nós+coerência; RISK reparado                  |
 | 2026-09-11 | FIX-AUDIT | Auditoria M001–M012: citações #mestre, pendentes #18/L-24/L-25 |
 | 2026-09-11 | M013      | Fog EXISTS; visibilidade pura; zero emendas prod               |
+| 2026-09-11 | M014      | Explored EXISTS; leaf+mark+monotonic; 621 testes engine        |

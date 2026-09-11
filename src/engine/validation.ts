@@ -21,6 +21,8 @@ import { isWorldState, type WorldState } from './world-state.js';
  * Schema-version preservation is subsumed by the shape gate while the
  * engine is single-version (no dead rule kept for decoration).
  * M010 adds map-preserved (fail-closed geography integrity, O(1)).
+ * M014 adds explored-monotonic (memory only accumulates; anti-forge
+ * stays a documented residual until stateful vision exists, L-28).
  */
 
 /** A single failed check: which rule + deterministic detail. */
@@ -111,8 +113,43 @@ function mapRule(before: WorldState, after: WorldState): Violation | null {
   };
 }
 
+/**
+ * M014 exploration memory: no handler may wipe, shrink, or drop a viewer —
+ * knowledge only accumulates. Before-undefined/after-defined passes (memory
+ * arriving with map context); the reference-fast path keeps handlers that
+ * merely spread state untouched.
+ */
+function exploredRule(before: WorldState, after: WorldState): Violation | null {
+  if (before.explored === after.explored) {
+    return null;
+  }
+  if (before.explored === undefined) {
+    return null;
+  }
+  const afterExplored = after.explored;
+  if (afterExplored === undefined) {
+    return { rule: 'explored-monotonic', detail: 'explored memory wiped' };
+  }
+  for (const [viewer, indices] of Object.entries(before.explored.viewers)) {
+    const grown = afterExplored.viewers[viewer];
+    if (grown === undefined || grown.length < indices.length) {
+      return { rule: 'explored-monotonic', detail: `viewer ${viewer} lost memory` };
+    }
+    for (const index of indices) {
+      if (!grown.includes(index)) {
+        return { rule: 'explored-monotonic', detail: `viewer ${viewer} lost cell ${index}` };
+      }
+    }
+  }
+  return null;
+}
+
 export function createWorldValidator(): WorldValidator {
-  return { pre: [], postShape: shapeRule, post: [rosterRule, tickRule, sizeRule, mapRule] };
+  return {
+    pre: [],
+    postShape: shapeRule,
+    post: [rosterRule, tickRule, sizeRule, mapRule, exploredRule],
+  };
 }
 
 /** Handler context extended with the dispatch's deterministic RNG stream. */
