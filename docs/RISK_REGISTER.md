@@ -101,3 +101,4 @@
 | 2026-09-11 | M034      | Harness live (drill 0 violations + suite transversal, zero prod); bloco M031–M034 CLOSED; composição→M035+ |
 | 2026-09-11 | M035      | Composer live (total+puro, 84-combo ∀-válido, zero wiring); consumers→M036+; bloco Strategic AI aberto |
 | 2026-09-11 | M036      | Assessment live (pura L2, médias exactas, zero pesos/wiring); consumers→M037+; bloco segue |
+| 2026-09-11 | M037      | Stance live (votada margem-15, 1.º consumer M035, zero wiring); consumers→M038+; bloco segue |

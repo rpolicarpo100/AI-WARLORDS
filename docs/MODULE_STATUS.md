@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 36 (M001–M036)  |
-| `PLANNED`  | 129 (M037–M165) |
+| `VERIFIED` | 37 (M001–M037)  |
+| `PLANNED`  | 128 (M038–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -143,6 +143,10 @@ Checkpoints `VERIFIED`:
   tijolo STRATEGIC ENGINE votado: pura L2, médias
   exactas, zero wiring); 1386/1386 testes, 100.
   Registo em `docs/modules/M036.md`.
+- **M037 @ 2026-09-11** — Commander Stance (1.ª
+  DECISION votada: dominante-margem-15, pura L2,
+  1.º consumer M035); 1397/1397 testes, 100.
+  Registo em `docs/modules/M037.md`.
 
 ---
 
@@ -211,7 +215,8 @@ Checkpoints `VERIFIED`:
 | M034 | Personalidade — Testing | `VERIFIED` |
 | M035 | Strategic AI — Effective DNA | `VERIFIED` |
 | M036 | Strategic AI — Player Assessment | `VERIFIED` |
-| M037–M042 | Strategic AI                                                        | `PLANNED` |
+| M037 | Strategic AI — Commander Stance | `VERIFIED` |
+| M038–M042 | Strategic AI                                                        | `PLANNED` |
 | M043–M045 | Player → AI Command                                                 | `PLANNED` |
 | M046–M047 | AI Refutation + Override                                            | `PLANNED` |
 | M048      | Confidence Engine                                                   | `PLANNED` |

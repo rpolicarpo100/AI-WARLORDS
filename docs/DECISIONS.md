@@ -1036,3 +1036,30 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
 - DISADVANTAGES: AverageDna duplica shape
   (molde mirrors); statsOf closure por chamada.
 - RISKS: baixo — pura; residual: tuning (#92).
+
+## D-031 — Commander stance L2 (M037 votos stance+margem)
+
+- DECISION: `src/engine/stance.ts` NOVO (L2 —
+  commanders/dna L0 + effective-dna L1, downward):
+  STANCE_IDS (fixo-5: aggressive/defensive/
+  expansionist/diplomatic/balanced) + isStanceId +
+  STANCE_MARGIN = 15 (VOTADO) + stanceOf(record):
+  effective via effectiveDnaOf (1.º CONSUMER M035);
+  dominante entre aggression/defense/expansion/
+  diplomacy vence se max−2.º ≥ 15, senão balanced
+  (empates → balanced determinístico). Pura, total.
+  Zero wiring (consumers M038+).
+- MOTIVE: 2 votos 2026-09-11 (stance; convenção
+  margem-15) + #7 (AI=DECISIONS) + M035 (substrato),
+  phase1-gate (downward).
+- ALTERNATIVES: thresholds por traço (rejeitado:
+  mais constantes); input DnaTraits (rejeitado:
+  não consome M035); blends multi-stance
+  (rejeitado: 1 label, FUTURO); wiring já
+  (rejeitado: sem consumer).
+- ADVANTAGES: 1.ª DECISION sobre o substrato;
+  1 constante inventada (margem votada); empates
+  determinísticos por construção.
+- DISADVANTAGES: set-4 fixo (molde vocab fixo);
+  folha L2 sem importadores até M038+.
+- RISKS: baixo — pura+total; residual: tuning (#92).
