@@ -622,3 +622,32 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
 - IMPLEMENTATION: `commanders.ts` + `world-state.ts` +
   `views.ts` + `commanders.test.ts` + tripwire (M027).
 - ESTADO: `ACCEPTED`.
+
+## D-021 — Percepção INFERRED: terrain-memory em PerceivedMap (M028 pré-análise)
+
+- DECISION: `PerceivedMap.inferred {index→terrain}` (explored E
+  não-visível → terreno lembrado; memória==actual — terreno
+  imutável, grep-prova zero writes; OOB skip-soft D-006;
+  disjunto de visible por construção). Só `views.ts` (fence
+  M015: sem ficheiro novo; census intacto); builders herdam;
+  L-29 CLOSED. Golden + 3 testes novos; map-keys resource ×2.
+- MOTIVE: M015 (INFERRED/UNKNOWN→M028; L-29→M028) + D-008
+  (posição-sem-terreno até inferência) + #10 (KNOWN≠REAL) +
+  D-006 (contexto soft) + M014 (memória de índices).
+- ALTERNATIVES: mudar `explored` p/ mapa (rejeitado: shape é
+  M014); chave top-level (rejeitado: churn F-09 + mapless —
+  scoped-in-map auto-ausente); intel inimiga em M028
+  (rejeitado: "M028+" é intervalo, inferência é a atribuição
+  explícita; regras de visão sem âncora); memória de amounts
+  (rejeitado: mutáveis, staleness sem âncora); memória de
+  spawns (rejeitado: D-008 sem modelo); guard PerceivedState
+  (rejeitado: M015 wire M069).
+- ADVANTAGES: commanders planeiam sobre terreno lembrado;
+  zero churn estado/transições (vista derivada); UNKNOWN
+  provável (ausente em todo o lado).
+- DISADVANTAGES: página/sim ignoram a chave até consumidores
+  (aditivo inofensivo).
+- RISKS: baixo — dados derivados, edges soft; residual: nenhum
+  novo (D-006 preservado).
+- IMPLEMENTATION: `views.ts` + `views.test.ts` + `resources.test.ts` (M028).
+- ESTADO: `ACCEPTED`.

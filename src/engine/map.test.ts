@@ -688,9 +688,10 @@ describe('view map-filtering (security)', () => {
     if (map === undefined) {
       throw new Error('test setup: expected perceived map');
     }
-    expect(Object.keys(map).sort()).toEqual(['explored', 'height', 'visible', 'width']);
+    expect(Object.keys(map).sort()).toEqual(['explored', 'height', 'inferred', 'visible', 'width']);
     expect(map.visible).toEqual({ 0: cell0.terrain });
     expect(map.explored).toEqual([]);
+    expect(map.inferred).toEqual({});
   });
 
   it('CLIENT view carries the same filtered map', () => {
@@ -699,7 +700,8 @@ describe('view map-filtering (security)', () => {
     if (map === undefined) {
       throw new Error('test setup: expected perceived map');
     }
-    expect(Object.keys(map).sort()).toEqual(['explored', 'height', 'visible', 'width']);
+    expect(Object.keys(map).sort()).toEqual(['explored', 'height', 'inferred', 'visible', 'width']);
     expect(map.visible).toEqual(toAiPerception(state, P1, { p1: [0] }).known.map?.visible);
+    expect(map.inferred).toEqual({});
   });
 });

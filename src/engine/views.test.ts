@@ -84,7 +84,13 @@ describe('perceive (integration: knowledge assembly)', () => {
       city: { level: 1, queue: [] },
       units: [],
       commanders: [],
-      map: { width: 3, height: 3, visible: { 4: 'forest', 8: 'mountain' }, explored: [0] },
+      map: {
+        width: 3,
+        height: 3,
+        visible: { 4: 'forest', 8: 'mountain' },
+        explored: [0],
+        inferred: { 0: 'field' },
+      },
     });
   });
 
@@ -141,7 +147,47 @@ describe('perceive (integration: knowledge assembly)', () => {
     });
     expect('map' in known).toBe(false);
   });
+});
 
+describe('inference (M028: remembered terrain)', () => {
+  it('infers terrain for explored-not-visible cells, disjoint from visible', () => {
+    const state = createWorldState({
+      players: [P1, P2],
+      map: mixedMap(),
+      explored: { schemaVersion: 1, viewers: { p1: [0, 1, 2] } },
+    });
+    const known = perceive(state, P1, { p1: [1] });
+    expect(known.map?.visible).toEqual({ 1: 'field' });
+    expect(known.map?.explored).toEqual([0, 2]);
+    expect(known.map?.inferred).toEqual({ 0: 'field', 2: 'field' });
+  });
+
+  it('skips OOB memory soft in inference (no crash, no leak)', () => {
+    const base = createWorldState({ players: [P1, P2], map: mixedMap() });
+    // OOB memory is unlawful (isWorldState bounds-checks vs the map);
+    // perceive stays soft on it (D-006 context level).
+    const stale = {
+      ...base,
+      explored: { schemaVersion: 1, viewers: { p1: [0, 99] } },
+    } as never;
+    const known = perceive(stale, P1, {});
+    expect(known.map?.explored).toEqual([0, 99]);
+    expect(known.map?.inferred).toEqual({ 0: 'field' });
+  });
+
+  it('unknown stays absent (never seen ⇒ zero signal)', () => {
+    const known = perceive(makeState(), P1, { p1: [4] });
+    const map = known.map;
+    if (map === undefined) {
+      throw new Error('TEST BUG: mapless');
+    }
+    expect(map.visible).not.toHaveProperty('8');
+    expect(map.explored).not.toContain(8);
+    expect(map.inferred).not.toHaveProperty('8');
+  });
+});
+
+describe('perceive (integration: fog-feed compatibility)', () => {
   it('feeds computeVisibility output (no-L2-edge compatibility proof)', () => {
     const seen = computeVisibility(mixedMap(), [{ viewer: P1, col: 1, row: 1, range: 0 }]);
     const known = perceive(makeState(), P1, seen);

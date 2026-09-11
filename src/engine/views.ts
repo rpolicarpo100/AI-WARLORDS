@@ -23,11 +23,18 @@ export interface PerceivedMap {
   readonly height: number;
   /**
    * Visible cell index → terrain (sparse; explored-only cells expose
-   * position, never terrain — M014 stores indices alone, L-29).
+   * position in `explored` + remembered terrain in `inferred` —
+   * M028 closes L-29).
    */
   readonly visible: { readonly [index: number]: TerrainId };
   /** Explored-but-not-visible indices (canonical; unexplored = absent). */
   readonly explored: readonly number[];
+  /**
+   * Remembered terrain for explored-but-not-visible cells (M028
+   * inference; terrain is immutable so memory == current; OOB memory
+   * skipped soft — D-006). Disjoint from visible by construction.
+   */
+  readonly inferred: { readonly [index: number]: TerrainId };
 }
 
 export interface PerceivedState {
@@ -128,6 +135,7 @@ export function perceive(
   // caller's objects through aliasing (copies below, never live refs).
   const visible: Record<number, TerrainId> = {};
   const explored: number[] = [];
+  const inferred: Record<number, TerrainId> = {};
   if (map !== undefined) {
     let position = 0;
     for (const cell of map.cells) {
@@ -139,6 +147,10 @@ export function perceive(
     for (const index of memory) {
       if (!visibleSet.has(index)) {
         explored.push(index);
+        const cell = map.cells[index];
+        if (cell !== undefined) {
+          inferred[index] = cell.terrain;
+        }
       }
     }
   }
@@ -155,7 +167,7 @@ export function perceive(
     commanders: commandersOf(state.commanders, viewer),
     ...(map === undefined
       ? {}
-      : { map: { width: map.width, height: map.height, visible, explored } }),
+      : { map: { width: map.width, height: map.height, visible, explored, inferred } }),
   };
   return freezeState(perceived);
 }

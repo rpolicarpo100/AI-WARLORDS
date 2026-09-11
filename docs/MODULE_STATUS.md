@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 27 (M001–M027)  |
-| `PLANNED`  | 138 (M028–M165) |
+| `VERIFIED` | 28 (M001–M028)  |
+| `PLANNED`  | 137 (M029–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -102,6 +102,10 @@ Checkpoints `VERIFIED`:
   own-only); 1166/1166 testes, 100×4, sem comportamento.
   Fase 5 aberta (AI Foundation).
   Registo em `docs/modules/M027.md`.
+- **M028 @ 2026-09-11** — percepção INFERRED (terrain-memory
+  p/ explored sem visão; OOB soft; UNKNOWN provável);
+  1169/1169 testes, 100×4, L-29 CLOSED.
+  Registo em `docs/modules/M028.md`.
 
 ---
 
@@ -161,7 +165,8 @@ Checkpoints `VERIFIED`:
 | Módulo(s) | Âmbito                                                              | Estado    |
 | --------- | ------------------------------------------------------------------- | --------- |
 | M027 | AI Foundation — Commander Core | `VERIFIED` |
-| M028–M030 | AI Foundation (Perception, State, Discovery Engine) | `PLANNED` |
+| M028 | AI Foundation — Perception | `VERIFIED` |
+| M029–M030 | AI Foundation (State, Discovery Engine) | `PLANNED` |
 | M031–M034 | Personalidade (DNA, Personalities, Doctrines, Testing)              | `PLANNED` |
 | M035–M042 | Strategic AI                                                        | `PLANNED` |
 | M043–M045 | Player → AI Command                                                 | `PLANNED` |
