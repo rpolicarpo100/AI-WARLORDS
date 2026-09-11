@@ -92,6 +92,7 @@ import {
   type UnitTreasury,
 } from './warfare.js';
 import { seedPrompts, spendPrompt } from './prompts.js';
+import { postureOf, type ArmyPosture } from './posture.js';
 import { stanceOf, type CommanderStance } from './stance.js';
 import { type UnitType } from './units.js';
 
@@ -515,6 +516,11 @@ export class Match {
       id: record.id,
       stance: stanceOf(record),
     }));
+  }
+
+  /** M039 — live army posture of one holder (read-only aggregation over stancesOf). */
+  postureOf(holder: string): ArmyPosture {
+    return postureOf(commandersOf(this.kernel.getSnapshot().commanders, holder));
   }
 
   getTimeline(): readonly TimelineEntry[] {

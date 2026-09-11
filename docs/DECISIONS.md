@@ -1091,3 +1091,28 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
   (mitiga: invariante + re-guard).
 - RISKS: médio-baixo — read-only; residual:
   superfície API (documentada).
+
+## D-033 — Army posture L3 + query (M039 voto posture)
+
+- DECISION: `src/engine/posture.ts` NOVO (L3 —
+  agrega stance L2; L2↛L2 proíbe L2): postureOf
+  (records): ArmyPosture {distribution, majority}:
+  contagens por stanceOf; maioria = argmax c/
+  desempate ordem STANCE_IDS (votado no âmbito);
+  exército vazio → zeros + balanced (paralelo
+  stanceOf-bare). Cast `as Stance` documentado
+  (IDS autoritativo fixo-5). Match ganha
+  postureOf(holder) (query read-only, molde M038).
+- MOTIVE: voto posture 2026-09-11 (desempate
+  votado no texto) + #7 + M037 + gate
+  (strictly-downward dita L3) + M038 (molde query).
+- ALTERNATIVES: L2 c/ mirror Stance (rejeitado:
+  drift perverso); maioria undefined-vazio
+  (rejeitado: balanced honesto, paralelo bare);
+  lib sem query (rejeitado: órfã — M038 dita uso
+  imediato); pesos por rank (rejeitado: FUTURO).
+- ADVANTAGES: 1.º consumer M037; zero constantes;
+  determinístico total.
+- DISADVANTAGES: 1.º L3 não-events; cast (mitiga:
+  IDS votado).
+- RISKS: baixo — pura+query read-only.

@@ -445,6 +445,7 @@ describe('determinism hygiene (static security review)', () => {
       'map.ts',
       'match.ts',
       'personalities.ts',
+      'posture.ts',
       'prompts.ts',
       'resources.ts',
       'rng.ts',
@@ -538,6 +539,7 @@ describe('architecture boundary (static review)', () => {
     views: 2,
     warfare: 2,
     events: 3,
+    posture: 3,
     match: 4,
   };
 

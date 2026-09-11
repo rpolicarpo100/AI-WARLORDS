@@ -166,6 +166,33 @@ describe('stancesOf (live query)', () => {
   });
 });
 
+describe('postureOf (live query, M039)', () => {
+  it('reads the army posture live: tie by order, then commission flips the majority', () => {
+    const match = campaign(drillUnits());
+    expect(match.postureOf('p1')).toEqual({
+      distribution: { aggressive: 0, defensive: 1, expansionist: 0, diplomatic: 0, balanced: 1 },
+      majority: 'defensive',
+    });
+    expect(match.postureOf('p2')).toEqual({
+      distribution: { aggressive: 0, defensive: 0, expansionist: 0, diplomatic: 0, balanced: 0 },
+      majority: 'balanced',
+    });
+    expect(order(match, 'r1', P1, COMMISSION_TRANSITION, {})).toMatchObject({ status: 'applied' });
+    expect(match.postureOf('p1')).toEqual({
+      distribution: { aggressive: 0, defensive: 1, expansionist: 0, diplomatic: 0, balanced: 2 },
+      majority: 'balanced',
+    });
+  });
+
+  it('returns a fresh copy (mutating it never touches the Match)', () => {
+    const match = campaign(drillUnits());
+    const first = match.postureOf('p1');
+    expect(match.postureOf('p1')).not.toBe(first);
+    (first.distribution as unknown as Record<string, number>).defensive = 0;
+    expect(match.postureOf('p1').distribution.defensive).toBe(1);
+  });
+});
+
 describe('query purity', () => {
   it('queries return fresh copies (mutating results never touches the Match)', () => {
     const match = campaign(drillUnits());
