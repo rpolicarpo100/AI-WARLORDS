@@ -1,6 +1,6 @@
-# AI WARLORDS — MODULE STATUS (M010)
+# AI WARLORDS — MODULE STATUS (M011)
 
-> Data: 2026-09-11 · Actualizado por: M010 (Map System)
+> Data: 2026-09-11 · Actualizado por: M011 (Terrain)
 > Estados oficiais: `PLANNED · IN_ANALYSIS · IN_DEVELOPMENT · IMPLEMENTED · TESTING · FAILED · BLOCKED · VERIFIED · DEPRECATED`
 
 ---
@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 10 (M001–M010)  |
-| `PLANNED`  | 155 (M011–M165) |
+| `VERIFIED` | 11 (M001–M011)  |
+| `PLANNED`  | 154 (M012–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -41,6 +41,9 @@ Checkpoints `VERIFIED`:
 - **M010 @ 2026-09-11** — sistema de mapas (hex + `MapData` + loader Tiled +
   `map-preserved`); 459/459 testes, 100×4, v1 compatível.
   Registo em `docs/modules/M010.md`.
+- **M011 @ 2026-09-11** — terreno (config 9/9 + default + consultas);
+  486/486 testes, 100×4, zero emendas de produção.
+  Registo em `docs/modules/M011.md`.
 
 ---
 
@@ -68,7 +71,7 @@ Checkpoints `VERIFIED`:
 | Módulo | Nome              | Estado     |
 | ------ | ----------------- | ---------- |
 | M010   | Map System        | `VERIFIED` |
-| M011   | Terrain           | `PLANNED`  |
+| M011   | Terrain           | `VERIFIED` |
 | M012   | Resources         | `PLANNED`  |
 | M013   | Fog of War        | `PLANNED`  |
 | M014   | Exploration       | `PLANNED`  |
@@ -152,10 +155,10 @@ Checkpoints `VERIFIED`:
 ## Ordem recomendada (estrita, sem saltos)
 
 ```text
-M001 → M002 → … → M009 → M010 (VERIFIED) → M011 → … → M165
+M001 → M002 → … → M010 → M011 (VERIFIED) → M012 → … → M165
 ```
 
-Próximo permitido: **M011 — Terrain**, apenas após autorização
+Próximo permitido: **M012 — Resources**, apenas após autorização
 explícita. Saltos, paralelização ou batch = violação do §35 (recusar).
 
 ---
