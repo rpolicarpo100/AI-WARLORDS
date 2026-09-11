@@ -59,6 +59,8 @@
   #herald { position:absolute; left:10px; bottom:8px; max-width:60%; background:rgba(10,12,16,.82);
     border:1px solid var(--gold-dim); border-radius:8px; padding:4px 12px; font:italic 13px Georgia,serif;
     color:var(--gold); pointer-events:none; }
+  #mini { position:absolute; top:8px; right:8px; border:2px solid var(--gold-dim); border-radius:6px;
+    background:#0a0c10; cursor:crosshair; z-index:5; }
   #cmdBanner { position:absolute; top:8px; left:50%; transform:translateX(-50%); background:rgba(40,20,10,.88);
     border:2px solid var(--gold); border-radius:8px; padding:4px 14px; font:bold 13px Georgia,serif;
     color:#ffe9a8; pointer-events:none; white-space:nowrap; z-index:5; }
@@ -124,6 +126,7 @@
   <select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option>
     <option value="2">2×</option><option value="4">4×</option></select>
     <button class="tbtn" id="tCmd" title="take command with the local engine">⚔ Command</button>
+  <button class="tbtn" id="tRain" title="rain on/off">🌧</button>
   <button class="tbtn" id="tMute" title="sound on/off">🔊</button>
   <div class="progress" id="prog"><div class="fill" id="fill"></div></div>
   <span id="nowplay"></span>
@@ -131,6 +134,7 @@
 <div class="arena" id="arena">
   <div id="cmdBanner" hidden></div>
   <canvas id="iso"></canvas>
+  <canvas id="mini" width="148" height="112" title="minimap — click to select"></canvas>
   <div id="floatlayer"></div>
   <div id="herald">📯 Herald: the chronicle plays itself, sire.</div>
   <div id="herald">📯 Herald: the chronicle plays itself, sire.</div>
@@ -8578,6 +8582,52 @@
       for (let q = 0; q < 4; q++) { ctx.beginPath(); ctx.arc(x + (rnd() - 0.5) * s * 1.1, y + (rnd() - 0.5) * s * 0.5, s * 0.028, 0, 7); ctx.fill(); }
     }
   }
+  function terrainDetail(cell, x, y, gy, s, terr, t) {
+    const dr = mulberry((cell.col * 131 + cell.row * 197 + 7) * 2654435761);
+    if (terr === 'mountain') {
+      for (let q = 0; q < 2; q++) {
+        const gx = x + (dr() - 0.5) * s, gyy = y - s * 0.1 - dr() * s * 0.25;
+        const tw = 0.5 + 0.5 * Math.sin(t * 3 + q * 2.4 + cell.col);
+        ctx.fillStyle = `rgba(255,255,255,${(tw * 0.8).toFixed(2)})`;
+        ctx.fillRect(gx, gyy, Math.max(1.5, s * 0.035), Math.max(1.5, s * 0.035));
+      }
+      ctx.strokeStyle = 'rgba(40,44,52,0.5)'; ctx.lineWidth = Math.max(1, s * 0.02);
+      ctx.beginPath(); ctx.moveTo(x - s * 0.3, gy - s * 0.1);
+      ctx.lineTo(x - s * 0.12, gy - s * 0.22); ctx.lineTo(x - s * 0.2, gy - s * 0.3); ctx.stroke();
+    } else if (terr === 'river' || terr === 'bridge') {
+      const shx = x + Math.sin(t * 0.9 + cell.col * 1.3 + cell.row) * s * 0.45;
+      ctx.fillStyle = 'rgba(200,235,255,0.28)';
+      ctx.beginPath(); ctx.ellipse(shx, y - s * 0.05, s * 0.22, s * 0.06, -0.3, 0, 7); ctx.fill();
+      const tw = 0.5 + 0.5 * Math.sin(t * 4 + cell.row * 2 + cell.col);
+      if (tw > 0.86) {
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+        ctx.fillRect(x + (dr() - 0.5) * s * 0.7, y + (dr() - 0.5) * s * 0.3, 2.5, 2.5);
+      }
+    } else if ((terr === 'field' || terr === 'village') && dr() > 0.45) {
+      const bx = x + (dr() - 0.5) * s, by = gy - s * 0.15 - dr() * s * 0.15;
+      const fx = bx + Math.sin(t * 1.4 + cell.col * 3) * s * 0.12;
+      const fy = by + Math.cos(t * 1.9 + cell.row * 2) * s * 0.06 - s * 0.03;
+      const flap = Math.abs(Math.sin(t * 14 + cell.col)) * s * 0.035 + 1;
+      ctx.fillStyle = dr() > 0.5 ? '#e8e8f2' : '#e8a8c8';
+      ctx.beginPath(); ctx.ellipse(fx - flap, fy, flap, s * 0.025, -0.4, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(fx + flap, fy, flap, s * 0.025, 0.4, 0, 7); ctx.fill();
+      ctx.fillStyle = '#33333a'; ctx.fillRect(fx - 1, fy - s * 0.02, 2, s * 0.045);
+    } else if (terr === 'forest') {
+      for (let q = 0; q < 2; q++) {
+        const mx = x + (dr() - 0.5) * s * 1.1 + Math.sin(t * 0.7 + q * 3 + cell.col) * s * 0.08;
+        const my = gy - s * 0.2 - dr() * s * 0.3 + Math.cos(t * 0.9 + q * 2 + cell.row) * s * 0.05;
+        const glow = 0.3 + 0.3 * Math.sin(t * 2 + q * 2 + cell.row);
+        ctx.fillStyle = `rgba(255,255,180,${glow.toFixed(2)})`;
+        ctx.beginPath(); ctx.arc(mx, my, s * 0.025, 0, 7); ctx.fill();
+      }
+    } else if (terr === 'road') {
+      ctx.strokeStyle = 'rgba(120,100,70,0.4)'; ctx.lineWidth = Math.max(1, s * 0.015);
+      for (let q = 0; q < 3; q++) {
+        const px = x + (dr() - 0.5) * s, py = y + (dr() - 0.5) * s * 0.4;
+        ctx.beginPath(); ctx.moveTo(px - s * 0.03, py); ctx.lineTo(px + s * 0.03, py); ctx.stroke();
+      }
+    }
+  }
   function scaffold(x, gy, s, w, h) {
     ctx.save(); ctx.globalAlpha = 0.92;
     ctx.strokeStyle = '#7a5c3a'; ctx.lineWidth = Math.max(2, s * 0.04);
@@ -8807,9 +8857,12 @@
   }
   // ── Transport state ──
   let pos = 0, playing = true, speed = 1, fog = true, sel = 18, hov = -1;
+  let raining = false;
+  const drops = [];
   let firedRev = 0, shake = 0, last = performance.now();
   const facing = {};
   const WORK = {};
+  const DUSTT = {};
   let LASTGATHER = null; // unitId -> 1 | -1 (illustrative facing from last march)
   const HERALDS = {
     'economy.gather': 'Thy workers toil, sire — the stores grow heavy.',
@@ -8840,6 +8893,7 @@
   // ── Projection: pointy-top odd-q hexes, y-squashed for the isometric feel ──
   const view = { s: 40, ox: 0, oy: 0 };
   const canvas = $('iso'), ctx = canvas.getContext('2d');
+  const mini = $('mini'), mctx = mini.getContext('2d');
   function center(c, r) { return [view.ox + view.s * SQ3 * (c + 0.5 * (r & 1)), view.oy + view.s * 1.5 * r * SQUASH]; }
   function hexPath(x, y, s) {
     ctx.beginPath();
@@ -9110,6 +9164,7 @@
     const gy = y + s * 0.28;
     const cells = kf(r).map.cells;
     groundNoise(x, y, s, rnd, terr);
+    terrainDetail(cell, x, y, gy, s, terr, t);
     if (terr === 'river' || terr === 'bridge') {
       ctx.strokeStyle = 'rgba(180,220,240,0.5)'; ctx.lineWidth = Math.max(1, s * 0.025);
       for (let q = 0; q < 2; q++) {
@@ -9120,6 +9175,39 @@
       const waterSet = new Set();
       for (const c of cells) if (c.terrain === 'river' || c.terrain === 'bridge') waterSet.add(idx(c.col, c.row));
       foamEdges(cell, x, y, s, waterSet);
+      const bankDirs = (cell.row & 1) === 0
+        ? [[1, 0, 0], [-1, 0, 180], [0, -1, -60], [-1, -1, -120], [0, 1, 60], [-1, 1, 120]]
+        : [[1, 0, 0], [-1, 0, 180], [1, -1, -60], [0, -1, -120], [1, 1, 60], [0, 1, -120]];
+      for (const [dc, drw, deg] of bankDirs) {
+        const nc = cell.col + dc, nr = cell.row + drw;
+        if (nc >= 0 && nc < W && nr >= 0 && nr < H && waterSet.has(idx(nc, nr))) continue;
+        const a = deg * Math.PI / 180;
+        const rx = x + Math.cos(a) * s * 0.62, ry = y + Math.sin(a) * s * 0.62 * SQUASH;
+        const sway = Math.sin(t * 2.2 + cell.col + deg) * s * 0.03;
+        ctx.strokeStyle = '#3f7038'; ctx.lineWidth = Math.max(1.5, s * 0.025);
+        for (let rq = 0; rq < 3; rq++) {
+          const ox = (rq - 1) * s * 0.07;
+          ctx.beginPath(); ctx.moveTo(rx + ox, ry);
+          ctx.quadraticCurveTo(rx + ox + sway, ry - s * 0.12, rx + ox + sway * 1.6, ry - s * 0.2); ctx.stroke();
+          ctx.fillStyle = '#6b4a2a';
+          ctx.beginPath(); ctx.arc(rx + ox + sway * 1.6, ry - s * 0.2, s * 0.022, 0, 7); ctx.fill();
+        }
+        break;
+      }
+      if (terr === 'river') {
+        const fc = (t * 0.22 + hash2(cell.col * 3 + 1, cell.row * 7 + 2)) % 1;
+        if (fc < 0.16) {
+          const fp = fc / 0.16, fx2 = x + (fp - 0.5) * s * 0.6, fy2 = y - Math.sin(fp * Math.PI) * s * 0.3;
+          ctx.fillStyle = '#bcd2e8';
+          ctx.beginPath(); ctx.ellipse(fx2, fy2, s * 0.06, s * 0.028, -0.5 + fp, 0, 7); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(fx2 - s * 0.06, fy2);
+          ctx.lineTo(fx2 - s * 0.1, fy2 - s * 0.035); ctx.lineTo(fx2 - s * 0.1, fy2 + s * 0.035);
+          ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = `rgba(220,240,255,${(0.6 * (1 - fp)).toFixed(2)})`;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.ellipse(x, y + s * 0.05, s * (0.1 + fp * 0.3), s * (0.05 + fp * 0.12), 0, 0, 7); ctx.stroke();
+        }
+      }
       if (terr === 'bridge') {
         ctx.fillStyle = '#7a5c3a';
         ctx.save(); ctx.translate(x, y); ctx.rotate(-0.12);
@@ -9205,6 +9293,14 @@
         blit('well', x + s * 0.05, gy + s * 0.12, s * 0.4, false);
         blit('fence', x - s * 0.55, gy, s * 0.35, false);
         blit('church', x + s * 0.02, gy - s * 0.12, s * 0.55, false);
+        for (let sq = 0; sq < 3; sq++) {
+          const sph = (t * 0.22 + sq / 3 + cell.col * 0.1) % 1;
+          ctx.fillStyle = `rgba(200,200,210,${((1 - sph) * 0.32).toFixed(2)})`;
+          ctx.beginPath();
+          ctx.arc(x - s * 0.3 + Math.sin(sph * 5 + cell.col) * s * 0.06 + sph * s * 0.14,
+            gy - s * 0.72 - sph * s * 0.5, s * (0.05 + sph * 0.09), 0, 7);
+          ctx.fill();
+        }
       }
     } else if (terr === 'resource' && cell.resource) {
       const rt = cell.resource.type;
@@ -9323,6 +9419,7 @@
         const [ox, oy] = FORM[q % FORM.length];
         soldier(x + ox * s, y + oy * s * 0.6, s, u.owner, u.type, q * 1.7 + tr.col, t + tr.row, isMoving, mdir, isWork, carry && q === 0 ? carry : null);
       }      if (isWork && Math.random() < 0.12) burst(x + (Math.random() - 0.5) * s, y - s * 0.5, 2, ['#ffe9a8', '#ffffff'], s * 0.5, 0.5, s * 1.2, 2, false);
+      if (isMoving && (DUSTT[u.id] || 0) < t) { DUSTT[u.id] = t + 0.14; burst(x, y + s * 0.32, 2, ['rgba(170,150,110,0.55)'], s * 0.35, 0.6, -s * 0.2, s * 0.07, false); }
       // HP bar + nameplate
       const fracHp = clamp(u.hp / (maxHpById[u.id] || u.hp), 0, 1);
       const bw = s * 0.95, bx = x - bw / 2, by = y - s * 0.78;
@@ -9417,6 +9514,28 @@
     }
     drawClouds(t, cw, ch);
     drawBirds(t, cw);
+    if (raining) {
+      while (drops.length < 130) drops.push({ x: Math.random() * cw, y: Math.random() * ch, v: 500 + Math.random() * 300 });
+      ctx.strokeStyle = 'rgba(150,190,230,0.35)'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (const d of drops) {
+        d.y += d.v * dt / 1000; d.x -= d.v * 0.12 * dt / 1000;
+        if (d.y > ch) { d.y = -10; d.x = Math.random() * (cw + 40); }
+        ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - 3, d.y + 12);
+      }
+      ctx.stroke();
+      for (let q = 0; q < 14; q++) {
+        const ph = (t * 1.5 + hash2(q, q)) % 1;
+        ctx.globalAlpha = (1 - ph) * 0.5; ctx.strokeStyle = '#aad2f5';
+        ctx.beginPath();
+        ctx.ellipse(hash2(q, 7) * cw, hash2(3, q) * ch, 3 + ph * 9, (3 + ph * 9) * 0.4, 0, 0, 7);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = 'rgba(20,40,70,0.10)'; ctx.fillRect(0, 0, cw, ch);
+    }
+
+    drawMini(r, vis);
     drawClouds(t, cw, ch);
     ctx.restore();
     // HUD (tweened piles)
@@ -9634,6 +9753,46 @@
     if (!muted) sfx('click');
   });
   for (const id of ['tPlay', 'tStart', 'tBack', 'tFwd']) $(id).addEventListener('click', () => sfx('click'));
+  $('tRain').addEventListener('click', () => {
+    raining = !raining;
+    $('tRain').style.borderColor = raining ? '#7fb2e5' : '';
+    if (raining) burst(600, 100, 12, ['#7fb2e5', '#bcd2e8'], 60, 0.8, 300, 3, false);
+    sfx('click');
+  });
+  function drawMini(r, vis) {
+    const mw = mini.width / W, mh = mini.height / H;
+    const known = new Set(S.exploredBySnap[r] || []);
+    const TCOL = { field: '#5d8a41', forest: '#2f5c2a', mountain: '#6f7a68', river: '#2e6f9e',
+      bridge: '#2e6f9e', road: '#a88954', city: '#e8c15a', village: '#6da054', resource: '#b89a4a' };
+    for (const c of kf(r).map.cells) {
+      const i = idx(c.col, c.row);
+      mctx.fillStyle = !fog || vis.has(i) ? (TCOL[c.terrain] || '#555') : known.has(i) ? '#2a2d36' : '#101218';
+      mctx.fillRect(c.col * mw, c.row * mh, mw - 0.5, mh - 0.5);
+    }
+    for (const u of (kf(r).units ? kf(r).units.units : [])) {
+      const i = idx(u.col, u.row);
+      if (fog && !vis.has(i)) continue;
+      mctx.fillStyle = u.owner === 'p1' ? '#6fa8ff' : '#ff8a7a';
+      mctx.beginPath();
+      mctx.arc(u.col * mw + mw / 2, u.row * mh + mh / 2, Math.max(2, mw * 0.22), 0, 7);
+      mctx.fill();
+      if (CMD && u.id === selUnit) {
+        mctx.strokeStyle = '#ffffff'; mctx.lineWidth = 1.5;
+        mctx.beginPath();
+        mctx.arc(u.col * mw + mw / 2, u.row * mh + mh / 2, Math.max(3.5, mw * 0.32), 0, 7);
+        mctx.stroke();
+      }
+    }
+    mctx.strokeStyle = '#e8c15a'; mctx.lineWidth = 1.5;
+    mctx.strokeRect((sel % W) * mw + 1, Math.floor(sel / W) * mh + 1, mw - 2, mh - 2);
+  }
+  mini.addEventListener('click', (ev) => {
+    const rect = mini.getBoundingClientRect();
+    const cc = clamp(Math.floor((ev.clientX - rect.left) / rect.width * W), 0, W - 1);
+    const rr = clamp(Math.floor((ev.clientY - rect.top) / rect.height * H), 0, H - 1);
+    sel = idx(cc, rr);
+    renderPanels();
+  });
   $('tCmd').addEventListener('click', () => {
     if (!engineOK()) { toast('Engine bundle missing — run: npm run engine', true); return; }
     if (CMD) exitCommand(); else enterCommand();

@@ -144,6 +144,13 @@ for (const id of ['cmdGather', 'cmdHouse', 'cmdTower', 'cmdStorage', 'cmdAdvance
   fire(id, 'click');
 fire('tMute', 'click');
 fire('tMute', 'click');
+fire('tRain', 'click');
+for (let i = 0; i < 10; i++) {
+  nowMs += 100;
+  rafCb(nowMs);
+}
+fire('tRain', 'click');
+fire('mini', 'click', { clientX: 100, clientY: 50 });
 fire('prog', 'click', { clientX: 600 });
 fire('iso', 'click', { clientX: 600, clientY: 350 });
 fire('iso', 'mousemove', { clientX: 100, clientY: 100 });
