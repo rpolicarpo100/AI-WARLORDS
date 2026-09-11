@@ -69,6 +69,9 @@
     color:#ffe9a8; pointer-events:none; white-space:nowrap; z-index:5; }
   #cmdbar { position:absolute; right:10px; bottom:8px; display:flex; gap:6px; z-index:5; }
   #cmdbar[hidden] { display:none; }
+  #cmdAttack.armed { border-color:#ff5a4e; color:#ffb4b4; }
+  .order.local { border-color:var(--gold); }
+  .order.local .n { background:var(--gold); color:#141414; }
   #toast { position:absolute; right:10px; bottom:52px; max-width:46%; background:rgba(10,12,16,.9);
     border:2px solid var(--gold-dim); border-radius:8px; padding:6px 12px; font:bold 13px system-ui,sans-serif;
     pointer-events:none; z-index:5; }
@@ -142,6 +145,7 @@
   <div id="herald">📯 Herald: the chronicle plays itself, sire.</div>
   <div id="cmdbar" hidden>
     <button class="tbtn" id="cmdGather" title="gather at the selected unit">⛏ Gather</button>
+    <button class="tbtn" id="cmdAttack" title="arm attack targeting, then click an adjacent enemy">⚔ Attack</button>
     <button class="tbtn" id="cmdHouse" title="build a house">🏠 House</button>
     <button class="tbtn" id="cmdTower" title="build a tower">🗼 Tower</button>
     <button class="tbtn" id="cmdStorage" title="build storage">📦 Storage</button>
@@ -8798,6 +8802,7 @@
   }
   // ── Take Command mode (local engine fork — demo; the real game is server-run) ──
   let CMD = null, BACKUP = null, selUnit = null;
+  let attackArmed = false;
   function engineOK() { return typeof AIWLEngine !== 'undefined' && AIWLEngine && !!AIWLEngine.Match; }
   function EE() { return (typeof AIWLEngine !== 'undefined' && AIWLEngine && AIWLEngine.neighborsOf) ? AIWLEngine : null; }
   function cloneSnap(o) { return typeof structuredClone !== 'undefined' ? structuredClone(o) : JSON.parse(JSON.stringify(o)); }
@@ -8845,6 +8850,9 @@
     CMD = null; BACKUP = null; selUnit = null;
     pos = Math.min(pos, N - 1); firedRev = rev();
     buildOrders(); buildStops(); renderPanels();
+    attackArmed = false;
+    $('cmdAttack').classList.remove('armed');
+    canvas.style.cursor = 'default';
     $('cmdBanner').hidden = true; $('cmdbar').hidden = true;
     $('tCmd').textContent = '⚔ Command';
   }
@@ -8861,7 +8869,7 @@
     if (out.status === 'applied') {
       const snap = CMD.match.getSnapshot();
       S.snapshots.push(snap);
-      S.outcomes.push({ status: out.status, revision: out.revision, summary: `⚔ ${out.summary || type}` });
+      S.outcomes.push({ status: out.status, revision: out.revision, summary: `⚔ ${out.summary || type}`, local: true });
       const seen = E.computeVisibility(snap.map, (snap.units.units || []).filter((u) => u.owner === 'p1')
         .map((u) => ({ viewer: 'p1', col: u.col, row: u.row, range: 2 })));
       CMD.memory = E.markExplored(CMD.memory, seen);
@@ -8882,6 +8890,7 @@
       sfx('click');
     }
     renderPanels();
+    return out.status;
   }
   // ── Transport state ──
   let pos = 0, playing = true, speed = 1, fog = true, sel = 18, hov = -1;
@@ -9775,7 +9784,7 @@
     ordersEl.innerHTML = '';
     S.outcomes.forEach((o, k) => {
       const b = document.createElement('button');
-      b.className = 'order'; b.dataset.k = String(k + 1);
+      b.className = 'order' + (o.local ? ' local' : ''); b.dataset.k = String(k + 1);
       b.innerHTML = `<span class="n">${k + 1}</span><span>${esc(o.summary || o.reason || o.status)} <span class="cost">· ${o.status}</span></span>`;
       b.addEventListener('click', () => {
         pos = Math.min(k + 1, N - 1); firedRev = rev();
@@ -9805,7 +9814,9 @@
       if (unitsHere.length > 0) {
         const clicked = unitsHere[0];
         const me = selUnit ? ((st.units && st.units.units) || []).find((x) => x.id === selUnit) : null;
-        if (me && clicked.owner !== me.owner && clicked.hp > 0 && me.hp > 0) cmdDispatch(me.owner, 'unit.attack', { id: selUnit, target: clicked.id });
+        if (me && clicked.owner !== me.owner && clicked.hp > 0 && me.hp > 0) {
+          if (cmdDispatch(me.owner, 'unit.attack', { id: selUnit, target: clicked.id }) === 'applied') disarmAttack(true);
+        }
         else { selUnit = clicked.id; toast(`${selUnit} selected — tile: march · enemy: attack`, false); }
       }
       else if (selUnit) {
@@ -9827,6 +9838,8 @@
     moveTooltip(ev);
   });
   canvas.addEventListener('mouseleave', () => { hov = -1; $('tooltip').hidden = true; });
+  canvas.addEventListener('contextmenu', (ev) => { if (ev && ev.preventDefault) ev.preventDefault(); disarmAttack(); });
+  window.addEventListener('keydown', (e) => { if (e && e.key === 'Escape') disarmAttack(); });
   $('tPlay').addEventListener('click', () => {
     if (!playing && pos >= N - 1) { pos = 0; firedRev = 0; }
     playing = !playing;
@@ -10019,6 +10032,23 @@
     const u = cmdSelUnit();
     if (!u) { toast('Select a unit first, sire', true); return; }
     cmdDispatch(u.owner, 'economy.gather', { col: u.col, row: u.row });
+  });
+  function disarmAttack(silent) {
+    if (!attackArmed) return;
+    attackArmed = false;
+    $('cmdAttack').classList.remove('armed');
+    canvas.style.cursor = 'default';
+    if (!silent) toast('Attack stood down.', false);
+  }
+  $('cmdAttack').addEventListener('click', () => {
+    if (!CMD) return;
+    const u = cmdSelUnit();
+    if (!u) { toast('Select a unit first, sire', true); return; }
+    if (attackArmed) { disarmAttack(); return; }
+    attackArmed = true;
+    $('cmdAttack').classList.add('armed');
+    canvas.style.cursor = 'crosshair';
+    toast(`⚔ ${u.id} ready — click an adjacent enemy (button / right-click / ESC to stand down)`, false);
   });
   for (const [bid, btype] of [['cmdHouse', 'house'], ['cmdTower', 'tower'], ['cmdStorage', 'storage']])
     $(bid).addEventListener('click', () => cmdDispatch(cmdSide(), 'city.build', { type: btype }));

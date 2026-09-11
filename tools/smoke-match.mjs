@@ -188,7 +188,7 @@ fire('vFull', 'click');
 fire('vFog', 'click');
 fire('vHeat', 'click');
 fire('tCmd', 'click');
-for (const id of ['cmdGather', 'cmdHouse', 'cmdTower', 'cmdStorage', 'cmdAdvance', 'cmdUpgrade'])
+for (const id of ['cmdGather', 'cmdAttack', 'cmdHouse', 'cmdTower', 'cmdStorage', 'cmdAdvance', 'cmdUpgrade'])
   fire(id, 'click');
 fire('tMute', 'click');
 fire('tMute', 'click');
@@ -215,5 +215,74 @@ if (process.env.ATTACK_TEST) {
     throw new Error('attack feedback missing: ' + JSON.stringify(heraldSeen.slice(-4)));
   if (!saw('u2 struck u4 for 3! DOWN!')) throw new Error('killing-blow feedback missing');
   console.log('attack feedback OK (clash + twang + horn + DOWN heralded)');
+  // FASE B E2E: real Command fork at rev 5 (u4 is DOWN from rev 6 by the
+  // attack injection), real selection, armed attack via
+  // the Attack button, real unit.attack dispatch, real transition feedback,
+  // local-order highlight. Pair + damage derived from SCENARIO (no hardcode).
+  {
+    const E = globalThis.AIWLEngine;
+    if (byId['cmdbar'].hidden === false) fire('tCmd', 'click'); // release controls-phase fork (restores 16 snapshots)
+    if (byId['cmdbar'].hidden !== true) throw new Error('FASEB E2E: release failed');
+    const st15 = SCENARIO.snapshots[5];
+    const us = (st15.units && st15.units.units) || [];
+    let atk = null, foe = null;
+    for (const a of us) {
+      if (a.owner !== 'p1' || a.hp <= 0) continue;
+      const nbs = new Set(E.neighborsOf(st15.map, a.col, a.row).map((c) => c.col + ',' + c.row));
+      const f = us.find((b) => b.owner !== a.owner && b.hp > 0 && nbs.has(b.col + ',' + b.row));
+      if (f) { atk = a; foe = f; break; }
+    }
+    if (!atk) throw new Error('FASEB E2E: no adjacent p1/enemy pair at rev 5');
+    const expDmg = ((SCENARIO.configs.unitsScenario || {})[atk.type] || {}).damage;
+    if (!(expDmg > 0)) throw new Error('FASEB E2E: attacker damage unknown');
+    if (foe.hp <= expDmg * 2) throw new Error('FASEB E2E: target too frail for 2 hits');
+    // Mirror of layout()/center() projection for the 1200x700 stub canvas.
+    // Constants (sqrt3, squash, margins) match the page; drift fails loudly.
+    const cells0 = SCENARIO.snapshots[0].map.cells;
+    const W = Math.max(...cells0.map((c) => c.col)) + 1;
+    const H = Math.max(...cells0.map((c) => c.row)) + 1;
+    const SQ3 = Math.sqrt(3), SQUASH = 0.56, cw = 1200, ch = 700;
+    const s = Math.min(cw / (SQ3 * (W - 0.5) + 1.9), ch / (1.5 * (H - 1) * SQUASH + 4.9));
+    const ox = cw / 2 - (s * SQ3 * (W - 0.5)) / 2;
+    const oy = ch / 2 - (s * (-3.4 + 1.5 * (H - 1) * SQUASH + 1.5)) / 2;
+    const px = (c, r) => [ox + s * SQ3 * (c + 0.5 * (r & 1)), oy + s * 1.5 * r * SQUASH];
+    const pump = (n) => { for (let i = 0; i < n; i++) { nowMs += 100; rafCb(nowMs); } };
+    const orderBtns = () => created.filter((e) => e.dataset.k && e.__listeners.click);
+    const seekers = orderBtns().filter((e) => e.dataset.k === '5');
+    for (const fn of seekers[seekers.length - 1].__listeners.click) fn(); // seek rev 15
+    fire('tCmd', 'click');
+    if (byId['cmdbar'].hidden !== false) throw new Error('FASEB E2E: command mode did not engage');
+    const toastEl = byId['toast'];
+    const [ax, ay] = px(atk.col, atk.row);
+    fire('iso', 'click', { clientX: ax, clientY: ay });
+    if (!toastEl.textContent.includes(atk.id) || !/selected/.test(toastEl.textContent))
+      throw new Error('FASEB E2E: attacker not selected: ' + toastEl.textContent);
+    fire('cmdAttack', 'click');
+    if (!/ready \u2014 click an adjacent enemy/.test(toastEl.textContent))
+      throw new Error('FASEB E2E: arming toast missing: ' + toastEl.textContent);
+    if (byId['iso'].style.cursor !== 'crosshair') throw new Error('FASEB E2E: cursor not crosshair when armed');
+    const [ex, ey] = px(foe.col, foe.row);
+    let hn = heraldSeen.length;
+    fire('iso', 'click', { clientX: ex, clientY: ey });
+    if (!toastEl.textContent.startsWith('✓'))
+      throw new Error('FASEB E2E: attack not applied: ' + toastEl.textContent);
+    pump(60);
+    const struck1 = heraldSeen.slice(hn).find((t) => t.includes('struck') && t.includes(atk.id));
+    if (!struck1 || !struck1.includes(atk.id) || !struck1.includes(foe.id) || !struck1.includes(`for ${expDmg}`))
+      throw new Error('FASEB E2E: struck feedback wrong: ' + JSON.stringify(heraldSeen.slice(hn)));
+    if (byId['iso'].style.cursor !== 'default') throw new Error('FASEB E2E: still armed after applied attack');
+    const obs = orderBtns();
+    const last = obs[obs.length - 1];
+    if (!String(last.className).includes('local')) throw new Error('FASEB E2E: local order not highlighted');
+    if (String(obs[0].className).includes('local')) throw new Error('FASEB E2E: chronicle order wrongly marked local');
+    hn = heraldSeen.length; // unarmed click-attack (pre-existing path, first coverage)
+    fire('iso', 'click', { clientX: ex, clientY: ey });
+    pump(60);
+    if (!heraldSeen.slice(hn).some((t) => t.includes('struck') && t.includes(atk.id)))
+      throw new Error('FASEB E2E: unarmed click-attack produced no struck feedback');
+    fire('tCmd', 'click');
+    if (byId['cmdbar'].hidden !== true) throw new Error('FASEB E2E: final release failed');
+    console.log(`FASEB E2E OK (${atk.id} x ${foe.id}, dmg ${expDmg}, armed + unarmed + local orders)`);
+  }
 }
 console.log('HARNESS PASS');
