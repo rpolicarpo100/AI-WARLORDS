@@ -1,6 +1,6 @@
-# AI WARLORDS — MODULE STATUS (M011)
+# AI WARLORDS — MODULE STATUS (M012)
 
-> Data: 2026-09-11 · Actualizado por: M011 (Terrain)
+> Data: 2026-09-11 · Actualizado por: M012 (Resources)
 > Estados oficiais: `PLANNED · IN_ANALYSIS · IN_DEVELOPMENT · IMPLEMENTED · TESTING · FAILED · BLOCKED · VERIFIED · DEPRECATED`
 
 ---
@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 11 (M001–M011)  |
-| `PLANNED`  | 154 (M012–M165) |
+| `VERIFIED` | 12 (M001–M012)  |
+| `PLANNED`  | 153 (M013–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -38,12 +38,15 @@ Checkpoints `VERIFIED`:
 - **M009 @ 2026-09-11** — suite transversal do motor (gémeos + selo + scans +
   escala); 327/327 testes, 100×4, zero código de produção.
   Registo em `docs/modules/M009.md`. **Fase 1 completa.**
-- **M010 @ 2026-09-11** — sistema de mapas (hex + `MapData` + loader Tiled +
+- **M010 @ 2026-09-10** — sistema de mapas (hex + `MapData` + loader Tiled +
   `map-preserved`); 459/459 testes, 100×4, v1 compatível.
   Registo em `docs/modules/M010.md`.
 - **M011 @ 2026-09-11** — terreno (config 9/9 + default + consultas);
   486/486 testes, 100×4, zero emendas de produção.
   Registo em `docs/modules/M011.md`.
+- **M012 @ 2026-09-11** — recursos (nós + coerência + loader + consultas);
+  525/525 testes, 100×4, RISK reparado.
+  Registo em `docs/modules/M012.md`.
 
 ---
 
@@ -72,7 +75,7 @@ Checkpoints `VERIFIED`:
 | ------ | ----------------- | ---------- |
 | M010   | Map System        | `VERIFIED` |
 | M011   | Terrain           | `VERIFIED` |
-| M012   | Resources         | `PLANNED`  |
+| M012   | Resources         | `VERIFIED` |
 | M013   | Fog of War        | `PLANNED`  |
 | M014   | Exploration       | `PLANNED`  |
 | M015   | Perception System | `PLANNED`  |
@@ -126,6 +129,14 @@ Checkpoints `VERIFIED`:
 
 ## Fases 21–28 — Economy sim, Free mode, Solana, Compliance, Seasons
 
+| Módulo(s) | Âmbito            | Estado    |
+| --------- | ----------------- | --------- |
+| M094      | Economy Simulator | `PLANNED` |
+| M095–M097 | Free Mode         | `PLANNED` |
+| M096–M097 | Free Mode         | `PLANNED` |
+
+Note: M095 intentionally folded above (duplicate row guard — see M003 record).
+
 | Módulo(s) | Âmbito             | Estado                                                      |
 | --------- | ------------------ | ----------------------------------------------------------- |
 | M094      | Economy Simulator  | `PLANNED`                                                   |
@@ -155,10 +166,10 @@ Checkpoints `VERIFIED`:
 ## Ordem recomendada (estrita, sem saltos)
 
 ```text
-M001 → M002 → … → M010 → M011 (VERIFIED) → M012 → … → M165
+M001 → M002 → … → M011 → M012 (VERIFIED) → M013 → … → M165
 ```
 
-Próximo permitido: **M012 — Resources**, apenas após autorização
+Próximo permitido: **M013 — Fog of War**, apenas após autorização
 explícita. Saltos, paralelização ou batch = violação do §35 (recusar).
 
 ---

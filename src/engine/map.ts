@@ -57,6 +57,25 @@ export function isTerrainId(value: unknown): value is TerrainId {
   return typeof value === 'string' && TERRAIN_IDS.includes(value);
 }
 
+/**
+ * Closed resource vocabulary (M012): master-doc #14 caps at 4 (Food, Wood,
+ * Stone, Gold). Colocated with the loader (leaf constraint) — queries live
+ * in resources.ts.
+ */
+export const RESOURCE_TYPES: readonly string[] = Object.freeze(['food', 'wood', 'stone', 'gold']);
+
+export type ResourceType = 'food' | 'wood' | 'stone' | 'gold';
+
+export function isResourceType(value: unknown): value is ResourceType {
+  return typeof value === 'string' && RESOURCE_TYPES.includes(value);
+}
+
+/** Node detail: type + amount (uint32; 0 = depleted, valid at runtime). */
+export interface ResourceDetail {
+  readonly type: ResourceType;
+  readonly amount: number;
+}
+
 export interface AxialCoord {
   readonly q: number;
   readonly r: number;
@@ -107,6 +126,8 @@ export interface MapCell {
   readonly col: number;
   readonly row: number;
   readonly terrain: TerrainId;
+  /** Present ⟺ terrain is 'resource' (M012 coherence, both directions). */
+  readonly resource?: ResourceDetail;
 }
 
 export interface SpawnPoint {
@@ -166,6 +187,17 @@ export function isMapData(value: unknown): value is MapData {
       return false;
     }
     if (!isTerrainId(cell['terrain'])) {
+      return false;
+    }
+    const detail = cell['resource'] as Record<string, unknown> | undefined;
+    if (cell['terrain'] === 'resource') {
+      if (typeof detail !== 'object' || detail === null || Array.isArray(detail)) {
+        return false;
+      }
+      if (!isResourceType(detail['type']) || !isIndex(detail['amount'])) {
+        return false;
+      }
+    } else if (detail !== undefined) {
       return false;
     }
   }
@@ -441,11 +473,31 @@ export function loadMapData(doc: unknown, id: unknown): MapData {
     if (local === -1) {
       throw new Error(`loadMapData: terrain cell ${index} is empty (terrain must be dense).`);
     }
-    const terrainProp = propsByLocal.get(local)?.get('terrain');
+    const tileProps = propsByLocal.get(local);
+    const terrainProp = tileProps?.get('terrain');
     if (!isTerrainId(terrainProp)) {
       throw new Error(`loadMapData: tile ${local} lacks a valid "terrain" property.`);
     }
-    cells.push({ col: index % width, row: Math.floor(index / width), terrain: terrainProp });
+    const typeProp = tileProps?.get('resourceType');
+    const amountProp = tileProps?.get('resourceAmount');
+    let resource: ResourceDetail | undefined;
+    if (terrainProp === 'resource') {
+      if (!isResourceType(typeProp)) {
+        throw new Error(`loadMapData: tile ${local} lacks a valid "resourceType" property.`);
+      }
+      if (!isIndex(amountProp)) {
+        throw new Error(`loadMapData: tile ${local} lacks a valid "resourceAmount" property.`);
+      }
+      resource = { type: typeProp, amount: amountProp };
+    } else if (typeProp !== undefined || amountProp !== undefined) {
+      throw new Error(`loadMapData: tile ${local} has resource props on "${terrainProp}" terrain.`);
+    }
+    cells.push({
+      col: index % width,
+      row: Math.floor(index / width),
+      terrain: terrainProp,
+      ...(resource === undefined ? {} : { resource }),
+    });
   });
 
   const spawns: SpawnPoint[] = [];
