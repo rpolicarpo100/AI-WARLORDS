@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 28 (M001–M028)  |
-| `PLANNED`  | 137 (M029–M165) |
+| `VERIFIED` | 29 (M001–M029)  |
+| `PLANNED`  | 136 (M030–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -106,6 +106,11 @@ Checkpoints `VERIFIED`:
   p/ explored sem visão; OOB soft; UNKNOWN provável);
   1169/1169 testes, 100×4, L-29 CLOSED.
   Registo em `docs/modules/M028.md`.
+- **M029 @ 2026-09-11** — lifecycle Commander (commission
+  + activate/deactivate + eventos + wiring Match; `active`
+  marcador, roster N, owner-only); 1264/1264 testes, 100
+  global, 3 votos de âmbito.
+  Registo em `docs/modules/M029.md`.
 
 ---
 
@@ -166,7 +171,8 @@ Checkpoints `VERIFIED`:
 | --------- | ------------------------------------------------------------------- | --------- |
 | M027 | AI Foundation — Commander Core | `VERIFIED` |
 | M028 | AI Foundation — Perception | `VERIFIED` |
-| M029–M030 | AI Foundation (State, Discovery Engine) | `PLANNED` |
+| M029 | AI Foundation — Commander State | `VERIFIED` |
+| M030 | AI Foundation — Discovery Engine | `PLANNED` |
 | M031–M034 | Personalidade (DNA, Personalities, Doctrines, Testing)              | `PLANNED` |
 | M035–M042 | Strategic AI                                                        | `PLANNED` |
 | M043–M045 | Player → AI Command                                                 | `PLANNED` |

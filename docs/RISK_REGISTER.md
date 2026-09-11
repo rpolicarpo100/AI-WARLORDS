@@ -93,3 +93,4 @@
 | 2026-09-11 | M023      | Combate live (dano+chão 0); 0hp não age; remoção→M024; produtor assume alvo              |
 | 2026-09-11 | M028      | L-29 CLOSED (terrain-memory live, OOB soft); intel inimiga mantém fail-closed             |
 | 2026-09-11 | PROMPTS   | Ticks mortos (budget live, exaustão=draw); tuning X=10→#92; sem unlimited (M09X)         |
+| 2026-09-11 | M029      | Lifecycle live (commission+flips+eventos owner-only); `active` sem leitor→M043+/M035+; roster sem cap |

@@ -690,3 +690,54 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
   residual: tuning 10 por validar em jogo real (#92).
 - IMPLEMENTATION: PROMPTS out-of-band (P1–P8).
 - ESTADO: `ACCEPTED`.
+
+## D-023 — Commander State: lifecycle completo, `active` marcador, roster N (M029 pré-análise + voto)
+
+- DECISION: ficheiro NOVO `commander-state.ts` (L2: importa
+  commanders/authority L0 + world-state L1 type-only, edges
+  downward); 3 transições despacháveis (custo 1 prompt cada —
+  custo do dispatch, não efeito): `commander.commission` (sem
+  params — precedente upgrade/noParamHandlers; mint `c${nextId}`
+  owner=caller active=true; bootstrap sobre dados ausentes;
+  nextId no tecto word→applied:false); `commander.activate` /
+  `commander.deactivate` (params {id} — commanderIdParamsRule
+  wire-shape; id desconhecido→applied:false; owner≠caller→
+  applied:false fail-closed; já-no-estado→applied:false).
+  Produtores diff-estrutural (molde completionProducer):
+  `commissionedProducer` (ids novos→`commander.commissioned`) +
+  `stateFlipProducer` (flips→`commander.activated/deactivated`).
+  Wiring Match: merge commanderHandlers + COMMISSION em
+  noParamHandlers + paramRules + producers.set ×3
+  (completionProducer boleia grátis, sem factos). `active` é
+  MARCADOR sem efeito motor (votado; dentes→M043+/M035+);
+  roster N por holder sem cap (votado; MAX_STATE_BYTES
+  auto-limita, precedente filas city). Sem seeding no Match
+  (commission é acção do holder); sem post-rule (shape cobre,
+  sem fluxo cross-section); views/world-state/validation/
+  sim/página/cenário intocados.
+- MOTIVE: 3 votos explícitos do utilizador 2026-09-11 (lifecycle
+  completo; marcador sem efeito; N por holder) + M019 (molde
+  lifecycle: criação+transições+Match+eventos) + M027 (contrato
+  dados: guard global-único, bootstrap fail-soft) + M028
+  ("M029+" é intervalo; sem cross-imports) + #21 (Commander
+  possui… — resto→M031+) + #29 (hierarquia→FUTURE).
+- ALTERNATIVES: lifecycle dentro de commanders.ts (rejeitado:
+  L0 leaf zero-imports; handlers precisam WorldState — molde
+  economy L2); `active` gate de dispatches (rejeitado pelo
+  user); 1-per-holder (rejeitado pelo user — master singular
+  preterido a favor de roster); auto-seed no Match
+  (rejeitado: churn selo + commission é acção do holder);
+  funções directas sem dispatch (rejeitado: sem eventos/
+  ledger — molde M019 é dispatch); cap de roster (rejeitado:
+  sem âncora no master).
+- ADVANTAGES: ciclo de vida fechado (commission⇄flips);
+  eventos auditáveis; owner-only fail-closed; zero churn
+  leitores existentes (selo intacto).
+- DISADVANTAGES: transições custam prompts sem efeito
+  mecânico até M043+ (marcador honesto); roster sem cap
+  (spam limitado só por bytes).
+- RISKS: baixo — transições novas, leitores zero; residual:
+  `active` sem leitor até ordens/IA (M043+/M035+).
+- IMPLEMENTATION: `commander-state.ts` + `commander-state.test.ts`
+  + `match.ts` (wiring) + `phase1-gate.test.ts` (2 pins) (M029).
+- ESTADO: `ACCEPTED`.

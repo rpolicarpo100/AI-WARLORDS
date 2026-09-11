@@ -57,6 +57,15 @@ import {
   payCost,
   UPGRADE_TRANSITION,
 } from './economy.js';
+import {
+  ACTIVATE_TRANSITION,
+  commissionedProducer,
+  COMMISSION_TRANSITION,
+  commanderHandlers,
+  commanderIdParamsRule,
+  DEACTIVATE_TRANSITION,
+  stateFlipProducer,
+} from './commander-state.js';
 import type { TerrainId } from './map.js';
 import { DEFAULT_TERRAIN_CONFIG, isTerrainConfig, modifiersFor } from './terrain.js';
 import {
@@ -230,6 +239,7 @@ export class Match {
     const world = worldHandlers();
     const economy = economyHandlers(economyConfig, buildingsConfig);
     const city = cityHandlers(buildingsConfig);
+    const commanders = commanderHandlers();
     // M022: passable = finite move cost (Infinity/NaN block, fail-closed).
     const passable = (terrain: string): boolean =>
       Number.isFinite(modifiersFor(terrainConfig, terrain as TerrainId).move);
@@ -245,10 +255,14 @@ export class Match {
       ...world,
       ...economy,
       ...city,
+      ...commanders,
       ...warfare,
       ...extra,
     ]);
-    if (merged.size !== world.size + economy.size + city.size + warfare.size + extra.size) {
+    if (
+      merged.size !==
+      world.size + economy.size + city.size + commanders.size + warfare.size + extra.size
+    ) {
       throw new Error('Match: duplicate handler names.');
     }
     const baseValidator = createWorldValidator();
@@ -258,13 +272,15 @@ export class Match {
       ...baseValidator,
       post: [...baseValidator.post, createEconomyRule(buildingsConfig)],
     };
-    const noParamHandlers = new Set([...world.keys(), UPGRADE_TRANSITION]);
+    const noParamHandlers = new Set([...world.keys(), UPGRADE_TRANSITION, COMMISSION_TRANSITION]);
     const paramRules = new Map<string, PreRule>([
       [GATHER_TRANSITION, gatherParamsRule],
       [BUILD_TRANSITION, buildParamsRule],
       [MOVE_TRANSITION, moveParamsRule],
       [ATTACK_TRANSITION, attackParamsRule],
       [TRAIN_TRANSITION, trainParamsRule],
+      [ACTIVATE_TRANSITION, commanderIdParamsRule],
+      [DEACTIVATE_TRANSITION, commanderIdParamsRule],
     ]);
     let dispatchCount = 0;
     const nextSeq = (): number => {
@@ -309,6 +325,9 @@ export class Match {
     producers.set(MOVE_TRANSITION, [moveProducer]);
     producers.set(ATTACK_TRANSITION, [attackProducer]);
     producers.set(TRAIN_TRANSITION, [trainProducer]);
+    producers.set(COMMISSION_TRANSITION, [commissionedProducer]);
+    producers.set(ACTIVATE_TRANSITION, [stateFlipProducer]);
+    producers.set(DEACTIVATE_TRANSITION, [stateFlipProducer]);
     const extraProducers = init.extraProducers ?? new Map<string, readonly EventProducer[]>();
     // (PROMPTS) The completion producer rides every transition: domain
     // producers first, completions second, caller extras last.
