@@ -741,3 +741,67 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
 - IMPLEMENTATION: `commander-state.ts` + `commander-state.test.ts`
   + `match.ts` (wiring) + `phase1-gate.test.ts` (2 pins) (M029).
 - ESTADO: `ACCEPTED`.
+
+## D-024 — Discovery Engine: pipeline canónico visibilidade→explored→factos (M030 pré-análise + voto)
+
+- DECISION: `VISION_RANGE = 2` fixo em `fog.ts` (votado;
+  canoniza o 2 ad-hoc das tools) + `sourcesOf(units)`
+  (L2, edge novo fog→units L0; vivos hp>0 + owner
+  isPlayerId, resto assume-shape — guard units dá
+  coords word, OOB skip-soft no flood). Acumulação no
+  postStep do Match (injecção L4; L2↛L2 proíbe
+  warfare→exploration/fog): mapless→skip (precedente
+  M015); senão visibility=computeVisibility(stepped.map,
+  sourcesOf(stepped.units)) + markExplored(stepped.explored
+  ?? fresh, visibility). Produtores em `exploration.ts`
+  (edge novo exploration→map L0): `discoveredProducer`
+  (diff explored por viewer ordenado + índices
+  ascendentes; payload {player, col, row, terrain} via
+  map.cells[index] guarda-undefined, molde M028; LOW) +
+  `spottedFacts` puro (before/after units + before/after
+  VisibilitySets + width; spotted⟺inimigo∧after-vê-pos_
+  after∧¬before-vê-pos_before; payload {player, unit,
+  owner, col, row}; NORMAL — #33 ENEMY SCOUT) + closure
+  em match.ts que computa as 2 visibilidades (L4 pode
+  importar fog+exploration; recompute aceite, medido).
+  Ride universal: discovery+sightings após
+  completionProducer p/ TODA a transição (ordem: domain,
+  completions, discoveries, sightings, extras —
+  declarado); noop TAMBÉM descobre (observar revela;
+  PROMPTS-consistente: noop é acção; postStep é
+  name-blind por desenho). Sem seam de config
+  (DEFAULT_FOG_CONFIG; range-via-config rejeitado).
+  Eventos globais (factos; redacção é das views).
+- MOTIVE: 3 votos explícitos do utilizador 2026-09-11
+  (motor completo; células+inimigos; fixo 2) + #10
+  (eventos observados; KNOWN≠REAL) + #33 (ENEMY
+  SCOUT→NORMAL; LOW≈movimento p/ células) + #11
+  (eventos SÃO os factos; tags confidence→depois) +
+  M013/M014/M015/M028 (peças do pipeline) + M022
+  (injecção L4; predicado>espelho) + PROMPTS (postStep
+  universal + ride-all) + M019 (molde wiring).
+- ALTERNATIVES: acumular-sem-factos / só-puros
+  (rejeitados pelo user); acumulação no handler move
+  (rejeitado: L2→L2); spotted-por-proxy-explored
+  (rejeitado: falha manobras em terra conhecida —
+  inexacto); mirror de fog em exploration (rejeitado:
+  divergência); range-via-config / range-1 / só-células
+  (rejeitados pelo user); resource.discovered (rejeitado:
+  #71 FUTURO); seeding explored na génese (rejeitado:
+  descoberta ganha-se por dispatch + churn selo);
+  perceive default canónico (rejeitado: views↛fog L2→L2;
+  caller usa sourcesOf); skip-noop (rejeitado: postStep
+  name-blind; observar revela).
+- ADVANTAGES: gap fechado (explored com writers);
+  IA recebe observados (#10); tools podem migrar p/
+  sourcesOf; sightings exactos (diff visibilidade).
+- DISADVANTAGES: churn PROMPTS-scale (goldens ganham
+  explored+eventos, re-lock declarado); 3 fog-computes
+  por dispatch (medido no sim).
+- RISKS: médio — postStep universal tocado (mitiga:
+  suite+selo+sim+timing); residual: tuning visão 2
+  (#92); sem lost-contact; corpses—n/a (slain removidos).
+- IMPLEMENTATION: `fog.ts` (RANGE+sourcesOf) +
+  `exploration.ts` (discovered+spottedFacts) + `match.ts`
+  (postStep+closure+ride) + testes + re-lock goldens (M030).
+- ESTADO: `ACCEPTED`.

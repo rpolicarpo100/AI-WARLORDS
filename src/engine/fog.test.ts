@@ -11,11 +11,14 @@ import {
   isFogConfig,
   isVisibleCell,
   isVisionSource,
+  sourcesOf,
   visibleCells,
+  VISION_RANGE,
   type FogConfig,
   type VisionSource,
 } from './fog.js';
 import { isMapData, type MapData, type MapId, type TerrainId } from './map.js';
+import type { UnitsData } from './units.js';
 
 const P1 = 'p1' as PlayerId;
 const P2 = 'p2' as PlayerId;
@@ -283,5 +286,46 @@ describe('viewer isolation + output integrity (security)', () => {
     expect(() => {
       (result as Record<string, number[]>)[P1]?.push(0);
     }).toThrow(TypeError);
+  });
+});
+
+describe('sourcesOf (M030)', () => {
+  function crewed(units: UnitsData['units']): UnitsData {
+    return { schemaVersion: 1, nextId: units.length, units };
+  }
+
+  it('absent units see nothing', () => {
+    expect(sourcesOf(undefined)).toEqual([]);
+  });
+
+  it('golden: living units become range-2 sources for their owners, roster order kept', () => {
+    const units = crewed([
+      { id: 'u0', owner: 'p1', type: 'worker', hp: 10, col: 1, row: 2 },
+      { id: 'u1', owner: 'p2', type: 'warrior', hp: 5, col: 0, row: 0 },
+    ]);
+    expect(sourcesOf(units)).toEqual([
+      { viewer: 'p1', col: 1, row: 2, range: 2 },
+      { viewer: 'p2', col: 0, row: 0, range: 2 },
+    ]);
+  });
+
+  it('skips the dead (0hp sees nothing)', () => {
+    const units = crewed([
+      { id: 'u0', owner: 'p1', type: 'worker', hp: 0, col: 1, row: 1 },
+      { id: 'u1', owner: 'p1', type: 'worker', hp: 1, col: 2, row: 2 },
+    ]);
+    expect(sourcesOf(units)).toEqual([{ viewer: 'p1', col: 2, row: 2, range: 2 }]);
+  });
+
+  it('skips malformed owners (fail-soft, never a fault)', () => {
+    const units = crewed([
+      { id: 'u0', owner: '', type: 'worker', hp: 10, col: 1, row: 1 },
+      { id: 'u1', owner: 'p2', type: 'worker', hp: 10, col: 1, row: 1 },
+    ]);
+    expect(sourcesOf(units)).toEqual([{ viewer: 'p2', col: 1, row: 1, range: 2 }]);
+  });
+
+  it('VISION_RANGE is stable (wire contract)', () => {
+    expect(VISION_RANGE).toBe(2);
   });
 });

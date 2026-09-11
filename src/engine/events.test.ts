@@ -414,7 +414,8 @@ describe('dispatch emission (Match E2E)', () => {
       revision: 1,
       type: 'system.event-fault',
       priority: 'high',
-      payload: { transition: 'test.ping', producer: 1, message: 'e2e boom' },
+      // M030: completion + discovery + sightings ride before caller extras.
+      payload: { transition: 'test.ping', producer: 3, message: 'e2e boom' },
     });
   });
 

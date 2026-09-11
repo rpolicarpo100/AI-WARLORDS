@@ -20,6 +20,9 @@ import {
   type EventProducer,
   type GameEvent,
 } from './events.js';
+import { EXPLORED_SCHEMA_VERSION } from './explored.js';
+import { discoveredProducer, markExplored, spottedFacts } from './exploration.js';
+import { computeVisibility, sourcesOf } from './fog.js';
 import { hashState } from './hash.js';
 import { MAX_UINT32 } from './rng.js';
 import {
@@ -303,16 +306,31 @@ export class Match {
       }
       const postStep = (_before: WorldState, caller: PlayerId, applied: WorldState): WorldState => {
         const prompts = spendPrompt(applied.prompts, caller);
-        if (applied.cities === undefined) {
-          return { ...applied, prompts };
-        }
-        const built = completeConstructions(applied.cities, applied.buildings, caller);
-        return {
+        const built =
+          applied.cities === undefined
+            ? undefined
+            : completeConstructions(applied.cities, applied.buildings, caller);
+        const stepped: WorldState = {
           ...applied,
           prompts,
-          cities: built.cities,
-          ...(built.buildings === undefined ? {} : { buildings: built.buildings }),
+          ...(built === undefined
+            ? {}
+            : {
+                cities: built.cities,
+                ...(built.buildings === undefined ? {} : { buildings: built.buildings }),
+              }),
         };
+        // M030: every dispatch observes — accumulate explored memory from
+        // canonical visibility (mapless matches skip, M015 precedent).
+        if (stepped.map === undefined) {
+          return stepped;
+        }
+        const visibility = computeVisibility(stepped.map, sourcesOf(stepped.units));
+        const explored = markExplored(
+          stepped.explored ?? { schemaVersion: EXPLORED_SCHEMA_VERSION, viewers: {} },
+          visibility,
+        );
+        return { ...stepped, explored };
       };
       validated.set(
         name,
@@ -328,11 +346,34 @@ export class Match {
     producers.set(COMMISSION_TRANSITION, [commissionedProducer]);
     producers.set(ACTIVATE_TRANSITION, [stateFlipProducer]);
     producers.set(DEACTIVATE_TRANSITION, [stateFlipProducer]);
+    // M030: sightings need before/after visibility, computed here (L4 may
+    // import fog; the L2 producer cannot — L2↛L2). Either map absent (or
+    // the maps differing, impossible live) yields silence, never a fault.
+    const spottedProducer: EventProducer = (input) => {
+      const beforeMap = input.before.map;
+      const afterMap = input.after.map;
+      if (beforeMap === undefined || afterMap === undefined) {
+        return [];
+      }
+      return spottedFacts({
+        beforeUnits: input.before.units,
+        afterUnits: input.after.units,
+        beforeVisible: computeVisibility(beforeMap, sourcesOf(input.before.units)),
+        afterVisible: computeVisibility(afterMap, sourcesOf(input.after.units)),
+        width: afterMap.width,
+      });
+    };
     const extraProducers = init.extraProducers ?? new Map<string, readonly EventProducer[]>();
-    // (PROMPTS) The completion producer rides every transition: domain
-    // producers first, completions second, caller extras last.
+    // (PROMPTS/M030) Completion + discovery ride every transition: domain
+    // producers first, completions second, discoveries third, sightings
+    // fourth, caller extras last.
     for (const name of validated.keys()) {
-      producers.set(name, [...(producers.get(name) ?? []), completionProducer]);
+      producers.set(name, [
+        ...(producers.get(name) ?? []),
+        completionProducer,
+        discoveredProducer,
+        spottedProducer,
+      ]);
     }
     const orderedExtras: Array<[string, readonly EventProducer[]]> = [...extraProducers];
     for (const [name, extra] of orderedExtras) {

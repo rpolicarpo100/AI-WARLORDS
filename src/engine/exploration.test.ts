@@ -5,10 +5,18 @@
 import { describe, expect, it } from 'vitest';
 import { markUntrusted, type ClientRequest, type PlayerId, type Untrusted } from './authority.js';
 import { type ExploredData } from './explored.js';
-import { exploredCells, explorationStatus, isExplored, markExplored } from './exploration.js';
+import {
+  discoveredProducer,
+  exploredCells,
+  explorationStatus,
+  isExplored,
+  markExplored,
+  spottedFacts,
+} from './exploration.js';
 import { computeVisibility } from './fog.js';
 import { type MapData, type MapId, type TerrainId } from './map.js';
 import { Match, STANDARD_RULESET, type MatchInit } from './match.js';
+import type { UnitsData } from './units.js';
 import { seedPrompts, spendPrompt } from './prompts.js';
 import { createWorldValidator, wrapWithValidation, type RngHandler } from './validation.js';
 import { toAiPerception } from './views.js';
@@ -333,5 +341,308 @@ describe('views perception (security)', () => {
     expect('viewers' in known).toBe(false);
     expect(known.visibleCells).toEqual([4]);
     expect(known.exploredCells).toEqual([0, 4]);
+  });
+});
+
+describe('discoveredProducer (M030 unit)', () => {
+  function world(map: MapData | undefined, explored?: ExploredData): WorldState {
+    return createWorldState({
+      players: [P1, P2],
+      ...(map === undefined ? {} : { map }),
+      ...(explored === undefined ? {} : { explored }),
+    });
+  }
+
+  const terrainMap = () =>
+    makeMap([
+      ['field', 'forest', 'mountain'],
+      ['river', 'road', 'bridge'],
+      ['field', 'village', 'city'],
+    ]);
+
+  it('golden: newly explored indices become LOW facts with terrain, viewers ascend', () => {
+    const before = world(terrainMap(), { schemaVersion: 1, viewers: { p1: [0] } });
+    const after = world(terrainMap(), { schemaVersion: 1, viewers: { p2: [8], p1: [0, 4] } });
+    expect(discoveredProducer({ type: 'x', caller: P1, params: {}, before, after })).toEqual([
+      {
+        type: 'cell.discovered',
+        priority: 'low',
+        payload: { player: 'p1', col: 1, row: 1, terrain: 'road' },
+      },
+      {
+        type: 'cell.discovered',
+        priority: 'low',
+        payload: { player: 'p2', col: 2, row: 2, terrain: 'city' },
+      },
+    ]);
+  });
+
+  it('silence: no diff, absent explored, mapless', () => {
+    const map = terrainMap();
+    const settled = world(map, { schemaVersion: 1, viewers: { p1: [0, 4] } });
+    expect(
+      discoveredProducer({ type: 'x', caller: P1, params: {}, before: settled, after: settled }),
+    ).toEqual([]);
+    const bare = world(map);
+    expect(
+      discoveredProducer({ type: 'x', caller: P1, params: {}, before: bare, after: bare }),
+    ).toEqual([]);
+    const mapless = world(undefined);
+    expect(
+      discoveredProducer({ type: 'x', caller: P1, params: {}, before: mapless, after: mapless }),
+    ).toEqual([]);
+  });
+
+  it('stale indices skip soft (never a fault)', () => {
+    const map = openMap(2);
+    const before = world(map, { schemaVersion: 1, viewers: {} });
+    // TEST CRAFT: out-of-bounds memory (rejected by isWorldState, tolerated by the producer).
+    const after = {
+      ...world(map, { schemaVersion: 1, viewers: {} }),
+      explored: { schemaVersion: 1, viewers: { p1: [99, 1] } },
+    } as WorldState;
+    expect(discoveredProducer({ type: 'x', caller: P1, params: {}, before, after })).toEqual([
+      {
+        type: 'cell.discovered',
+        priority: 'low',
+        payload: { player: 'p1', col: 1, row: 0, terrain: 'field' },
+      },
+    ]);
+  });
+});
+
+describe('spottedFacts (M030 unit)', () => {
+  function crewed(entries: UnitsData['units']): UnitsData {
+    return { schemaVersion: 1, nextId: entries.length, units: entries };
+  }
+
+  const foe = (col: number, row: number) => ({
+    id: 'u9',
+    owner: 'p2',
+    type: 'warrior' as const,
+    hp: 5,
+    col,
+    row,
+  });
+
+  it('golden: enemy entering vision fires one NORMAL fact, viewers ascend', () => {
+    const beforeUnits = crewed([foe(5, 0)]);
+    const afterUnits = crewed([foe(2, 0)]);
+    expect(
+      spottedFacts({
+        beforeUnits,
+        afterUnits,
+        beforeVisible: { p1: [0, 1, 2] },
+        afterVisible: { p1: [0, 1, 2] },
+        width: 6,
+      }),
+    ).toEqual([
+      {
+        type: 'unit.spotted',
+        priority: 'normal',
+        payload: { player: 'p1', unit: 'u9', owner: 'p2', col: 2, row: 0 },
+      },
+    ]);
+  });
+
+  it('tracked contact stays silent (before-cell already watched)', () => {
+    const beforeUnits = crewed([foe(2, 0)]);
+    const afterUnits = crewed([foe(1, 0)]);
+    expect(
+      spottedFacts({
+        beforeUnits,
+        afterUnits,
+        beforeVisible: { p1: [0, 1, 2] },
+        afterVisible: { p1: [0, 1, 2] },
+        width: 6,
+      }),
+    ).toEqual([]);
+  });
+
+  it('leaving vision stays silent (no un-spot event)', () => {
+    const beforeUnits = crewed([foe(2, 0)]);
+    const afterUnits = crewed([foe(3, 0)]);
+    expect(
+      spottedFacts({
+        beforeUnits,
+        afterUnits,
+        beforeVisible: { p1: [0, 1, 2] },
+        afterVisible: { p1: [0, 1, 2] },
+        width: 6,
+      }),
+    ).toEqual([]);
+  });
+
+  it('fresh spawns in watched cells fire (no before-entry)', () => {
+    expect(
+      spottedFacts({
+        beforeUnits: undefined,
+        afterUnits: crewed([foe(1, 0)]),
+        beforeVisible: {},
+        afterVisible: { p1: [0, 1, 2] },
+        width: 6,
+      }),
+    ).toEqual([
+      {
+        type: 'unit.spotted',
+        priority: 'normal',
+        payload: { player: 'p1', unit: 'u9', owner: 'p2', col: 1, row: 0 },
+      },
+    ]);
+  });
+
+  it('own units never spotted; absent rosters silent', () => {
+    const mined = crewed([{ id: 'u0', owner: 'p1', type: 'worker', hp: 10, col: 0, row: 0 }]);
+    expect(
+      spottedFacts({
+        beforeUnits: mined,
+        afterUnits: mined,
+        beforeVisible: { p1: [0] },
+        afterVisible: { p1: [0] },
+        width: 6,
+      }),
+    ).toEqual([]);
+    expect(
+      spottedFacts({
+        beforeUnits: undefined,
+        afterUnits: undefined,
+        beforeVisible: {},
+        afterVisible: {},
+        width: 6,
+      }),
+    ).toEqual([]);
+    // Vanished roster (crafted): viewers persist, sightings cannot.
+    expect(
+      spottedFacts({
+        beforeUnits: mined,
+        afterUnits: undefined,
+        beforeVisible: { p1: [0] },
+        afterVisible: { p1: [0] },
+        width: 6,
+      }),
+    ).toEqual([]);
+  });
+});
+
+describe('discovery engine (M030 dispatch E2E)', () => {
+  function crewed(entries: UnitsData['units']): UnitsData {
+    return { schemaVersion: 1, nextId: entries.length, units: entries };
+  }
+
+  function scoutMatch(map: MapData | undefined, units?: UnitsData): Match {
+    return new Match({
+      seed: 30,
+      ruleset: STANDARD_RULESET,
+      players: [P1, P2],
+      initialState: createWorldState({
+        players: [P1, P2],
+        ...(map === undefined ? {} : { map }),
+        ...(units === undefined ? {} : { units }),
+      }),
+    });
+  }
+
+  function noop(match: Match, rid: string, player: PlayerId) {
+    return match.dispatch(
+      match.join(player),
+      raw({ requestId: rid, playerId: player, type: 'world.noop', payload: {} }),
+    );
+  }
+
+  function move(match: Match, rid: string, player: PlayerId, id: string, col: number, row: number) {
+    return match.dispatch(
+      match.join(player),
+      raw({ requestId: rid, playerId: player, type: 'unit.move', payload: { id, col, row } }),
+    );
+  }
+
+  function spotted(match: Match): readonly unknown[] {
+    return match.getEvents().filter((e) => e.type === 'unit.spotted');
+  }
+
+  it('golden: first dispatch observes for every viewer (2x2, all visible at range 2)', () => {
+    const match = scoutMatch(
+      openMap(2),
+      crewed([
+        { id: 'u0', owner: 'p1', type: 'worker', hp: 10, col: 0, row: 0 },
+        { id: 'u1', owner: 'p2', type: 'worker', hp: 10, col: 1, row: 1 },
+      ]),
+    );
+    expect(noop(match, 'r1', P1)).toMatchObject({ status: 'applied' });
+    expect(match.getSnapshot().explored).toEqual({
+      schemaVersion: 1,
+      viewers: { p1: [0, 1, 2, 3], p2: [0, 1, 2, 3] },
+    });
+    expect(match.getEvents().map((e) => e.type)).toEqual([
+      'match.started',
+      'cell.discovered',
+      'cell.discovered',
+      'cell.discovered',
+      'cell.discovered',
+      'cell.discovered',
+      'cell.discovered',
+      'cell.discovered',
+      'cell.discovered',
+    ]);
+    expect(match.getEvents()[1]).toEqual({
+      seq: 2,
+      revision: 1,
+      type: 'cell.discovered',
+      priority: 'low',
+      payload: { player: 'p1', col: 0, row: 0, terrain: 'field' },
+    });
+    // Nothing ENTERED vision (positions frozen) — memory fires, sightings stay silent.
+    expect(spotted(match)).toEqual([]);
+  });
+
+  it('corridor stalk: discoveries on approach, double spotting on contact (6x1)', () => {
+    const match = scoutMatch(
+      makeMap([['field', 'field', 'field', 'field', 'field', 'field']]),
+      crewed([
+        { id: 'u0', owner: 'p1', type: 'worker', hp: 10, col: 0, row: 0 },
+        { id: 'u1', owner: 'p2', type: 'worker', hp: 10, col: 5, row: 0 },
+      ]),
+    );
+    expect(move(match, 'r1', P2, 'u1', 4, 0)).toMatchObject({ status: 'applied' });
+    expect(match.getSnapshot().explored).toEqual({
+      schemaVersion: 1,
+      viewers: { p1: [0, 1, 2], p2: [2, 3, 4, 5] },
+    });
+    expect(spotted(match)).toEqual([]);
+    expect(move(match, 'r2', P2, 'u1', 3, 0)).toMatchObject({ status: 'applied' });
+    expect(spotted(match)).toEqual([]);
+    expect(move(match, 'r3', P2, 'u1', 2, 0)).toMatchObject({ status: 'applied' });
+    expect(spotted(match)).toEqual([
+      expect.objectContaining({
+        type: 'unit.spotted',
+        priority: 'normal',
+        payload: { player: 'p1', unit: 'u1', owner: 'p2', col: 2, row: 0 },
+      }),
+      expect.objectContaining({
+        type: 'unit.spotted',
+        priority: 'normal',
+        payload: { player: 'p2', unit: 'u0', owner: 'p1', col: 0, row: 0 },
+      }),
+    ]);
+    // Tracked contact then leaving: no new sightings either way.
+    expect(move(match, 'r4', P2, 'u1', 1, 0)).toMatchObject({ status: 'applied' });
+    expect(spotted(match)).toHaveLength(2);
+    expect(move(match, 'r5', P2, 'u1', 2, 0)).toMatchObject({ status: 'applied' });
+    expect(move(match, 'r6', P2, 'u1', 3, 0)).toMatchObject({ status: 'applied' });
+    expect(spotted(match)).toHaveLength(2);
+  });
+
+  it('mapless matches skip silently (no shell, no facts)', () => {
+    const match = scoutMatch(undefined, undefined);
+    expect(noop(match, 'r1', P1)).toMatchObject({ status: 'applied' });
+    expect('explored' in match.getSnapshot()).toBe(false);
+    expect(match.getEvents().map((e) => e.type)).toEqual(['match.started']);
+  });
+
+  it('mapped but unitless matches observe nothing (empty shell, no facts)', () => {
+    const match = scoutMatch(openMap(3), undefined);
+    expect(noop(match, 'r1', P1)).toMatchObject({ status: 'applied' });
+    expect(match.getSnapshot().explored).toEqual({ schemaVersion: 1, viewers: {} });
+    expect(match.getEvents().map((e) => e.type)).toEqual(['match.started']);
   });
 });

@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 29 (M001–M029)  |
-| `PLANNED`  | 136 (M030–M165) |
+| `VERIFIED` | 30 (M001–M030)  |
+| `PLANNED`  | 135 (M031–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -111,6 +111,11 @@ Checkpoints `VERIFIED`:
   marcador, roster N, owner-only); 1264/1264 testes, 100
   global, 3 votos de âmbito.
   Registo em `docs/modules/M029.md`.
+- **M030 @ 2026-09-11** — pipeline descoberta (sourcesOf +
+  postStep-explored + cell.discovered LOW + unit.spotted
+  NORMAL #33; 3 votos); 1281/1281 testes, 100 global,
+  L-28 CLOSED.
+  Registo em `docs/modules/M030.md`.
 
 ---
 
@@ -172,7 +177,7 @@ Checkpoints `VERIFIED`:
 | M027 | AI Foundation — Commander Core | `VERIFIED` |
 | M028 | AI Foundation — Perception | `VERIFIED` |
 | M029 | AI Foundation — Commander State | `VERIFIED` |
-| M030 | AI Foundation — Discovery Engine | `PLANNED` |
+| M030 | AI Foundation — Discovery Engine | `VERIFIED` |
 | M031–M034 | Personalidade (DNA, Personalities, Doctrines, Testing)              | `PLANNED` |
 | M035–M042 | Strategic AI                                                        | `PLANNED` |
 | M043–M045 | Player → AI Command                                                 | `PLANNED` |

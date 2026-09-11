@@ -596,13 +596,27 @@ describe('gather E2E (real Match)', () => {
       applied: true,
       detail: 'gathered 3 gold at 0,0',
     });
-    expect(match.getEvents()).toHaveLength(2);
+    expect(match.getEvents().map((e) => e.type)).toEqual([
+      'match.started',
+      'resource.gathered',
+      'cell.discovered',
+      'cell.discovered',
+      'cell.discovered',
+      'cell.discovered',
+    ]);
     expect(match.getEvents()[1]).toEqual({
       seq: 2,
       revision: 1,
       type: 'resource.gathered',
       priority: 'normal',
       payload: { player: 'p1', col: 0, row: 0, resource: 'gold', amount: 3 },
+    });
+    expect(match.getEvents()[2]).toEqual({
+      seq: 3,
+      revision: 1,
+      type: 'cell.discovered',
+      priority: 'low',
+      payload: { player: 'p1', col: 0, row: 0, terrain: 'resource' },
     });
   });
 
@@ -630,7 +644,15 @@ describe('gather E2E (real Match)', () => {
       applied: false,
       detail: 'gather: node depleted.',
     });
-    expect(match.getEvents()).toHaveLength(3);
+    expect(match.getEvents().map((e) => e.type)).toEqual([
+      'match.started',
+      'resource.gathered',
+      'cell.discovered',
+      'cell.discovered',
+      'cell.discovered',
+      'cell.discovered',
+      'resource.gathered',
+    ]);
   });
 
   it('malformed params rejected (pre-rule), state untouched', () => {

@@ -19,6 +19,7 @@ import {
   type TerrainId,
 } from './map.js';
 import { MAX_UINT32 } from './rng.js';
+import type { UnitsData } from './units.js';
 
 /** A vision source: who sees, from where, how far (hex steps). */
 export interface VisionSource {
@@ -93,6 +94,33 @@ const defaultFogConfig: FogConfig = {
 };
 
 export const DEFAULT_FOG_CONFIG: FogConfig = freezeState(defaultFogConfig);
+
+/**
+ * M030 — Fixed vision range in hex steps (voted; canonicalizes the
+ * ad-hoc range-2 the tools used to build sources by hand).
+ */
+export const VISION_RANGE = 2;
+
+/**
+ * M030 — Canonical vision sources from live units: every living
+ * (hp > 0) unit whose owner is a well-formed player id sees from its
+ * cell. Units order is preserved (deterministic). Coordinates are
+ * trusted from validated state (units guard gives uint32 words;
+ * OOB origins skip soft inside the flood).
+ */
+export function sourcesOf(units: UnitsData | undefined): VisionSource[] {
+  if (units === undefined) {
+    return [];
+  }
+  const sources: VisionSource[] = [];
+  for (const unit of units.units) {
+    if (unit.hp <= 0 || !isPlayerId(unit.owner)) {
+      continue;
+    }
+    sources.push({ viewer: unit.owner, col: unit.col, row: unit.row, range: VISION_RANGE });
+  }
+  return sources;
+}
 
 /**
  * Visibility outcome: ascending cell indices per viewer (`index =

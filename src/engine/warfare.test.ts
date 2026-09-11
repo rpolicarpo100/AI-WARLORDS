@@ -547,13 +547,27 @@ describe('move E2E (real Match)', () => {
       col: 1,
       row: 0,
     });
-    expect(match.getEvents().map((e) => e.type)).toEqual(['match.started', 'unit.moved']);
+    expect(match.getEvents().map((e) => e.type)).toEqual([
+      'match.started',
+      'unit.moved',
+      'cell.discovered',
+      'cell.discovered',
+      'cell.discovered',
+      'cell.discovered',
+    ]);
     expect(match.getEvents()[1]).toEqual({
       seq: 2,
       revision: 1,
       type: 'unit.moved',
       priority: 'low',
       payload: { player: 'p1', unit: 'u0', col: 1, row: 0 },
+    });
+    expect(match.getEvents()[2]).toEqual({
+      seq: 3,
+      revision: 1,
+      type: 'cell.discovered',
+      priority: 'low',
+      payload: { player: 'p1', col: 0, row: 0, terrain: 'field' },
     });
   });
 
@@ -1134,7 +1148,16 @@ describe('attack E2E (real Match)', () => {
       col: 1,
       row: 0,
     });
-    expect(match.getEvents().map((e) => e.type)).toEqual(['match.started', 'unit.attacked']);
+    expect(match.getEvents().map((e) => e.type)).toEqual([
+      'match.started',
+      'unit.attacked',
+      'cell.discovered',
+      'cell.discovered',
+      'cell.discovered',
+      'cell.discovered',
+      'cell.discovered',
+      'cell.discovered',
+    ]);
     expect(match.getEvents()[1]).toEqual({
       seq: 2,
       revision: 1,
