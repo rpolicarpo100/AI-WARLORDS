@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 15 (M001–M015)  |
-| `PLANNED`  | 150 (M016–M165) |
+| `VERIFIED` | 16 (M001–M016)  |
+| `PLANNED`  | 149 (M017–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -56,6 +56,9 @@ Checkpoints `VERIFIED`:
 - **M015 @ 2026-09-11** — percepção (perceive + membership + mapa
   filtrado; secrets removido); 651/651 testes, 100×4, selo re-locked.
   Registo em `docs/modules/M015.md`. **Fase 2 completa.**
+- **M016 @ 2026-09-11** — motor de recursos (stockpiles + config + ops
+  exactas); 717/717 testes, 100×4, sem invariante (M020 owns).
+  Registo em `docs/modules/M016.md`.
 
 ---
 
@@ -91,13 +94,13 @@ Checkpoints `VERIFIED`:
 
 ## Fase 3 — Economy
 
-| Módulo | Nome               | Estado    |
-| ------ | ------------------ | --------- |
-| M016   | Resource Engine    | `PLANNED` |
-| M017   | Gathering          | `PLANNED` |
-| M018   | Buildings          | `PLANNED` |
-| M019   | City System        | `PLANNED` |
-| M020   | Economy Validation | `PLANNED` |
+| Módulo | Nome               | Estado     |
+| ------ | ------------------ | ---------- |
+| M016   | Resource Engine    | `VERIFIED` |
+| M017   | Gathering          | `PLANNED`  |
+| M018   | Buildings          | `PLANNED`  |
+| M019   | City System        | `PLANNED`  |
+| M020   | Economy Validation | `PLANNED`  |
 
 ## Fase 4 — Military
 
@@ -188,10 +191,10 @@ Alinhadas por número: 0, 1, 3, 4, 28. Divergentes:
 ## Ordem recomendada (estrita, sem saltos)
 
 ```text
-M001 → M002 → … → M013 → M014 → M015 (VERIFIED) → M016 → … → M165
+M001 → M002 → … → M014 → M015 → M016 (VERIFIED) → M017 → … → M165
 ```
 
-Próximo permitido: **M016 — Resource Engine**, apenas após autorização
+Próximo permitido: **M017 — Gathering**, apenas após autorização
 explícita. Saltos, paralelização ou batch = violação do §35 (recusar).
 
 ---

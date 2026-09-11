@@ -79,6 +79,7 @@ describe('perceive (integration: knowledge assembly)', () => {
       viewer: 'p1',
       visibleCells: [4, 8],
       exploredCells: [0, 4],
+      stockpile: { food: 0, wood: 0, stone: 0, gold: 0 },
       map: { width: 3, height: 3, visible: { 4: 'forest', 8: 'mountain' }, explored: [0] },
     });
   });
@@ -128,6 +129,7 @@ describe('perceive (integration: knowledge assembly)', () => {
       viewer: 'p1',
       visibleCells: [],
       exploredCells: [],
+      stockpile: { food: 0, wood: 0, stone: 0, gold: 0 },
     });
     expect('map' in known).toBe(false);
   });
@@ -151,6 +153,7 @@ describe('perceive (integration: knowledge assembly)', () => {
     expect(Object.isFrozen(known.players)).toBe(true);
     expect(Object.isFrozen(known.visibleCells)).toBe(true);
     expect(Object.isFrozen(known.exploredCells)).toBe(true);
+    expect(Object.isFrozen(known.stockpile)).toBe(true);
     expect(Object.isFrozen(map)).toBe(true);
     expect(Object.isFrozen(map.visible)).toBe(true);
     expect(Object.isFrozen(map.explored)).toBe(true);
@@ -202,6 +205,7 @@ describe('F-09 key tripwire (updated M015: perception keys)', () => {
       'exploredCells',
       'map',
       'players',
+      'stockpile',
       'tick',
       'viewer',
       'visibleCells',
@@ -210,6 +214,7 @@ describe('F-09 key tripwire (updated M015: perception keys)', () => {
     expect(Object.keys(perceive(mapless, P1)).sort()).toEqual([
       'exploredCells',
       'players',
+      'stockpile',
       'tick',
       'viewer',
       'visibleCells',

@@ -1,6 +1,6 @@
-# AI WARLORDS — RISK REGISTER (M015)
+# AI WARLORDS — RISK REGISTER (M016)
 
-> Data: 2026-09-11 · Actualizado por: M015
+> Data: 2026-09-11 · Actualizado por: M016
 > Convenção: `ACTIVE` = presente agora · `FUTURE` = fases vindouras ·
 > `MITIGATED` = tratado com residual declarado · `CLOSED` = encerrado
 
@@ -83,3 +83,4 @@
 | 2026-09-11 | M013      | R-12 nota (computação fog); L-26/L-27 (on-demand, viewer-membership)                   |
 | 2026-09-11 | M014      | R-12 nota (memória explored); L-28 (anti-forge residual → M021+)                       |
 | 2026-09-11 | M015      | R-12 nota (fog real); L-04/L-27 CLOSED; L-29 (→ M028); selo re-locked                  |
+| 2026-09-11 | M016      | L-30/L-31 (grants→M019, caps→M018); sem invariante (M020 owns)                         |

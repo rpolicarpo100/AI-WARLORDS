@@ -1,6 +1,7 @@
 import { freezeState, type PlayerId } from './authority.js';
 import { isCellIndex } from './explored.js';
 import type { TerrainId } from './map.js';
+import { stockpileOf, type StockpileAmounts } from './stockpiles.js';
 import type { WorldPlayer, WorldState } from './world-state.js';
 
 /** Full canonical state. SERVER-ONLY — never crosses the trust boundary. */
@@ -34,6 +35,11 @@ export interface PerceivedState {
   readonly visibleCells: readonly number[];
   /** Full explored memory, visible-or-not (M014 semantics preserved). */
   readonly exploredCells: readonly number[];
+  /**
+   * Own stockpile (M016; zeros when absent). Other holders' stores stay
+   * out — enemy intel is fail-closed until an owning module (M028+).
+   */
+  readonly stockpile: StockpileAmounts;
   /** Absent when the world is mapless (no map context ⇒ no cells). */
   readonly map?: PerceivedMap;
 }
@@ -118,6 +124,7 @@ export function perceive(
     viewer,
     visibleCells,
     exploredCells: [...memory],
+    stockpile: stockpileOf(state.stockpiles, viewer),
     ...(map === undefined
       ? {}
       : { map: { width: map.width, height: map.height, visible, explored } }),

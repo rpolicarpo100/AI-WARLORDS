@@ -1,6 +1,7 @@
 import { isPlayerId, type PlayerId, type TransitionHandler } from './authority.js';
 import { isExploredData, type ExploredData } from './explored.js';
 import { isMapData, type MapData } from './map.js';
+import { isStockpilesData, type StockpilesData } from './stockpiles.js';
 
 export const WORLD_SCHEMA_VERSION = 1;
 
@@ -27,6 +28,13 @@ export interface WorldState {
    * by views (M015).
    */
   readonly explored?: ExploredData;
+  /**
+   * Per-holder resource stores (M016, optional compatible extension).
+   * Map-independent (abstract matches may hold stockpiles); holders are
+   * shape-checked only — membership enforced at consumption (M014
+   * doctrine; non-roster holders stay invisible, fail-closed).
+   */
+  readonly stockpiles?: StockpilesData;
 }
 
 export interface WorldStateInit {
@@ -34,6 +42,7 @@ export interface WorldStateInit {
   readonly tick?: number;
   readonly map?: MapData;
   readonly explored?: ExploredData;
+  readonly stockpiles?: StockpilesData;
 }
 
 /**
@@ -88,6 +97,10 @@ export function isWorldState(value: unknown): value is WorldState {
       }
     }
   }
+  const stockpiles = fields['stockpiles'];
+  if (stockpiles !== undefined && !isStockpilesData(stockpiles)) {
+    return false;
+  }
   return true;
 }
 
@@ -98,6 +111,7 @@ export function createWorldState(init: WorldStateInit): WorldState {
     players: init.players.map((id) => ({ id })),
     ...(init.map === undefined ? {} : { map: init.map }),
     ...(init.explored === undefined ? {} : { explored: init.explored }),
+    ...(init.stockpiles === undefined ? {} : { stockpiles: init.stockpiles }),
   };
   if (!isWorldState(candidate)) {
     throw new Error('createWorldState: invalid initial world.');

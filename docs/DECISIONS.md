@@ -144,3 +144,37 @@
   Sem produtores, sem inferência (M028), sem wire (M069).
 - IMPLEMENTATION: `views.ts` + `world-state.ts` + testes + selo (M015).
 - ESTADO: `ACCEPTED`.
+
+## D-009 — Stockpiles em estado; config fora; sem invariante (M016 pré-análise)
+
+- DECISION: M016 = estado + config + ops puras, zero produtores.
+  `stockpiles.ts` L0 (StockpilesData + guard + `stockpileOf`; 4 chaves
+  fixas espelhando RESOURCE_TYPES com cross-check em teste) +
+  `economy.ts` L2 (EconomyConfig 4/4 + default neutro + `credit`/
+  `debit`/`canAfford`; imports authority/map/rng/stockpiles).
+  `WorldState.stockpiles?` (sem exigir mapa; holders só-shape, sem
+  membership — doutrina M014). `PerceivedState.stockpile` own-only
+  (views importa stockpiles L0; tripwire F-09 +1 chave). SEM
+  pós-invariante (M020 é Economy Validation; ops safe-by-construction
+  até lá). SEM handlers/eventos (M017 primeiro produtor).
+- MOTIVE: mestre #14 (4 tipos fechados M012; valores/rates
+  configuráveis) + #84 (regras fora do estado canónico) + M012
+  (stockpiles/valores M016; gathering M017 muta nodes). `value` alimenta
+  score futuro (L-17); `gatherYield` alimenta M017 directamente.
+  Defaults NEUTROS (1/1/1/1, analogia M011: só desvios ditados pelo
+  mestre; tuning em #92/playtesting). Non-roster holders invisíveis
+  fail-closed (membership no consumo, L-27).
+- ALTERNATIVES: guard em `resources.ts` L2 (rejeitado: world-state L1
+  só importa L0 — forçamento M009/M014); caps no estado/config
+  (rejeitado: storehouses sem dono — L-31 decide-by M018); valores no
+  estado (rejeitado: #84); percepção full-table (rejeitado: intel
+  inimiga fail-closed até M028); invariante M016 (rejeitado: M020 owns).
+- ADVANTAGES: par leaf+ops simétrico a M014; config validada+golden
+  sem consumidores (padrão D-006); ops exactas (overflow loud, nunca
+  saturação silenciosa — exploits escondidos); zeros fail-soft.
+- DISADVANTAGES: 2 ficheiros p/ 1 módulo (forçado pela lei M009);
+  3.º espelho de id-shape (teste cross-check cada vez).
+- RISKS: baixo — sem produtores/consumidores; M017/M018/M020 validam.
+  Sem gathering (M017), sem custos (M018), sem score (L-17), sem trade.
+- IMPLEMENTATION: `stockpiles.ts` L0 + `economy.ts` L2 (M016).
+- ESTADO: `ACCEPTED`.
