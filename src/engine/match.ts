@@ -40,6 +40,7 @@ import {
   buildParamsRule,
   buildStartedProducer,
   BUILD_TRANSITION,
+  canAfford,
   cityHandlers,
   completeConstructions,
   completionProducer,
@@ -52,6 +53,7 @@ import {
   GATHER_TRANSITION,
   isBuildingsConfig,
   isEconomyConfig,
+  payCost,
   UPGRADE_TRANSITION,
 } from './economy.js';
 import type { TerrainId } from './map.js';
@@ -65,7 +67,11 @@ import {
   MOVE_TRANSITION,
   moveParamsRule,
   moveProducer,
+  TRAIN_TRANSITION,
+  trainParamsRule,
+  trainProducer,
   warfareHandlers,
+  type UnitTreasury,
 } from './warfare.js';
 
 declare const matchBrand: unique symbol;
@@ -262,7 +268,11 @@ export class Match {
       Number.isFinite(modifiersFor(terrainConfig, terrain as TerrainId).move);
     const defenseOf = (terrain: string): number =>
       modifiersFor(terrainConfig, terrain as TerrainId).defense;
-    const warfare = warfareHandlers(passable, unitsConfig, defenseOf);
+    const treasury: UnitTreasury = {
+      canAfford: (funds, holder, cost) => canAfford(funds, holder, cost),
+      pay: (funds, holder, cost) => payCost(funds, holder, cost),
+    };
+    const warfare = warfareHandlers(passable, unitsConfig, defenseOf, treasury);
     const extra = init.extraHandlers ?? new Map<string, RngHandler<WorldState>>();
     const merged = new Map<string, RngHandler<WorldState>>([
       ...world,
@@ -291,6 +301,7 @@ export class Match {
       [BUILD_TRANSITION, buildParamsRule],
       [MOVE_TRANSITION, moveParamsRule],
       [ATTACK_TRANSITION, attackParamsRule],
+      [TRAIN_TRANSITION, trainParamsRule],
     ]);
     let dispatchCount = 0;
     const nextSeq = (): number => {
@@ -318,6 +329,7 @@ export class Match {
     producers.set(BUILD_TRANSITION, [buildStartedProducer]);
     producers.set(MOVE_TRANSITION, [moveProducer]);
     producers.set(ATTACK_TRANSITION, [attackProducer]);
+    producers.set(TRAIN_TRANSITION, [trainProducer]);
     const extraProducers = init.extraProducers ?? new Map<string, readonly EventProducer[]>();
     // (M019) The completion producer rides the same append path as caller extras:
     // structurally after matchAdvanced, ahead of caller extras.

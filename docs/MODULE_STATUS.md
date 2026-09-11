@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 24 (M001–M024)  |
-| `PLANNED`  | 141 (M025–M165) |
+| `VERIFIED` | 25 (M001–M025)  |
+| `PLANNED`  | 140 (M026–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -88,6 +88,10 @@ Checkpoints `VERIFIED`:
   morte=remoção; `unit.slain` NORMAL; cura adiada); 1102/1102 testes,
   100×4, tooltip de defesa passa a verdade.
   Registo em `docs/modules/M024.md`.
+- **M025 @ 2026-09-11** — treino de unidades (`unit.train`;
+  paga+gera atómico; `unit.trained` NORMAL; treasury injectada);
+  1123/1123 testes, 100×4, custo #83 consumido.
+  Registo em `docs/modules/M025.md`.
 
 ---
 
@@ -139,7 +143,7 @@ Checkpoints `VERIFIED`:
 | M022   | Movement          | `VERIFIED` |
 | M023   | Combat            | `VERIFIED` |
 | M024   | Damage Resolution | `VERIFIED` |
-| M025   | Army Management   | `PLANNED`  |
+| M025   | Army Management   | `VERIFIED` |
 | M026   | Military Tests    | `PLANNED`  |
 
 ## Fases 5–16 — AI (Foundation → Arena)

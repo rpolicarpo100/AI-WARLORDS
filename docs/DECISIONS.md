@@ -498,3 +498,47 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
   existem).
 - IMPLEMENTATION: `warfare.ts` L2 + `match.ts` (M024).
 - ESTADO: `ACCEPTED`.
+
+## D-018 — Treino de unidades: `unit.train`, custo #83, treasury injectada (M025 pré-análise)
+
+- DECISION: `TRAIN_TRANSITION` (`unit.train`) em `warfare.ts` L2:
+  `createTrainHandler(unitsConfig, treasury)` + `trainParamsRule`
+  ({type string, col/row uint32}) + `trainProducer` (`unit.trained`,
+  NORMAL, `{player, unit, type, col, row}` — id/unidade lidos do
+  after; id = `u${before.nextId ?? 0}`, contrato spawnUnit) +
+  `warfareHandlers(passable, unitsConfig, defenseOf, treasury)`
+  (append, precedente M023/M024). Regras: `unknown unit type.` /
+  `no map.` / `out of bounds.` (precedente M022) / `cannot afford.`
+  (precedente build); paga via treasury e faz spawnUnit (full-hp,
+  id `u${nextId}`); summary `trained T ID at C,R`. `UnitTreasury =
+  {canAfford, pay}` injectada pelo Match (closures economy —
+  L2↛L2 impede warfare importar payCost; precedente M022).
+  NORMAL = precedente build.started (produção). Cunhagem
+  `unit.train/trained` aprovada pelo utilizador 2026-09-11
+  (D-014 `UNIT_CREATED` presumível REAVALIADO para dotted-minus
+  convenção repo). Sem regra nova (composição 5+1); sem ficheiro
+  novo; sem bump ruleset; cenário intocado.
+- MOTIVE: #5 (criação engine-owned) + #83 (custo sem consumidor) +
+  D-014 (criação→M025) + M021 (spawnUnit puro; UnitCost//Cost) +
+  M016/M017 (payCost/canAfford; padrão createBuildHandler:
+  canAfford→pay→efeito) + M020 (conservação: débitos passam) +
+  aprovação explícita do utilizador 2026-09-11 (verbo `train`).
+- ALTERNATIVES: `unit.create/created` (pretermitted — user escolheu
+  `train`); `unit.recruit/spawn` (idem); handler em economy.ts
+  (rejeitado: UnitsConfig é L2 — espelho duplicava; coesão
+  unit.* em warfare); importar payCost (rejeitado: L2↛L2);
+  exigir edifício/passabilidade/adjacência (rejeitado: sem âncora);
+  stacking-gate (rejeitado: M022 CUT precedente); cap/upkeep
+  (CUT: sem âncora — 200 da página fica CONCEPT); cura/regem
+  (fora de âmbito — M024 adiou).
+- ADVANTAGES: #83 totalmente consumido (custo+hp+dano); treino
+  atómico paga+gera; facto de 1ª classe p/ UI futura; zero churn
+  de assinaturas existentes (só append).
+- DISADVANTAGES: warfareHandlers com 4 params (precedente
+  positional mantido); spawn em rio/montanha permitido (sem
+  âncora p/ gate — residual declarado).
+- RISKS: baixo — criação pura + gate estrito; residual: colisão
+  de id (HANDLER_FAULT fail-stop, precedente spawnUnit); sem
+  botão na página (visual futuro, fora do módulo).
+- IMPLEMENTATION: `warfare.ts` L2 + `match.ts` (M025).
+- ESTADO: `ACCEPTED`.

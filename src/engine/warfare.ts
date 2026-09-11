@@ -8,6 +8,7 @@
 import { freezeState, isPlayerId, type PlayerId, type TransitionHandler } from './authority.js';
 import { isResourceType, neighborsOf, type ResourceType } from './map.js';
 import { MAX_UINT32 } from './rng.js';
+import { STOCKPILES_SCHEMA_VERSION, type StockpilesData } from './stockpiles.js';
 import type { WorldState } from './world-state.js';
 import {
   isUnitsData,
@@ -170,6 +171,15 @@ export type PassableTerrain = (terrain: string) => boolean;
 
 /** Structural defense predicate (Match injects the terrain-config closure). */
 export type DefenseOfTerrain = (terrain: string) => number;
+
+/**
+ * Structural treasury (Match injects the economy closures — L2↛L2 bars
+ * warfare from importing payCost; M022 predicate precedent).
+ */
+export interface UnitTreasury {
+  canAfford(funds: StockpilesData, holder: PlayerId, cost: UnitCost): boolean;
+  pay(funds: StockpilesData, holder: PlayerId, cost: UnitCost): StockpilesData;
+}
 
 /** Wire-shape pre-rule (game rules live in the handler, not here). */
 export function moveParamsRule(
@@ -335,11 +345,80 @@ export function warfareHandlers(
   passable: PassableTerrain,
   unitsConfig: UnitsConfig,
   defenseOf: DefenseOfTerrain,
+  treasury: UnitTreasury,
 ): Map<string, TransitionHandler<WorldState>> {
   return new Map([
     [MOVE_TRANSITION, createMoveHandler(passable)],
     [ATTACK_TRANSITION, createAttackHandler(unitsConfig, defenseOf)],
+    [TRAIN_TRANSITION, createTrainHandler(unitsConfig, treasury)],
   ]);
+}
+
+/** Transition name (single source — match.ts wires it, tests dispatch it). */
+export const TRAIN_TRANSITION = 'unit.train';
+
+/** Validated train parameters: a unit type plus a muster cell. */
+export interface TrainParams {
+  readonly type: string;
+  readonly col: number;
+  readonly row: number;
+}
+
+/** Wire-shape pre-rule (game rules live in the handler, not here). */
+export function trainParamsRule(
+  _caller: PlayerId,
+  params: unknown,
+): { readonly rule: string; readonly detail: string } | null {
+  if (typeof params !== 'object' || params === null || Array.isArray(params)) {
+    return { rule: 'train-params', detail: 'train takes { type, col, row }' };
+  }
+  const fields = params as Record<string, unknown>;
+  if (typeof fields['type'] !== 'string' || !isUint32(fields['col']) || !isUint32(fields['row'])) {
+    return { rule: 'train-params', detail: 'train takes { type string, col/row uint32 }' };
+  }
+  return null;
+}
+
+export function createTrainHandler(
+  unitsConfig: UnitsConfig,
+  treasury: UnitTreasury,
+): TransitionHandler<WorldState> {
+  if (!isUnitsConfig(unitsConfig)) {
+    throw new Error('createTrainHandler: invalid units config.');
+  }
+  if (typeof treasury?.pay !== 'function' || typeof treasury?.canAfford !== 'function') {
+    throw new Error('createTrainHandler: invalid treasury.');
+  }
+  return (ctx) => {
+    // The pre-rule validated { type, col, row } shape on the dispatch path;
+    // this cast documents the seam (match.ts `validated` precedent).
+    const { type, col, row } = ctx.params as TrainParams;
+    if (!isUnitType(type)) {
+      return { applied: false, reason: 'train: unknown unit type.' };
+    }
+    const map = ctx.state.map;
+    if (map === undefined) {
+      return { applied: false, reason: 'train: no map.' };
+    }
+    if (map.cells.find((entry) => entry.col === col && entry.row === row) === undefined) {
+      return { applied: false, reason: 'train: out of bounds.' };
+    }
+    const cost = unitsConfig[type].cost;
+    const funds: StockpilesData =
+      ctx.state.stockpiles ?? { schemaVersion: STOCKPILES_SCHEMA_VERSION, stockpiles: {} };
+    if (!treasury.canAfford(funds, ctx.caller, cost)) {
+      return { applied: false, reason: 'train: cannot afford.' };
+    }
+    const paid = treasury.pay(funds, ctx.caller, cost);
+    const data = ctx.state.units;
+    const id = `u${data?.nextId ?? 0}`;
+    const spawned = spawnUnit(data, ctx.caller, type, col, row, unitsConfig);
+    return {
+      applied: true,
+      state: { ...ctx.state, units: spawned, stockpiles: paid },
+      summary: `trained ${type} ${id} at ${col},${row}`,
+    };
+  };
 }
 
 /** Structural EventProducer: unit.moved from validated params (LOW per #priorities). */
@@ -414,4 +493,49 @@ export function attackProducer(input: {
     });
   }
   return facts;
+}
+
+/** Structural EventProducer: unit.trained from the created unit (NORMAL per production precedent). */
+export function trainProducer(input: {
+  readonly type: string;
+  readonly caller: PlayerId;
+  readonly params: unknown;
+  readonly before: WorldState;
+  readonly after: WorldState;
+}): ReadonlyArray<{
+  readonly type: string;
+  readonly priority: 'normal';
+  readonly payload: unknown;
+}> {
+  const params = input.params;
+  if (typeof params !== 'object' || params === null || Array.isArray(params)) {
+    throw new Error('trainProducer: invalid params.');
+  }
+  const fields = params as Record<string, unknown>;
+  const { type, col, row } = fields;
+  if (typeof type !== 'string' || !isUint32(col) || !isUint32(row)) {
+    throw new Error('trainProducer: invalid params.');
+  }
+  const afterUnits = input.after.units;
+  if (afterUnits === undefined) {
+    throw new Error('trainProducer: missing unit.');
+  }
+  const id = `u${input.before.units?.nextId ?? 0}`;
+  const recruit = unitById(afterUnits, id);
+  if (recruit === undefined) {
+    throw new Error('trainProducer: missing unit.');
+  }
+  return [
+    {
+      type: 'unit.trained',
+      priority: 'normal',
+      payload: {
+        player: input.caller,
+        unit: id,
+        type: recruit.type,
+        col: recruit.col,
+        row: recruit.row,
+      },
+    },
+  ];
 }

@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { markUntrusted, type ClientRequest, type PlayerId, type Untrusted } from './authority.js';
 import { isMapData, neighborsOf, type MapCell, type MapData } from './map.js';
 import { Match, STANDARD_RULESET } from './match.js';
+import type { StockpilesData } from './stockpiles.js';
 import { DEFAULT_TERRAIN_CONFIG, type TerrainConfig } from './terrain.js';
 import { createWorldState, isWorldState, type WorldState } from './world-state.js';
 import { perceive } from './views.js';
@@ -16,6 +17,7 @@ import {
   attackProducer,
   createAttackHandler,
   createMoveHandler,
+  createTrainHandler,
   DEFAULT_UNITS_CONFIG,
   isUnitsConfig,
   maxHpOf,
@@ -23,12 +25,16 @@ import {
   moveParamsRule,
   moveProducer,
   spawnUnit,
+  TRAIN_TRANSITION,
+  trainParamsRule,
+  trainProducer,
   unitCostOf,
   unitDamageOf,
   warfareHandlers,
   type DefenseOfTerrain,
   type PassableTerrain,
   type UnitsConfig,
+  type UnitTreasury,
 } from './warfare.js';
 import { unitById, type UnitsData, type UnitType } from './units.js';
 
@@ -415,20 +421,25 @@ describe('createMoveHandler (unit: direct)', () => {
 });
 
 describe('warfareHandlers (unit)', () => {
-  it('registers move+attack; invalid predicate/config throws', () => {
-    expect([...warfareHandlers(() => true, customUnits(), () => 0).keys()]).toEqual([
+  const RICH: UnitTreasury = { canAfford: () => true, pay: (funds) => funds };
+  it('registers move+attack+train; invalid predicate/config/treasury throws', () => {
+    expect([...warfareHandlers(() => true, customUnits(), () => 0, RICH).keys()]).toEqual([
       'unit.move',
       'unit.attack',
+      'unit.train',
     ]);
-    expect(() => warfareHandlers(42 as unknown as PassableTerrain, customUnits(), () => 0)).toThrow(
-      /invalid passable predicate/,
-    );
-    expect(() => warfareHandlers(() => true, 42 as unknown as UnitsConfig, () => 0)).toThrow(
+    expect(() =>
+      warfareHandlers(42 as unknown as PassableTerrain, customUnits(), () => 0, RICH),
+    ).toThrow(/invalid passable predicate/);
+    expect(() => warfareHandlers(() => true, 42 as unknown as UnitsConfig, () => 0, RICH)).toThrow(
       /invalid units config/,
     );
     expect(() =>
-      warfareHandlers(() => true, customUnits(), 42 as unknown as DefenseOfTerrain),
+      warfareHandlers(() => true, customUnits(), 42 as unknown as DefenseOfTerrain, RICH),
     ).toThrow(/invalid defense predicate/);
+    expect(() =>
+      warfareHandlers(() => true, customUnits(), () => 0, 42 as unknown as UnitTreasury),
+    ).toThrow(/invalid treasury/);
   });
 });
 
@@ -1232,5 +1243,413 @@ describe('attack E2E (real Match)', () => {
     expect(match.getEvents().filter((e) => e.type === 'unit.attacked')).toEqual([
       expect.objectContaining({ payload: { player: 'p1', unit: 'u0', target: 'u1', damage: 2 } }),
     ]);
+  });
+});
+
+describe('trainParamsRule (wire-shape)', () => {
+  it.each([[null], [[]], ['x']] as Array<[unknown]>)('rejects non-object %j', (value) => {
+    expect(trainParamsRule(P1, value)).toEqual({
+      rule: 'train-params',
+      detail: 'train takes { type, col, row }',
+    });
+  });
+
+  it('rejects mistyped fields, accepts the shape', () => {
+    const detail = { rule: 'train-params', detail: 'train takes { type string, col/row uint32 }' };
+    expect(trainParamsRule(P1, {})).toEqual(detail);
+    expect(trainParamsRule(P1, { type: 42, col: 0, row: 0 })).toEqual(detail);
+    expect(trainParamsRule(P1, { type: 'worker', col: 0, row: -1 })).toEqual(detail);
+    expect(trainParamsRule(P1, { type: 'worker', col: 1, row: 2 })).toBeNull();
+  });
+});
+
+describe('createTrainHandler (unit: direct)', () => {
+  const RICH: UnitTreasury = { canAfford: () => true, pay: (funds) => funds };
+  const BROKE: UnitTreasury = { canAfford: () => false, pay: (funds) => funds };
+
+  function warMap(): MapData {
+    const cells: MapCell[] = [];
+    for (let row = 0; row < 3; row += 1) {
+      for (let col = 0; col < 3; col += 1) {
+        cells.push({ col, row, terrain: 'field' });
+      }
+    }
+    const map: MapData = {
+      schemaVersion: 1,
+      id: 'test-muster' as MapData['id'],
+      width: 3,
+      height: 3,
+      stagger: 'odd',
+      cells,
+      spawns: [],
+    };
+    if (!isMapData(map)) {
+      throw new Error('TEST BUG: warMap invalid');
+    }
+    return map;
+  }
+
+  function funds(): StockpilesData {
+    return { schemaVersion: 1, stockpiles: { p1: { food: 100, wood: 50, stone: 0, gold: 20 } } };
+  }
+
+  function garrison(): UnitsData {
+    return {
+      schemaVersion: 1,
+      nextId: 4,
+      units: [{ id: 'u0', owner: 'p1', type: 'warrior', hp: 12, col: 0, row: 0 }],
+    };
+  }
+
+  it('throws on invalid units config or treasury', () => {
+    expect(() => createTrainHandler(42 as unknown as UnitsConfig, RICH)).toThrow(
+      /invalid units config/,
+    );
+    expect(() => createTrainHandler(customUnits(), 42 as unknown as UnitTreasury)).toThrow(
+      /invalid treasury/,
+    );
+    expect(() =>
+      createTrainHandler(customUnits(), {
+        pay: (paid: StockpilesData) => paid,
+      } as unknown as UnitTreasury),
+    ).toThrow(/invalid treasury/);
+  });
+
+  it('rejects unknown unit types (string and non-string)', () => {
+    const handler = createTrainHandler(customUnits(), RICH);
+    const state = createWorldState({ players: [P1, P2], map: warMap(), stockpiles: funds() });
+    for (const type of ['peasant', 42]) {
+      expect(
+        handler({ caller: P1, params: { type, col: 1, row: 1 }, state }),
+      ).toEqual({ applied: false, reason: 'train: unknown unit type.' });
+    }
+  });
+
+  it('rejects training without a map', () => {
+    const handler = createTrainHandler(customUnits(), RICH);
+    const state = createWorldState({ players: [P1, P2], stockpiles: funds() });
+    expect(
+      handler({
+        caller: P1,
+        params: { type: 'worker', col: 0, row: 0 },
+        state,
+      }),
+    ).toEqual({ applied: false, reason: 'train: no map.' });
+  });
+
+  it('rejects muster cells outside the map', () => {
+    const handler = createTrainHandler(customUnits(), RICH);
+    const state = createWorldState({ players: [P1, P2], map: warMap(), stockpiles: funds() });
+    expect(
+      handler({
+        caller: P1,
+        params: { type: 'worker', col: 9, row: 9 },
+        state,
+      }),
+    ).toEqual({ applied: false, reason: 'train: out of bounds.' });
+  });
+
+  it('rejects training the caller cannot afford', () => {
+    const handler = createTrainHandler(customUnits(), BROKE);
+    const state = createWorldState({
+      players: [P1, P2],
+      map: warMap(),
+      stockpiles: funds(),
+      units: garrison(),
+    });
+    expect(
+      handler({
+        caller: P1,
+        params: { type: 'warrior', col: 1, row: 1 },
+        state,
+      }),
+    ).toEqual({ applied: false, reason: 'train: cannot afford.' });
+  });
+
+  it('golden: pays the treasury, musters a full-hp worker, names it u4', () => {
+    const seen: Array<{ holder: PlayerId; cost: unknown }> = [];
+    const treasury: UnitTreasury = {
+      canAfford: () => true,
+      pay: (paid, holder, cost) => {
+        seen.push({ holder, cost });
+        return paid;
+      },
+    };
+    const handler = createTrainHandler(customUnits(), treasury);
+    const state = createWorldState({
+      players: [P1, P2],
+      map: warMap(),
+      stockpiles: funds(),
+      units: garrison(),
+    });
+    const result = handler({
+      caller: P1,
+      params: { type: 'worker', col: 2, row: 0 },
+      state,
+    });
+    expect(result.applied).toBe(true);
+    if (!result.applied) {
+      throw new Error('TEST BUG: expected applied');
+    }
+    expect(seen).toEqual([{ holder: P1, cost: { food: 10 } }]);
+    expect(result.state.stockpiles).toEqual(funds());
+    expect(result.state.units).toEqual({
+      schemaVersion: 1,
+      nextId: 5,
+      units: [
+        { id: 'u0', owner: 'p1', type: 'warrior', hp: 12, col: 0, row: 0 },
+        { id: 'u4', owner: 'p1', type: 'worker', hp: 5, col: 2, row: 0 },
+      ],
+    });
+    expect(result.summary).toBe('trained worker u4 at 2,0');
+  });
+
+  it('id follows nextId, not the roster length', () => {
+    const handler = createTrainHandler(customUnits(), RICH);
+    const state = createWorldState({
+      players: [P1, P2],
+      map: warMap(),
+      stockpiles: funds(),
+      units: { ...garrison(), nextId: 7 },
+    });
+    const result = handler({
+      caller: P1,
+      params: { type: 'archer', col: 1, row: 2 },
+      state,
+    });
+    expect(result.applied).toBe(true);
+    if (!result.applied) {
+      throw new Error('TEST BUG: expected applied');
+    }
+    expect(result.state.units?.units.map((unit) => unit.id)).toContain('u7');
+    expect(result.summary).toBe('trained archer u7 at 1,2');
+  });
+
+  it('musters u0 into a unit-less world', () => {
+    const handler = createTrainHandler(customUnits(), RICH);
+    const state = createWorldState({ players: [P1, P2], map: warMap(), stockpiles: funds() });
+    const result = handler({
+      caller: P1,
+      params: { type: 'warrior', col: 0, row: 2 },
+      state,
+    });
+    expect(result.applied).toBe(true);
+    if (!result.applied) {
+      throw new Error('TEST BUG: expected applied');
+    }
+    expect(result.state.units).toEqual({
+      schemaVersion: 1,
+      nextId: 1,
+      units: [{ id: 'u0', owner: 'p1', type: 'warrior', hp: 12, col: 0, row: 2 }],
+    });
+    expect(result.summary).toBe('trained warrior u0 at 0,2');
+  });
+
+  it('applies zero-cost training without any stockpiles', () => {
+    const handler = createTrainHandler(DEFAULT_UNITS_CONFIG, RICH);
+    const state = createWorldState({ players: [P1, P2], map: warMap() });
+    const result = handler({
+      caller: P1,
+      params: { type: 'worker', col: 1, row: 1 },
+      state,
+    });
+    expect(result.applied).toBe(true);
+    if (!result.applied) {
+      throw new Error('TEST BUG: expected applied');
+    }
+    expect(result.state.units?.units).toHaveLength(1);
+    expect(result.state.stockpiles).toEqual({ schemaVersion: 1, stockpiles: {} });
+  });
+});
+
+describe('trainProducer (unit: direct)', () => {
+  function crewed(units?: UnitsData): WorldState {
+    return createWorldState({ players: [P1, P2], ...(units === undefined ? {} : { units }) });
+  }
+
+  const params = { type: 'worker', col: 2, row: 0 };
+
+  it('throws on malformed params', () => {
+    const state = crewed();
+    for (const bad of ['x', { type: 'worker' }]) {
+      expect(() =>
+        trainProducer({ type: TRAIN_TRANSITION, caller: P1, params: bad, before: state, after: state }),
+      ).toThrow(/invalid params/);
+    }
+  });
+
+  it('throws when the after state has no units', () => {
+    const before = crewed({
+      schemaVersion: 1,
+      nextId: 1,
+      units: [{ id: 'u0', owner: 'p1', type: 'warrior', hp: 12, col: 0, row: 0 }],
+    });
+    expect(() =>
+      trainProducer({ type: TRAIN_TRANSITION, caller: P1, params, before, after: crewed() }),
+    ).toThrow(/missing unit/);
+  });
+
+  it('throws when the recruit id is absent from the after roster', () => {
+    const roster: UnitsData = {
+      schemaVersion: 1,
+      nextId: 2,
+      units: [
+        { id: 'u0', owner: 'p1', type: 'warrior', hp: 12, col: 0, row: 0 },
+        { id: 'u1', owner: 'p2', type: 'warrior', hp: 12, col: 1, row: 0 },
+      ],
+    };
+    expect(() =>
+      trainProducer({ type: TRAIN_TRANSITION, caller: P1, params, before: crewed(roster), after: crewed(roster) }),
+    ).toThrow(/missing unit/);
+  });
+
+  it('golden: trained NORMAL fact reads type+cell from the recruit', () => {
+    const before = crewed({
+      schemaVersion: 1,
+      nextId: 2,
+      units: [
+        { id: 'u0', owner: 'p1', type: 'warrior', hp: 12, col: 0, row: 0 },
+        { id: 'u1', owner: 'p2', type: 'warrior', hp: 12, col: 1, row: 0 },
+      ],
+    });
+    const after = crewed({
+      schemaVersion: 1,
+      nextId: 3,
+      units: [
+        ...(before.units?.units ?? []),
+        { id: 'u2', owner: 'p1', type: 'worker', hp: 5, col: 2, row: 0 },
+      ],
+    });
+    expect(trainProducer({ type: TRAIN_TRANSITION, caller: P1, params, before, after })).toEqual([
+      {
+        type: 'unit.trained',
+        priority: 'normal',
+        payload: { player: 'p1', unit: 'u2', type: 'worker', col: 2, row: 0 },
+      },
+    ]);
+  });
+
+  it('names u0 when the before state has no units', () => {
+    const after = crewed({
+      schemaVersion: 1,
+      nextId: 1,
+      units: [{ id: 'u0', owner: 'p1', type: 'warrior', hp: 12, col: 0, row: 2 }],
+    });
+    expect(trainProducer({ type: TRAIN_TRANSITION, caller: P1, params, before: crewed(), after })).toEqual([
+      {
+        type: 'unit.trained',
+        priority: 'normal',
+        payload: { player: 'p1', unit: 'u0', type: 'warrior', col: 0, row: 2 },
+      },
+    ]);
+  });
+});
+
+describe('train E2E (real Match)', () => {
+  function trainMap(): MapData {
+    const map: MapData = {
+      schemaVersion: 1,
+      id: 'test-depot' as MapData['id'],
+      width: 3,
+      height: 1,
+      stagger: 'odd',
+      cells: [
+        { col: 0, row: 0, terrain: 'field' },
+        { col: 1, row: 0, terrain: 'field' },
+        { col: 2, row: 0, terrain: 'field' },
+      ],
+      spawns: [],
+    };
+    if (!isMapData(map)) {
+      throw new Error('TEST BUG: trainMap invalid');
+    }
+    return map;
+  }
+
+  function trainMatch(funded: boolean): Match {
+    return new Match({
+      seed: 25,
+      ruleset: STANDARD_RULESET,
+      players: [P1, P2],
+      initialState: createWorldState({
+        players: [P1, P2],
+        map: trainMap(),
+        units: {
+          schemaVersion: 1,
+          nextId: 2,
+          units: [
+            { id: 'u0', owner: 'p1', type: 'warrior', hp: 12, col: 0, row: 0 },
+            { id: 'u1', owner: 'p2', type: 'warrior', hp: 12, col: 1, row: 0 },
+          ],
+        },
+        ...(funded
+          ? {
+              stockpiles: {
+                schemaVersion: 1,
+                stockpiles: { p1: { food: 100, wood: 50, stone: 0, gold: 20 } },
+              },
+            }
+          : {}),
+      }),
+      unitsConfig: customUnits(),
+    });
+  }
+
+  function enlist(match: Match, rid: string, player: PlayerId, params: unknown) {
+    return match.dispatch(
+      match.join(player),
+      raw({ requestId: rid, playerId: player, type: TRAIN_TRANSITION, payload: params }),
+    );
+  }
+
+  it('golden: funds debit 10 food, u2 musters full-hp, trained fact NORMAL', () => {
+    const match = trainMatch(true);
+    const result = enlist(match, 'r1', P1, { type: 'worker', col: 2, row: 0 });
+    expect(result).toMatchObject({ status: 'applied', summary: 'trained worker u2 at 2,0' });
+    expect(match.getRevision()).toBe(1);
+    const snapshot = match.getSnapshot();
+    expect(snapshot.stockpiles?.stockpiles['p1']).toEqual({ food: 90, wood: 50, stone: 0, gold: 20 });
+    expect(snapshot.units).toEqual({
+      schemaVersion: 1,
+      nextId: 3,
+      units: [
+        { id: 'u0', owner: 'p1', type: 'warrior', hp: 12, col: 0, row: 0 },
+        { id: 'u1', owner: 'p2', type: 'warrior', hp: 12, col: 1, row: 0 },
+        { id: 'u2', owner: 'p1', type: 'worker', hp: 5, col: 2, row: 0 },
+      ],
+    });
+    expect(match.getEvents().filter((e) => e.type === 'unit.trained')).toEqual([
+      expect.objectContaining({
+        type: 'unit.trained',
+        priority: 'normal',
+        payload: { player: 'p1', unit: 'u2', type: 'worker', col: 2, row: 0 },
+      }),
+    ]);
+  });
+
+  it('rejects unfunded training, state untouched', () => {
+    const match = trainMatch(false);
+    const before = match.getSnapshot();
+    const result = enlist(match, 'r1', P1, { type: 'worker', col: 2, row: 0 });
+    expect(result).toMatchObject({ status: 'rejected', reason: 'train: cannot afford.' });
+    expect(match.getSnapshot()).toEqual(before);
+    expect(match.getRevision()).toBe(0);
+  });
+
+  it('malformed params rejected (pre-rule), state untouched', () => {
+    const match = trainMatch(true);
+    const session = match.join(P1);
+    const before = match.getSnapshot();
+    const payloads: unknown[] = ['x', {}, { type: 'worker' }];
+    payloads.forEach((payload, index) => {
+      expect(
+        match.dispatch(
+          session,
+          raw({ requestId: `r${index + 1}`, playerId: 'p1', type: TRAIN_TRANSITION, payload }),
+        ),
+      ).toMatchObject({ status: 'rejected' });
+    });
+    expect(match.getSnapshot()).toEqual(before);
+    expect(match.getRevision()).toBe(0);
   });
 });
