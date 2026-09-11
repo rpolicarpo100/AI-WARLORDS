@@ -45,7 +45,7 @@ semântica de terreno configurável (regras, fora do estado);
 nós de recursos como geografia (coerência dupla, sob map-preserved);
 AI/CLIENT map-blind por construção até fog/percepção (M013/M015).
 
-## 2. Arquitectura-alvo (PLANNED — fonte: documento-mestre §12)
+## 2. Arquitectura-alvo (PLANNED — fonte: documento-mestre #6)
 
 ```text
 PLAYER → COMMAND INTERPRETER → COMMAND INTENT → COMMAND POLICY
@@ -55,9 +55,9 @@ PLAYER → COMMAND INTERPRETER → COMMAND INTENT → COMMAND POLICY
  → EVENT SYSTEM → REPLAY → ANALYTICS
 ```
 
-Invariantes em vigor: AI propõe / servidor valida / engine executa (§12);
-cliente nunca é fonte de verdade (§23); ENGINE=FACTS, AI=DECISIONS,
-LLM=LANGUAGE (§22); jogo funciona sem LLM (§20); separação
+Invariantes em vigor: AI propõe / servidor valida / engine executa (#5/#6);
+cliente nunca é fonte de verdade (#4); ENGINE=FACTS, AI=DECISIONS,
+LLM=LANGUAGE (#7); jogo funciona sem LLM (#7); separação
 WORLD≠AI≠CLIENT imposta por construção — kinds nominais (M004);
 determinismo end-to-end provado — timeline+hash+goldens (M005);
 output de handlers re-guardado — shape/roster/tick/size/map (M006+M010);
@@ -93,6 +93,9 @@ chain nunca substitui o engine (M101); dinheiro só após gate Fase 28.
 - [ ] Lifecycle (M071) estende o invariante roster (membership) sem o contornar
 - [ ] Score/comparação no time-limit (M016+ estende; L-17)
 - [ ] Primeiro mapa de conteúdo (M011+ com semântica; geometria pixel — L-21)
+- [ ] Action queue do mestre #18 (sem dono; propor M069 transporte; decidir até M022)
+- [ ] Mapeamento tick↔relógio indefinido (maxTicks vs #46 "15 minutos" — L-24)
+- [ ] Spawns↔roster sem confronto (playerIndex uint32 livre — L-25; M021 precisa)
 - [x] Linguagem/stack base (M002: TypeScript/Node — VERIFIED)
 - [x] Mecanismo de autoridade (M003: kernel — VERIFIED)
 - [x] Estado oficial + separação de vistas (M004: WorldState v1 — VERIFIED)
@@ -145,17 +148,18 @@ events, victory, map, terrain, resources.
 
 ## 6. Registo de alterações
 
-| Data       | Módulo | Alteração                                                   |
-| ---------- | ------ | ----------------------------------------------------------- |
-| 2026-09-10 | M001   | Criação inicial: estado NONE + alvo PLANNED                 |
-| 2026-09-10 | M002   | Layout do repo + aviso anti-contrato do scaffold            |
-| 2026-09-10 | M003   | Kernel de autoridade EXISTS; layout engine; constraint M071 |
-| 2026-09-10 | M004   | WorldState v1 + vistas EXISTS; gate formato→M010; TOOLS.md  |
-| 2026-09-10 | M005   | Match determinístico EXISTS; goldens; seed explícita        |
-| 2026-09-10 | M006   | Validador EXISTS; pós-invariantes; streams; registo detido  |
-| 2026-09-10 | M007   | Eventos EXISTS; geneses+factos+surrogates; restrição prova  |
-| 2026-09-10 | M008   | Veredictos EXISTS; lazy+time-draw; terminalidade; fail-stop |
-| 2026-09-11 | M009   | Suite transversal EXISTS; selo+scans+escala; Fase 1 selada  |
-| 2026-09-11 | M010   | Mapas EXISTS; hex+loader Tiled; map-preserved; Tiled aut.   |
-| 2026-09-11 | M011   | Terreno EXISTS; config 9/9; consultas; sem emendas prod     |
-| 2026-09-11 | M012   | Recursos EXISTS; nós+coerência; RISK reparado               |
+| Data       | Módulo    | Alteração                                                      |
+| ---------- | --------- | -------------------------------------------------------------- |
+| 2026-09-10 | M001      | Criação inicial: estado NONE + alvo PLANNED                    |
+| 2026-09-10 | M002      | Layout do repo + aviso anti-contrato do scaffold               |
+| 2026-09-10 | M003      | Kernel de autoridade EXISTS; layout engine; constraint M071    |
+| 2026-09-10 | M004      | WorldState v1 + vistas EXISTS; gate formato→M010; TOOLS.md     |
+| 2026-09-10 | M005      | Match determinístico EXISTS; goldens; seed explícita           |
+| 2026-09-10 | M006      | Validador EXISTS; pós-invariantes; streams; registo detido     |
+| 2026-09-10 | M007      | Eventos EXISTS; geneses+factos+surrogates; restrição prova     |
+| 2026-09-10 | M008      | Veredictos EXISTS; lazy+time-draw; terminalidade; fail-stop    |
+| 2026-09-11 | M009      | Suite transversal EXISTS; selo+scans+escala; Fase 1 selada     |
+| 2026-09-11 | M010      | Mapas EXISTS; hex+loader Tiled; map-preserved; Tiled aut.      |
+| 2026-09-11 | M011      | Terreno EXISTS; config 9/9; consultas; sem emendas prod        |
+| 2026-09-11 | M012      | Recursos EXISTS; nós+coerência; RISK reparado                  |
+| 2026-09-11 | FIX-AUDIT | Auditoria M001–M012: citações #mestre, pendentes #18/L-24/L-25 |

@@ -11,7 +11,7 @@ see `docs/MODULE_STATUS.md` for the current phase.
 - Node.js 20+ (`nvm use`, see `.nvmrc`; `engines` field enforced by contract test)
 - npm (ships with Node)
 
-No Docker, no database, no external services required (as of Fase 0–1).
+No Docker, no database, no external services required (as of Fase 0–2).
 
 ## Setup
 
@@ -58,4 +58,7 @@ docs/modules/   per-module contract + analysis + execution record
 - `docs/RISK_REGISTER.md` — risk register
 - `docs/MODULE_STATUS.md` — official status of all M001–M165
 - `docs/TESTING.md` — test policy (categories, negative tests, coverage, mocks)
+- `docs/DECISIONS.md` — architectural decisions (master #81)
+- `docs/PROCESS.md` — process rules (surgical edits, checklists, FIX vehicle)
+- `docs/AUDIT_2026-09-11_M001-M012.md` — independent audit + resolution
 - `docs/modules/Mxxx.md` — per-module execution records

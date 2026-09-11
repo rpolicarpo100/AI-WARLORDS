@@ -182,7 +182,12 @@ Respeitar estritamente a ordem do documento-mestre: **M002 → M003 → …**, s
 
 1. Isto é o melhor cenário para um audit: sem legado, sem surpresas escondidas. O risco está todo no futuro, não no presente.
 2. Os dois ficheiros em `uploads/` são duplicados — manter apenas como referência; o conteúdo canónico vive nesta pasta `ai-warlords/docs/`.
-3. O documento-mestre tem 165 módulos e 36 fases. O risco nº 1 do programa é **abandono por exaustão / scope creep**, não tecnologia. Mitigação: gates rígidos, um módulo de cada vez (§35).
+3. O plano adoptado organiza o trabalho em 165 módulos e 36 fases
+   (derivação do agente em M001; o mestre em `uploads/` define #0–#110 e fases
+   0–38 sem breakdown por módulo — ver mapa em `MODULE_STATUS.md`; texto
+   canónico da metodologia § por importar — R2b). O risco nº 1 do programa é
+   **abandono por exaustão / scope creep**, não tecnologia. Mitigação: gates
+   rígidos, um módulo de cada vez (§35 — metodologia, importação pendente).
 4. Nada neste audit autoriza escrita de código. Próximo passo permitido: M002, apenas após autorização explícita.
 
 ---

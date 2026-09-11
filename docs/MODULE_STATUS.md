@@ -38,7 +38,7 @@ Checkpoints `VERIFIED`:
 - **M009 @ 2026-09-11** — suite transversal do motor (gémeos + selo + scans +
   escala); 327/327 testes, 100×4, zero código de produção.
   Registo em `docs/modules/M009.md`. **Fase 1 completa.**
-- **M010 @ 2026-09-10** — sistema de mapas (hex + `MapData` + loader Tiled +
+- **M010 @ 2026-09-11** — sistema de mapas (hex + `MapData` + loader Tiled +
   `map-preserved`); 459/459 testes, 100×4, v1 compatível.
   Registo em `docs/modules/M010.md`.
 - **M011 @ 2026-09-11** — terreno (config 9/9 + default + consultas);
@@ -129,14 +129,6 @@ Checkpoints `VERIFIED`:
 
 ## Fases 21–28 — Economy sim, Free mode, Solana, Compliance, Seasons
 
-| Módulo(s) | Âmbito            | Estado    |
-| --------- | ----------------- | --------- |
-| M094      | Economy Simulator | `PLANNED` |
-| M095–M097 | Free Mode         | `PLANNED` |
-| M096–M097 | Free Mode         | `PLANNED` |
-
-Note: M095 intentionally folded above (duplicate row guard — see M003 record).
-
 | Módulo(s) | Âmbito             | Estado                                                      |
 | --------- | ------------------ | ----------------------------------------------------------- |
 | M094      | Economy Simulator  | `PLANNED`                                                   |
@@ -162,6 +154,27 @@ Note: M095 intentionally folded above (duplicate row guard — see M003 record).
 | M161–M165 | Social                  | `PLANNED` |
 
 ---
+
+## Mapa fases-mestre ↔ fases-repo (FIX-AUDIT 2026-09-11)
+
+O mestre (`uploads/`, #76) numera fases 0–38; o plano-repo numera 0–36.
+Regra: em docs, fases-repo escrevem-se `Fase N`; fases-mestre `#N`.
+
+Alinhadas por número: 0, 1, 3, 4, 28. Divergentes:
+
+| Mestre (#76)        | Repo                | Nota                                     |
+| ------------------- | ------------------- | ---------------------------------------- |
+| 2 Map & World       | Fase 2 (M010–M015)  | repo-2 absorve a mestre-5                |
+| 5 Fog & Perception  | Fase 2 (M013–M015)  | fog vive na repo-2, não numa fase 5      |
+| 6–9 (AI→Commands)   | Fases 5–8           | faixas correspondentes                   |
+| 10–17 (Ref→Arena)   | Fases 9–16          | faixas correspondentes                   |
+| 18–21 (Mult→Obs)    | Fases 17–20         | desvio −1                                |
+| 22–23 (Sim→Free)    | Fases 21–22         | desvio −1                                |
+| 24–27 (Sol→Seasons) | Fases 23–27         | desvio −1                                |
+| 29 Supply Lines     | —                   | SEM módulo no plano; colmatar até F-29   |
+| 30–36 (Adv→Content) | Fases 29–36 (parc.) | nomes diferem; Social≈M161–M165          |
+| 37 Social/Content   | Fase 36 (M161–M165) | aproximado                               |
+| 38 Long-Term        | —                   | fora do plano 165; decidir se necessário |
 
 ## Ordem recomendada (estrita, sem saltos)
 
