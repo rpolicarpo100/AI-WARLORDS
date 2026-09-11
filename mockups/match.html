@@ -1,0 +1,3089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AI Warlords — Match (MOCKUP)</title>
+<style>
+  :root { --bg:#0d1017; --panel:#151b26; --line:#2a3446; --ink:#e8ecf4; --dim:#9aa5b8;
+         --gold:#e8b93c; --blue:#3d7dd6; --red:#d64545; --green:#57a773; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.45 system-ui,sans-serif; }
+  .ribbon { background:repeating-linear-gradient(45deg,#3a2f10,#3a2f10 12px,#2c260c 12px,#2c260c 24px);
+    color:var(--gold); text-align:center; padding:4px; font-size:12px; letter-spacing:1px; }
+  header.hud { display:flex; gap:10px; align-items:center; padding:8px 14px; background:var(--panel);
+    border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  header.hud .logo { font-weight:800; color:var(--gold); }
+  .tickbox { display:flex; align-items:center; gap:6px; background:#0a0d13; border:1px solid var(--line);
+    border-radius:8px; padding:4px 8px; }
+  .tickbox button { background:#222c3e; color:var(--ink); border:1px solid var(--line); border-radius:6px;
+    cursor:pointer; padding:2px 10px; font-size:14px; }
+  .res { display:flex; gap:8px; margin-left:auto; flex-wrap:wrap; }
+  .res span { background:#0a0d13; border:1px solid var(--line); border-radius:8px; padding:4px 10px; }
+  .viewtoggle button { background:#222c3e; color:var(--dim); border:1px solid var(--line); border-radius:6px;
+    cursor:pointer; padding:4px 10px; }
+  .viewtoggle button.on { color:#0a0d13; background:var(--gold); border-color:var(--gold); font-weight:700; }
+  main { display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:10px; padding:10px; }
+  section.mapcard, aside.panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:10px; }
+  svg.map { width:100%; height:auto; display:block; background:#07090e; border-radius:8px; }
+  .hex { cursor:pointer; stroke:#0a0d13; stroke-width:1.5; }
+  .hex.sel { stroke:var(--gold); stroke-width:3; }
+  .tabs { display:flex; gap:6px; margin-bottom:8px; }
+  .tabs button { flex:1; background:#0a0d13; color:var(--dim); border:1px solid var(--line);
+    border-radius:6px; padding:6px; cursor:pointer; }
+  .tabs button.on { color:var(--gold); border-color:var(--gold); }
+  .card { background:#0a0d13; border:1px solid var(--line); border-radius:8px; padding:8px 10px; margin-bottom:8px; }
+  .card h4 { margin:0 0 6px; color:var(--gold); font-size:13px; text-transform:uppercase; letter-spacing:1px; }
+  .brow { display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-top:1px dotted #222c3e; }
+  .brow:first-of-type { border-top:none; }
+  .cost { color:var(--dim); font-size:12px; }
+  .afford { color:var(--green); } .poor { color:var(--red); }
+  .mockbtn { background:#222c3e; color:var(--dim); border:1px solid var(--line); border-radius:6px;
+    padding:3px 10px; cursor:not-allowed; font-size:12px; }
+  .qbar { height:8px; background:#222c3e; border-radius:4px; overflow:hidden; margin-top:3px; }
+  .qbar i { display:block; height:100%; background:var(--gold); }
+  .log { max-height:260px; overflow:auto; font-size:12.5px; }
+  .log div { padding:3px 0; border-top:1px dotted #222c3e; }
+  .log .t { color:var(--dim); }
+  footer.actions { display:flex; gap:8px; align-items:center; padding:10px 14px; background:var(--panel);
+    border-top:1px solid var(--line); flex-wrap:wrap; }
+  footer.actions button { background:#222c3e; color:var(--ink); border:1px solid var(--line);
+    border-radius:8px; padding:8px 14px; cursor:not-allowed; }
+  .chip { font-size:11px; border-radius:6px; padding:1px 7px; margin-left:6px; }
+  .live { background:#12351f; color:var(--green); } .soon { background:#3a2f10; color:var(--gold); }
+  .fine { color:var(--dim); font-size:12px; padding:8px 14px 16px; }
+  .legend { display:flex; gap:10px; flex-wrap:wrap; font-size:12px; color:var(--dim); margin-top:6px; }
+  a { color:var(--gold); }
+</style>
+</head>
+<body>
+<div class="ribbon">MOCKUP — placeholder art &amp; layout · map/state/events are REAL engine outputs (scenario seed 7)</div>
+<header class="hud">
+  <span class="logo">⚔ AI WARLORDS</span>
+  <span style="color:var(--dim)">Vale of Echoes (concept name)</span>
+  <div class="tickbox">
+    <button id="prev">◀</button><b id="tick">TICK 2</b><button id="next">▶</button>
+  </div>
+  <div class="res" id="res"></div>
+  <div class="viewtoggle">
+    <button id="vFog" class="on">Commander (fog)</button><button id="vFull">Strategist (full)</button>
+  </div>
+  <a href="index.html">hub</a> <a href="city.html">city</a> <a href="menu.html">menu</a>
+</header>
+<main>
+  <section class="mapcard">
+    <svg class="map" id="map" viewBox="0 0 560 360" role="img" aria-label="scenario hex map"></svg>
+    <div class="legend"><span>● worker</span><span>■ warrior</span><span>◆ archer</span>
+      <span style="color:var(--blue)">■ you (p1)</span><span style="color:var(--red)">■ foe (p2, fog-gated)</span>
+      <span id="fogNote"></span></div>
+  </section>
+  <aside class="panel">
+    <div class="tabs">
+      <button data-tab="cell" class="on">Cell</button><button data-tab="build">Build</button>
+      <button data-tab="city">City</button><button data-tab="log">Log</button>
+    </div>
+    <div id="tab-cell"></div><div id="tab-build" hidden></div>
+    <div id="tab-city" hidden></div><div id="tab-log" hidden></div>
+    <div class="card"><h4>Minimap</h4><svg id="mini" viewBox="0 0 160 120" style="width:100%"></svg></div>
+  </aside>
+</main>
+<footer class="actions">
+  <button disabled>⛏ Gather <span class="chip live">M017 ✓</span></button>
+  <button disabled>🏠 Build <span class="chip live">M019 ✓</span></button>
+  <button disabled>➤ Move <span class="chip soon">M022 →</span></button>
+  <button disabled>⚔ Attack <span class="chip soon">M023 →</span></button>
+  <span style="color:var(--dim)">Advisor (CONCEPT): “Tower completes in 2 ticks — train an archer next (M025).”</span>
+</footer>
+<div class="fine" id="fine"></div>
+<script>const SCENARIO = {
+ "meta": {
+  "kind": "mockup-scenario",
+  "seed": 7,
+  "ruleset": {
+   "id": "standard",
+   "version": 1
+  },
+  "generatedBy": "mockups/generate-state.ts (real engine dispatches)",
+  "note": "All snapshots/events/perception below are genuine engine outputs. Page chrome, art and layout are placeholder mockups."
+ },
+ "configs": {
+  "buildings": {
+   "town-center": {
+    "cost": {},
+    "buildTime": 0
+   },
+   "house": {
+    "cost": {
+     "wood": 5
+    },
+    "buildTime": 2
+   },
+   "storage": {
+    "cost": {
+     "wood": 8
+    },
+    "buildTime": 2
+   },
+   "barracks": {
+    "cost": {
+     "wood": 20,
+     "stone": 10
+    },
+    "buildTime": 4
+   },
+   "wall": {
+    "cost": {
+     "stone": 5
+    },
+    "buildTime": 2
+   },
+   "tower": {
+    "cost": {
+     "wood": 2,
+     "stone": 1
+    },
+    "buildTime": 3
+   },
+   "caps": {
+    "base": 100,
+    "perStorage": 50
+   }
+  },
+  "economy": {
+   "food": {
+    "value": 1,
+    "gatherYield": 1
+   },
+   "wood": {
+    "value": 1,
+    "gatherYield": 1
+   },
+   "stone": {
+    "value": 1,
+    "gatherYield": 1
+   },
+   "gold": {
+    "value": 5,
+    "gatherYield": 3
+   }
+  },
+  "unitsDefault": {
+   "worker": {
+    "cost": {},
+    "maxHp": 1,
+    "damage": 0
+   },
+   "warrior": {
+    "cost": {},
+    "maxHp": 1,
+    "damage": 0
+   },
+   "archer": {
+    "cost": {},
+    "maxHp": 1,
+    "damage": 0
+   }
+  },
+  "unitsScenario": {
+   "worker": {
+    "cost": {
+     "food": 10
+    },
+    "maxHp": 5,
+    "damage": 1
+   },
+   "warrior": {
+    "cost": {
+     "food": 20,
+     "gold": 5
+    },
+    "maxHp": 12,
+    "damage": 4
+   },
+   "archer": {
+    "cost": {
+     "wood": 15,
+     "gold": 10
+    },
+    "maxHp": 8,
+    "damage": 3
+   }
+  }
+ },
+ "snapshots": [
+  {
+   "schemaVersion": 1,
+   "tick": 0,
+   "players": [
+    {
+     "id": "p1"
+    },
+    {
+     "id": "p2"
+    }
+   ],
+   "map": {
+    "schemaVersion": 1,
+    "id": "mockup-vale",
+    "width": 8,
+    "height": 6,
+    "stagger": "odd",
+    "cells": [
+     {
+      "col": 0,
+      "row": 0,
+      "terrain": "forest"
+     },
+     {
+      "col": 1,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 2,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 0,
+      "terrain": "mountain"
+     },
+     {
+      "col": 4,
+      "row": 0,
+      "terrain": "mountain"
+     },
+     {
+      "col": 5,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 6,
+      "row": 0,
+      "terrain": "forest"
+     },
+     {
+      "col": 7,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 1,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 3,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 4,
+      "row": 1,
+      "terrain": "bridge"
+     },
+     {
+      "col": 5,
+      "row": 1,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 1,
+      "terrain": "field"
+     },
+     {
+      "col": 7,
+      "row": 1,
+      "terrain": "forest"
+     },
+     {
+      "col": 0,
+      "row": 2,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 2,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 2,
+      "terrain": "city"
+     },
+     {
+      "col": 3,
+      "row": 2,
+      "terrain": "resource",
+      "resource": {
+       "type": "gold",
+       "amount": 30
+      }
+     },
+     {
+      "col": 4,
+      "row": 2,
+      "terrain": "resource",
+      "resource": {
+       "type": "wood",
+       "amount": 25
+      }
+     },
+     {
+      "col": 5,
+      "row": 2,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 2,
+      "terrain": "village"
+     },
+     {
+      "col": 7,
+      "row": 2,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 3,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 3,
+      "terrain": "resource",
+      "resource": {
+       "type": "stone",
+       "amount": 20
+      }
+     },
+     {
+      "col": 4,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 5,
+      "row": 3,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 7,
+      "row": 3,
+      "terrain": "mountain"
+     },
+     {
+      "col": 0,
+      "row": 4,
+      "terrain": "forest"
+     },
+     {
+      "col": 1,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 2,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 4,
+      "terrain": "road"
+     },
+     {
+      "col": 4,
+      "row": 4,
+      "terrain": "road"
+     },
+     {
+      "col": 5,
+      "row": 4,
+      "terrain": "bridge"
+     },
+     {
+      "col": 6,
+      "row": 4,
+      "terrain": "river"
+     },
+     {
+      "col": 7,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 5,
+      "terrain": "forest"
+     },
+     {
+      "col": 2,
+      "row": 5,
+      "terrain": "resource",
+      "resource": {
+       "type": "food",
+       "amount": 40
+      }
+     },
+     {
+      "col": 3,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 4,
+      "row": 5,
+      "terrain": "mountain"
+     },
+     {
+      "col": 5,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 6,
+      "row": 5,
+      "terrain": "forest"
+     },
+     {
+      "col": 7,
+      "row": 5,
+      "terrain": "field"
+     }
+    ],
+    "spawns": [
+     {
+      "playerIndex": 0,
+      "col": 1,
+      "row": 2
+     },
+     {
+      "playerIndex": 1,
+      "col": 6,
+      "row": 3
+     }
+    ]
+   },
+   "stockpiles": {
+    "schemaVersion": 1,
+    "stockpiles": {
+     "p1": {
+      "food": 60,
+      "wood": 45,
+      "stone": 30,
+      "gold": 25
+     },
+     "p2": {
+      "food": 40,
+      "wood": 30,
+      "stone": 20,
+      "gold": 15
+     }
+    }
+   },
+   "buildings": {
+    "schemaVersion": 1,
+    "buildings": {
+     "p1": {
+      "town-center": 1,
+      "house": 2,
+      "storage": 1,
+      "barracks": 0,
+      "wall": 0,
+      "tower": 0
+     },
+     "p2": {
+      "town-center": 1,
+      "house": 1,
+      "storage": 0,
+      "barracks": 0,
+      "wall": 0,
+      "tower": 0
+     }
+    }
+   },
+   "cities": {
+    "schemaVersion": 1,
+    "cities": {
+     "p1": {
+      "level": 2,
+      "queue": [
+       {
+        "type": "house",
+        "remaining": 2
+       }
+      ]
+     },
+     "p2": {
+      "level": 1,
+      "queue": []
+     }
+    }
+   },
+   "units": {
+    "schemaVersion": 1,
+    "nextId": 5,
+    "units": [
+     {
+      "id": "u0",
+      "owner": "p1",
+      "type": "worker",
+      "hp": 5,
+      "col": 2,
+      "row": 2
+     },
+     {
+      "id": "u1",
+      "owner": "p1",
+      "type": "warrior",
+      "hp": 12,
+      "col": 3,
+      "row": 3
+     },
+     {
+      "id": "u2",
+      "owner": "p1",
+      "type": "archer",
+      "hp": 8,
+      "col": 1,
+      "row": 1
+     },
+     {
+      "id": "u3",
+      "owner": "p2",
+      "type": "worker",
+      "hp": 5,
+      "col": 6,
+      "row": 3
+     },
+     {
+      "id": "u4",
+      "owner": "p2",
+      "type": "warrior",
+      "hp": 12,
+      "col": 5,
+      "row": 2
+     }
+    ]
+   }
+  },
+  {
+   "schemaVersion": 1,
+   "tick": 0,
+   "players": [
+    {
+     "id": "p1"
+    },
+    {
+     "id": "p2"
+    }
+   ],
+   "map": {
+    "schemaVersion": 1,
+    "id": "mockup-vale",
+    "width": 8,
+    "height": 6,
+    "stagger": "odd",
+    "cells": [
+     {
+      "col": 0,
+      "row": 0,
+      "terrain": "forest"
+     },
+     {
+      "col": 1,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 2,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 0,
+      "terrain": "mountain"
+     },
+     {
+      "col": 4,
+      "row": 0,
+      "terrain": "mountain"
+     },
+     {
+      "col": 5,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 6,
+      "row": 0,
+      "terrain": "forest"
+     },
+     {
+      "col": 7,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 1,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 3,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 4,
+      "row": 1,
+      "terrain": "bridge"
+     },
+     {
+      "col": 5,
+      "row": 1,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 1,
+      "terrain": "field"
+     },
+     {
+      "col": 7,
+      "row": 1,
+      "terrain": "forest"
+     },
+     {
+      "col": 0,
+      "row": 2,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 2,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 2,
+      "terrain": "city"
+     },
+     {
+      "col": 3,
+      "row": 2,
+      "terrain": "resource",
+      "resource": {
+       "type": "gold",
+       "amount": 27
+      }
+     },
+     {
+      "col": 4,
+      "row": 2,
+      "terrain": "resource",
+      "resource": {
+       "type": "wood",
+       "amount": 25
+      }
+     },
+     {
+      "col": 5,
+      "row": 2,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 2,
+      "terrain": "village"
+     },
+     {
+      "col": 7,
+      "row": 2,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 3,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 3,
+      "terrain": "resource",
+      "resource": {
+       "type": "stone",
+       "amount": 20
+      }
+     },
+     {
+      "col": 4,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 5,
+      "row": 3,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 7,
+      "row": 3,
+      "terrain": "mountain"
+     },
+     {
+      "col": 0,
+      "row": 4,
+      "terrain": "forest"
+     },
+     {
+      "col": 1,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 2,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 4,
+      "terrain": "road"
+     },
+     {
+      "col": 4,
+      "row": 4,
+      "terrain": "road"
+     },
+     {
+      "col": 5,
+      "row": 4,
+      "terrain": "bridge"
+     },
+     {
+      "col": 6,
+      "row": 4,
+      "terrain": "river"
+     },
+     {
+      "col": 7,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 5,
+      "terrain": "forest"
+     },
+     {
+      "col": 2,
+      "row": 5,
+      "terrain": "resource",
+      "resource": {
+       "type": "food",
+       "amount": 40
+      }
+     },
+     {
+      "col": 3,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 4,
+      "row": 5,
+      "terrain": "mountain"
+     },
+     {
+      "col": 5,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 6,
+      "row": 5,
+      "terrain": "forest"
+     },
+     {
+      "col": 7,
+      "row": 5,
+      "terrain": "field"
+     }
+    ],
+    "spawns": [
+     {
+      "playerIndex": 0,
+      "col": 1,
+      "row": 2
+     },
+     {
+      "playerIndex": 1,
+      "col": 6,
+      "row": 3
+     }
+    ]
+   },
+   "stockpiles": {
+    "schemaVersion": 1,
+    "stockpiles": {
+     "p1": {
+      "food": 60,
+      "wood": 45,
+      "stone": 30,
+      "gold": 28
+     },
+     "p2": {
+      "food": 40,
+      "wood": 30,
+      "stone": 20,
+      "gold": 15
+     }
+    }
+   },
+   "buildings": {
+    "schemaVersion": 1,
+    "buildings": {
+     "p1": {
+      "town-center": 1,
+      "house": 2,
+      "storage": 1,
+      "barracks": 0,
+      "wall": 0,
+      "tower": 0
+     },
+     "p2": {
+      "town-center": 1,
+      "house": 1,
+      "storage": 0,
+      "barracks": 0,
+      "wall": 0,
+      "tower": 0
+     }
+    }
+   },
+   "cities": {
+    "schemaVersion": 1,
+    "cities": {
+     "p1": {
+      "level": 2,
+      "queue": [
+       {
+        "type": "house",
+        "remaining": 2
+       }
+      ]
+     },
+     "p2": {
+      "level": 1,
+      "queue": []
+     }
+    }
+   },
+   "units": {
+    "schemaVersion": 1,
+    "nextId": 5,
+    "units": [
+     {
+      "id": "u0",
+      "owner": "p1",
+      "type": "worker",
+      "hp": 5,
+      "col": 2,
+      "row": 2
+     },
+     {
+      "id": "u1",
+      "owner": "p1",
+      "type": "warrior",
+      "hp": 12,
+      "col": 3,
+      "row": 3
+     },
+     {
+      "id": "u2",
+      "owner": "p1",
+      "type": "archer",
+      "hp": 8,
+      "col": 1,
+      "row": 1
+     },
+     {
+      "id": "u3",
+      "owner": "p2",
+      "type": "worker",
+      "hp": 5,
+      "col": 6,
+      "row": 3
+     },
+     {
+      "id": "u4",
+      "owner": "p2",
+      "type": "warrior",
+      "hp": 12,
+      "col": 5,
+      "row": 2
+     }
+    ]
+   }
+  },
+  {
+   "schemaVersion": 1,
+   "tick": 0,
+   "players": [
+    {
+     "id": "p1"
+    },
+    {
+     "id": "p2"
+    }
+   ],
+   "map": {
+    "schemaVersion": 1,
+    "id": "mockup-vale",
+    "width": 8,
+    "height": 6,
+    "stagger": "odd",
+    "cells": [
+     {
+      "col": 0,
+      "row": 0,
+      "terrain": "forest"
+     },
+     {
+      "col": 1,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 2,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 0,
+      "terrain": "mountain"
+     },
+     {
+      "col": 4,
+      "row": 0,
+      "terrain": "mountain"
+     },
+     {
+      "col": 5,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 6,
+      "row": 0,
+      "terrain": "forest"
+     },
+     {
+      "col": 7,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 1,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 3,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 4,
+      "row": 1,
+      "terrain": "bridge"
+     },
+     {
+      "col": 5,
+      "row": 1,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 1,
+      "terrain": "field"
+     },
+     {
+      "col": 7,
+      "row": 1,
+      "terrain": "forest"
+     },
+     {
+      "col": 0,
+      "row": 2,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 2,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 2,
+      "terrain": "city"
+     },
+     {
+      "col": 3,
+      "row": 2,
+      "terrain": "resource",
+      "resource": {
+       "type": "gold",
+       "amount": 27
+      }
+     },
+     {
+      "col": 4,
+      "row": 2,
+      "terrain": "resource",
+      "resource": {
+       "type": "wood",
+       "amount": 25
+      }
+     },
+     {
+      "col": 5,
+      "row": 2,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 2,
+      "terrain": "village"
+     },
+     {
+      "col": 7,
+      "row": 2,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 3,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 3,
+      "terrain": "resource",
+      "resource": {
+       "type": "stone",
+       "amount": 20
+      }
+     },
+     {
+      "col": 4,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 5,
+      "row": 3,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 7,
+      "row": 3,
+      "terrain": "mountain"
+     },
+     {
+      "col": 0,
+      "row": 4,
+      "terrain": "forest"
+     },
+     {
+      "col": 1,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 2,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 4,
+      "terrain": "road"
+     },
+     {
+      "col": 4,
+      "row": 4,
+      "terrain": "road"
+     },
+     {
+      "col": 5,
+      "row": 4,
+      "terrain": "bridge"
+     },
+     {
+      "col": 6,
+      "row": 4,
+      "terrain": "river"
+     },
+     {
+      "col": 7,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 5,
+      "terrain": "forest"
+     },
+     {
+      "col": 2,
+      "row": 5,
+      "terrain": "resource",
+      "resource": {
+       "type": "food",
+       "amount": 40
+      }
+     },
+     {
+      "col": 3,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 4,
+      "row": 5,
+      "terrain": "mountain"
+     },
+     {
+      "col": 5,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 6,
+      "row": 5,
+      "terrain": "forest"
+     },
+     {
+      "col": 7,
+      "row": 5,
+      "terrain": "field"
+     }
+    ],
+    "spawns": [
+     {
+      "playerIndex": 0,
+      "col": 1,
+      "row": 2
+     },
+     {
+      "playerIndex": 1,
+      "col": 6,
+      "row": 3
+     }
+    ]
+   },
+   "stockpiles": {
+    "schemaVersion": 1,
+    "stockpiles": {
+     "p1": {
+      "food": 60,
+      "wood": 40,
+      "stone": 30,
+      "gold": 28
+     },
+     "p2": {
+      "food": 40,
+      "wood": 30,
+      "stone": 20,
+      "gold": 15
+     }
+    }
+   },
+   "buildings": {
+    "schemaVersion": 1,
+    "buildings": {
+     "p1": {
+      "town-center": 1,
+      "house": 2,
+      "storage": 1,
+      "barracks": 0,
+      "wall": 0,
+      "tower": 0
+     },
+     "p2": {
+      "town-center": 1,
+      "house": 1,
+      "storage": 0,
+      "barracks": 0,
+      "wall": 0,
+      "tower": 0
+     }
+    }
+   },
+   "cities": {
+    "schemaVersion": 1,
+    "cities": {
+     "p1": {
+      "level": 2,
+      "queue": [
+       {
+        "type": "house",
+        "remaining": 2
+       },
+       {
+        "type": "house",
+        "remaining": 2
+       }
+      ]
+     },
+     "p2": {
+      "level": 1,
+      "queue": []
+     }
+    }
+   },
+   "units": {
+    "schemaVersion": 1,
+    "nextId": 5,
+    "units": [
+     {
+      "id": "u0",
+      "owner": "p1",
+      "type": "worker",
+      "hp": 5,
+      "col": 2,
+      "row": 2
+     },
+     {
+      "id": "u1",
+      "owner": "p1",
+      "type": "warrior",
+      "hp": 12,
+      "col": 3,
+      "row": 3
+     },
+     {
+      "id": "u2",
+      "owner": "p1",
+      "type": "archer",
+      "hp": 8,
+      "col": 1,
+      "row": 1
+     },
+     {
+      "id": "u3",
+      "owner": "p2",
+      "type": "worker",
+      "hp": 5,
+      "col": 6,
+      "row": 3
+     },
+     {
+      "id": "u4",
+      "owner": "p2",
+      "type": "warrior",
+      "hp": 12,
+      "col": 5,
+      "row": 2
+     }
+    ]
+   }
+  },
+  {
+   "schemaVersion": 1,
+   "tick": 1,
+   "players": [
+    {
+     "id": "p1"
+    },
+    {
+     "id": "p2"
+    }
+   ],
+   "map": {
+    "schemaVersion": 1,
+    "id": "mockup-vale",
+    "width": 8,
+    "height": 6,
+    "stagger": "odd",
+    "cells": [
+     {
+      "col": 0,
+      "row": 0,
+      "terrain": "forest"
+     },
+     {
+      "col": 1,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 2,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 0,
+      "terrain": "mountain"
+     },
+     {
+      "col": 4,
+      "row": 0,
+      "terrain": "mountain"
+     },
+     {
+      "col": 5,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 6,
+      "row": 0,
+      "terrain": "forest"
+     },
+     {
+      "col": 7,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 1,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 3,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 4,
+      "row": 1,
+      "terrain": "bridge"
+     },
+     {
+      "col": 5,
+      "row": 1,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 1,
+      "terrain": "field"
+     },
+     {
+      "col": 7,
+      "row": 1,
+      "terrain": "forest"
+     },
+     {
+      "col": 0,
+      "row": 2,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 2,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 2,
+      "terrain": "city"
+     },
+     {
+      "col": 3,
+      "row": 2,
+      "terrain": "resource",
+      "resource": {
+       "type": "gold",
+       "amount": 27
+      }
+     },
+     {
+      "col": 4,
+      "row": 2,
+      "terrain": "resource",
+      "resource": {
+       "type": "wood",
+       "amount": 25
+      }
+     },
+     {
+      "col": 5,
+      "row": 2,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 2,
+      "terrain": "village"
+     },
+     {
+      "col": 7,
+      "row": 2,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 3,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 3,
+      "terrain": "resource",
+      "resource": {
+       "type": "stone",
+       "amount": 20
+      }
+     },
+     {
+      "col": 4,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 5,
+      "row": 3,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 7,
+      "row": 3,
+      "terrain": "mountain"
+     },
+     {
+      "col": 0,
+      "row": 4,
+      "terrain": "forest"
+     },
+     {
+      "col": 1,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 2,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 4,
+      "terrain": "road"
+     },
+     {
+      "col": 4,
+      "row": 4,
+      "terrain": "road"
+     },
+     {
+      "col": 5,
+      "row": 4,
+      "terrain": "bridge"
+     },
+     {
+      "col": 6,
+      "row": 4,
+      "terrain": "river"
+     },
+     {
+      "col": 7,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 5,
+      "terrain": "forest"
+     },
+     {
+      "col": 2,
+      "row": 5,
+      "terrain": "resource",
+      "resource": {
+       "type": "food",
+       "amount": 40
+      }
+     },
+     {
+      "col": 3,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 4,
+      "row": 5,
+      "terrain": "mountain"
+     },
+     {
+      "col": 5,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 6,
+      "row": 5,
+      "terrain": "forest"
+     },
+     {
+      "col": 7,
+      "row": 5,
+      "terrain": "field"
+     }
+    ],
+    "spawns": [
+     {
+      "playerIndex": 0,
+      "col": 1,
+      "row": 2
+     },
+     {
+      "playerIndex": 1,
+      "col": 6,
+      "row": 3
+     }
+    ]
+   },
+   "stockpiles": {
+    "schemaVersion": 1,
+    "stockpiles": {
+     "p1": {
+      "food": 60,
+      "wood": 40,
+      "stone": 30,
+      "gold": 28
+     },
+     "p2": {
+      "food": 40,
+      "wood": 30,
+      "stone": 20,
+      "gold": 15
+     }
+    }
+   },
+   "buildings": {
+    "schemaVersion": 1,
+    "buildings": {
+     "p1": {
+      "town-center": 1,
+      "house": 2,
+      "storage": 1,
+      "barracks": 0,
+      "wall": 0,
+      "tower": 0
+     },
+     "p2": {
+      "town-center": 1,
+      "house": 1,
+      "storage": 0,
+      "barracks": 0,
+      "wall": 0,
+      "tower": 0
+     }
+    }
+   },
+   "cities": {
+    "schemaVersion": 1,
+    "cities": {
+     "p1": {
+      "level": 2,
+      "queue": [
+       {
+        "type": "house",
+        "remaining": 1
+       },
+       {
+        "type": "house",
+        "remaining": 1
+       }
+      ]
+     },
+     "p2": {
+      "level": 1,
+      "queue": []
+     }
+    }
+   },
+   "units": {
+    "schemaVersion": 1,
+    "nextId": 5,
+    "units": [
+     {
+      "id": "u0",
+      "owner": "p1",
+      "type": "worker",
+      "hp": 5,
+      "col": 2,
+      "row": 2
+     },
+     {
+      "id": "u1",
+      "owner": "p1",
+      "type": "warrior",
+      "hp": 12,
+      "col": 3,
+      "row": 3
+     },
+     {
+      "id": "u2",
+      "owner": "p1",
+      "type": "archer",
+      "hp": 8,
+      "col": 1,
+      "row": 1
+     },
+     {
+      "id": "u3",
+      "owner": "p2",
+      "type": "worker",
+      "hp": 5,
+      "col": 6,
+      "row": 3
+     },
+     {
+      "id": "u4",
+      "owner": "p2",
+      "type": "warrior",
+      "hp": 12,
+      "col": 5,
+      "row": 2
+     }
+    ]
+   }
+  },
+  {
+   "schemaVersion": 1,
+   "tick": 1,
+   "players": [
+    {
+     "id": "p1"
+    },
+    {
+     "id": "p2"
+    }
+   ],
+   "map": {
+    "schemaVersion": 1,
+    "id": "mockup-vale",
+    "width": 8,
+    "height": 6,
+    "stagger": "odd",
+    "cells": [
+     {
+      "col": 0,
+      "row": 0,
+      "terrain": "forest"
+     },
+     {
+      "col": 1,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 2,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 0,
+      "terrain": "mountain"
+     },
+     {
+      "col": 4,
+      "row": 0,
+      "terrain": "mountain"
+     },
+     {
+      "col": 5,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 6,
+      "row": 0,
+      "terrain": "forest"
+     },
+     {
+      "col": 7,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 1,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 3,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 4,
+      "row": 1,
+      "terrain": "bridge"
+     },
+     {
+      "col": 5,
+      "row": 1,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 1,
+      "terrain": "field"
+     },
+     {
+      "col": 7,
+      "row": 1,
+      "terrain": "forest"
+     },
+     {
+      "col": 0,
+      "row": 2,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 2,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 2,
+      "terrain": "city"
+     },
+     {
+      "col": 3,
+      "row": 2,
+      "terrain": "resource",
+      "resource": {
+       "type": "gold",
+       "amount": 27
+      }
+     },
+     {
+      "col": 4,
+      "row": 2,
+      "terrain": "resource",
+      "resource": {
+       "type": "wood",
+       "amount": 25
+      }
+     },
+     {
+      "col": 5,
+      "row": 2,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 2,
+      "terrain": "village"
+     },
+     {
+      "col": 7,
+      "row": 2,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 3,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 3,
+      "terrain": "resource",
+      "resource": {
+       "type": "stone",
+       "amount": 20
+      }
+     },
+     {
+      "col": 4,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 5,
+      "row": 3,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 7,
+      "row": 3,
+      "terrain": "mountain"
+     },
+     {
+      "col": 0,
+      "row": 4,
+      "terrain": "forest"
+     },
+     {
+      "col": 1,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 2,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 4,
+      "terrain": "road"
+     },
+     {
+      "col": 4,
+      "row": 4,
+      "terrain": "road"
+     },
+     {
+      "col": 5,
+      "row": 4,
+      "terrain": "bridge"
+     },
+     {
+      "col": 6,
+      "row": 4,
+      "terrain": "river"
+     },
+     {
+      "col": 7,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 5,
+      "terrain": "forest"
+     },
+     {
+      "col": 2,
+      "row": 5,
+      "terrain": "resource",
+      "resource": {
+       "type": "food",
+       "amount": 40
+      }
+     },
+     {
+      "col": 3,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 4,
+      "row": 5,
+      "terrain": "mountain"
+     },
+     {
+      "col": 5,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 6,
+      "row": 5,
+      "terrain": "forest"
+     },
+     {
+      "col": 7,
+      "row": 5,
+      "terrain": "field"
+     }
+    ],
+    "spawns": [
+     {
+      "playerIndex": 0,
+      "col": 1,
+      "row": 2
+     },
+     {
+      "playerIndex": 1,
+      "col": 6,
+      "row": 3
+     }
+    ]
+   },
+   "stockpiles": {
+    "schemaVersion": 1,
+    "stockpiles": {
+     "p1": {
+      "food": 60,
+      "wood": 38,
+      "stone": 29,
+      "gold": 28
+     },
+     "p2": {
+      "food": 40,
+      "wood": 30,
+      "stone": 20,
+      "gold": 15
+     }
+    }
+   },
+   "buildings": {
+    "schemaVersion": 1,
+    "buildings": {
+     "p1": {
+      "town-center": 1,
+      "house": 2,
+      "storage": 1,
+      "barracks": 0,
+      "wall": 0,
+      "tower": 0
+     },
+     "p2": {
+      "town-center": 1,
+      "house": 1,
+      "storage": 0,
+      "barracks": 0,
+      "wall": 0,
+      "tower": 0
+     }
+    }
+   },
+   "cities": {
+    "schemaVersion": 1,
+    "cities": {
+     "p1": {
+      "level": 2,
+      "queue": [
+       {
+        "type": "house",
+        "remaining": 1
+       },
+       {
+        "type": "house",
+        "remaining": 1
+       },
+       {
+        "type": "tower",
+        "remaining": 3
+       }
+      ]
+     },
+     "p2": {
+      "level": 1,
+      "queue": []
+     }
+    }
+   },
+   "units": {
+    "schemaVersion": 1,
+    "nextId": 5,
+    "units": [
+     {
+      "id": "u0",
+      "owner": "p1",
+      "type": "worker",
+      "hp": 5,
+      "col": 2,
+      "row": 2
+     },
+     {
+      "id": "u1",
+      "owner": "p1",
+      "type": "warrior",
+      "hp": 12,
+      "col": 3,
+      "row": 3
+     },
+     {
+      "id": "u2",
+      "owner": "p1",
+      "type": "archer",
+      "hp": 8,
+      "col": 1,
+      "row": 1
+     },
+     {
+      "id": "u3",
+      "owner": "p2",
+      "type": "worker",
+      "hp": 5,
+      "col": 6,
+      "row": 3
+     },
+     {
+      "id": "u4",
+      "owner": "p2",
+      "type": "warrior",
+      "hp": 12,
+      "col": 5,
+      "row": 2
+     }
+    ]
+   }
+  },
+  {
+   "schemaVersion": 1,
+   "tick": 2,
+   "players": [
+    {
+     "id": "p1"
+    },
+    {
+     "id": "p2"
+    }
+   ],
+   "map": {
+    "schemaVersion": 1,
+    "id": "mockup-vale",
+    "width": 8,
+    "height": 6,
+    "stagger": "odd",
+    "cells": [
+     {
+      "col": 0,
+      "row": 0,
+      "terrain": "forest"
+     },
+     {
+      "col": 1,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 2,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 0,
+      "terrain": "mountain"
+     },
+     {
+      "col": 4,
+      "row": 0,
+      "terrain": "mountain"
+     },
+     {
+      "col": 5,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 6,
+      "row": 0,
+      "terrain": "forest"
+     },
+     {
+      "col": 7,
+      "row": 0,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 1,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 3,
+      "row": 1,
+      "terrain": "road"
+     },
+     {
+      "col": 4,
+      "row": 1,
+      "terrain": "bridge"
+     },
+     {
+      "col": 5,
+      "row": 1,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 1,
+      "terrain": "field"
+     },
+     {
+      "col": 7,
+      "row": 1,
+      "terrain": "forest"
+     },
+     {
+      "col": 0,
+      "row": 2,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 2,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 2,
+      "terrain": "city"
+     },
+     {
+      "col": 3,
+      "row": 2,
+      "terrain": "resource",
+      "resource": {
+       "type": "gold",
+       "amount": 27
+      }
+     },
+     {
+      "col": 4,
+      "row": 2,
+      "terrain": "resource",
+      "resource": {
+       "type": "wood",
+       "amount": 25
+      }
+     },
+     {
+      "col": 5,
+      "row": 2,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 2,
+      "terrain": "village"
+     },
+     {
+      "col": 7,
+      "row": 2,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 3,
+      "terrain": "road"
+     },
+     {
+      "col": 2,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 3,
+      "terrain": "resource",
+      "resource": {
+       "type": "stone",
+       "amount": 20
+      }
+     },
+     {
+      "col": 4,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 5,
+      "row": 3,
+      "terrain": "river"
+     },
+     {
+      "col": 6,
+      "row": 3,
+      "terrain": "field"
+     },
+     {
+      "col": 7,
+      "row": 3,
+      "terrain": "mountain"
+     },
+     {
+      "col": 0,
+      "row": 4,
+      "terrain": "forest"
+     },
+     {
+      "col": 1,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 2,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 3,
+      "row": 4,
+      "terrain": "road"
+     },
+     {
+      "col": 4,
+      "row": 4,
+      "terrain": "road"
+     },
+     {
+      "col": 5,
+      "row": 4,
+      "terrain": "bridge"
+     },
+     {
+      "col": 6,
+      "row": 4,
+      "terrain": "river"
+     },
+     {
+      "col": 7,
+      "row": 4,
+      "terrain": "field"
+     },
+     {
+      "col": 0,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 1,
+      "row": 5,
+      "terrain": "forest"
+     },
+     {
+      "col": 2,
+      "row": 5,
+      "terrain": "resource",
+      "resource": {
+       "type": "food",
+       "amount": 40
+      }
+     },
+     {
+      "col": 3,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 4,
+      "row": 5,
+      "terrain": "mountain"
+     },
+     {
+      "col": 5,
+      "row": 5,
+      "terrain": "field"
+     },
+     {
+      "col": 6,
+      "row": 5,
+      "terrain": "forest"
+     },
+     {
+      "col": 7,
+      "row": 5,
+      "terrain": "field"
+     }
+    ],
+    "spawns": [
+     {
+      "playerIndex": 0,
+      "col": 1,
+      "row": 2
+     },
+     {
+      "playerIndex": 1,
+      "col": 6,
+      "row": 3
+     }
+    ]
+   },
+   "stockpiles": {
+    "schemaVersion": 1,
+    "stockpiles": {
+     "p1": {
+      "food": 60,
+      "wood": 38,
+      "stone": 29,
+      "gold": 28
+     },
+     "p2": {
+      "food": 40,
+      "wood": 30,
+      "stone": 20,
+      "gold": 15
+     }
+    }
+   },
+   "buildings": {
+    "schemaVersion": 1,
+    "buildings": {
+     "p1": {
+      "town-center": 1,
+      "house": 4,
+      "storage": 1,
+      "barracks": 0,
+      "wall": 0,
+      "tower": 0
+     },
+     "p2": {
+      "town-center": 1,
+      "house": 1,
+      "storage": 0,
+      "barracks": 0,
+      "wall": 0,
+      "tower": 0
+     }
+    }
+   },
+   "cities": {
+    "schemaVersion": 1,
+    "cities": {
+     "p1": {
+      "level": 2,
+      "queue": [
+       {
+        "type": "tower",
+        "remaining": 2
+       }
+      ]
+     },
+     "p2": {
+      "level": 1,
+      "queue": []
+     }
+    }
+   },
+   "units": {
+    "schemaVersion": 1,
+    "nextId": 5,
+    "units": [
+     {
+      "id": "u0",
+      "owner": "p1",
+      "type": "worker",
+      "hp": 5,
+      "col": 2,
+      "row": 2
+     },
+     {
+      "id": "u1",
+      "owner": "p1",
+      "type": "warrior",
+      "hp": 12,
+      "col": 3,
+      "row": 3
+     },
+     {
+      "id": "u2",
+      "owner": "p1",
+      "type": "archer",
+      "hp": 8,
+      "col": 1,
+      "row": 1
+     },
+     {
+      "id": "u3",
+      "owner": "p2",
+      "type": "worker",
+      "hp": 5,
+      "col": 6,
+      "row": 3
+     },
+     {
+      "id": "u4",
+      "owner": "p2",
+      "type": "warrior",
+      "hp": 12,
+      "col": 5,
+      "row": 2
+     }
+    ]
+   }
+  }
+ ],
+ "outcomes": [
+  {
+   "status": "applied",
+   "revision": 1,
+   "summary": "gathered 3 gold at 3,2"
+  },
+  {
+   "status": "applied",
+   "revision": 2,
+   "summary": "started house (2 ticks)"
+  },
+  {
+   "status": "applied",
+   "revision": 3,
+   "summary": "tick=1"
+  },
+  {
+   "status": "applied",
+   "revision": 4,
+   "summary": "started tower (3 ticks)"
+  },
+  {
+   "status": "applied",
+   "revision": 5,
+   "summary": "tick=2"
+  }
+ ],
+ "events": [
+  {
+   "seq": 1,
+   "tick": 0,
+   "revision": 0,
+   "type": "match.started",
+   "priority": "normal",
+   "payload": {
+    "seed": 7,
+    "players": [
+     "p1",
+     "p2"
+    ],
+    "ruleset": {
+     "id": "standard",
+     "version": 1
+    },
+    "map": {
+     "id": "mockup-vale",
+     "version": 1
+    }
+   }
+  },
+  {
+   "seq": 2,
+   "tick": 0,
+   "revision": 1,
+   "type": "resource.gathered",
+   "priority": "normal",
+   "payload": {
+    "player": "p1",
+    "col": 3,
+    "row": 2,
+    "resource": "gold",
+    "amount": 3
+   }
+  },
+  {
+   "seq": 3,
+   "tick": 0,
+   "revision": 2,
+   "type": "build.started",
+   "priority": "normal",
+   "payload": {
+    "player": "p1",
+    "building": "house"
+   }
+  },
+  {
+   "seq": 4,
+   "tick": 1,
+   "revision": 3,
+   "type": "match.advanced",
+   "priority": "low",
+   "payload": {
+    "tick": 1
+   }
+  },
+  {
+   "seq": 5,
+   "tick": 1,
+   "revision": 4,
+   "type": "build.started",
+   "priority": "normal",
+   "payload": {
+    "player": "p1",
+    "building": "tower"
+   }
+  },
+  {
+   "seq": 6,
+   "tick": 2,
+   "revision": 5,
+   "type": "match.advanced",
+   "priority": "low",
+   "payload": {
+    "tick": 2
+   }
+  },
+  {
+   "seq": 7,
+   "tick": 2,
+   "revision": 5,
+   "type": "build.completed",
+   "priority": "normal",
+   "payload": {
+    "player": "p1",
+    "building": "house"
+   }
+  },
+  {
+   "seq": 8,
+   "tick": 2,
+   "revision": 5,
+   "type": "build.completed",
+   "priority": "normal",
+   "payload": {
+    "player": "p1",
+    "building": "house"
+   }
+  }
+ ],
+ "timeline": [
+  {
+   "seq": 1,
+   "revision": 1,
+   "tick": 0,
+   "requestId": "r1",
+   "playerId": "p1",
+   "type": "economy.gather",
+   "applied": true,
+   "detail": "gathered 3 gold at 3,2",
+   "stateHash": "bbdea6299fd18e06e2e25862a28f544a12b4a266a4f1fd7cd5a7fec7c14b0d3c"
+  },
+  {
+   "seq": 2,
+   "revision": 2,
+   "tick": 0,
+   "requestId": "r2",
+   "playerId": "p1",
+   "type": "city.build",
+   "applied": true,
+   "detail": "started house (2 ticks)",
+   "stateHash": "263843fdb2e0879805e6e4eb38cc9554ef9c3276e2975bd647bc59e77a63a6b0"
+  },
+  {
+   "seq": 3,
+   "revision": 3,
+   "tick": 1,
+   "requestId": "r3",
+   "playerId": "p1",
+   "type": "match.advance",
+   "applied": true,
+   "detail": "tick=1",
+   "stateHash": "9201dc2a55afd33d4a1564eaf361d04abdac066683ceb30d083593e3454da90c"
+  },
+  {
+   "seq": 4,
+   "revision": 4,
+   "tick": 1,
+   "requestId": "r4",
+   "playerId": "p1",
+   "type": "city.build",
+   "applied": true,
+   "detail": "started tower (3 ticks)",
+   "stateHash": "bdbe79181b620634c505ab589c09626a26cb7a952e5034886c057b6f30acc1db"
+  },
+  {
+   "seq": 5,
+   "revision": 5,
+   "tick": 2,
+   "requestId": "r5",
+   "playerId": "p1",
+   "type": "match.advance",
+   "applied": true,
+   "detail": "tick=2",
+   "stateHash": "bc151363493c9906d050d69f6dfb0da03928b9db19b27dd1ee0f2006992cfb3a"
+  }
+ ],
+ "visibility": {
+  "p1": [
+   0,
+   1,
+   2,
+   3,
+   8,
+   9,
+   10,
+   11,
+   12,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   24,
+   25,
+   26,
+   27,
+   28,
+   29,
+   33,
+   34,
+   35,
+   36,
+   37,
+   42,
+   43,
+   44
+  ]
+ },
+ "explored": {
+  "schemaVersion": 1,
+  "viewers": {
+   "p1": [
+    0,
+    1,
+    2,
+    3,
+    8,
+    9,
+    10,
+    11,
+    12,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    33,
+    34,
+    35,
+    36,
+    37,
+    42,
+    43,
+    44
+   ]
+  }
+ },
+ "perception": {
+  "tick": 2,
+  "players": [
+   {
+    "id": "p1"
+   },
+   {
+    "id": "p2"
+   }
+  ],
+  "viewer": "p1",
+  "visibleCells": [
+   0,
+   1,
+   2,
+   3,
+   8,
+   9,
+   10,
+   11,
+   12,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   24,
+   25,
+   26,
+   27,
+   28,
+   29,
+   33,
+   34,
+   35,
+   36,
+   37,
+   42,
+   43,
+   44
+  ],
+  "exploredCells": [],
+  "stockpile": {
+   "food": 60,
+   "wood": 38,
+   "stone": 29,
+   "gold": 28
+  },
+  "buildings": {
+   "town-center": 1,
+   "house": 4,
+   "storage": 1,
+   "barracks": 0,
+   "wall": 0,
+   "tower": 0
+  },
+  "city": {
+   "level": 2,
+   "queue": [
+    {
+     "type": "tower",
+     "remaining": 2
+    }
+   ]
+  },
+  "units": [
+   {
+    "id": "u0",
+    "owner": "p1",
+    "type": "worker",
+    "hp": 5,
+    "col": 2,
+    "row": 2
+   },
+   {
+    "id": "u1",
+    "owner": "p1",
+    "type": "warrior",
+    "hp": 12,
+    "col": 3,
+    "row": 3
+   },
+   {
+    "id": "u2",
+    "owner": "p1",
+    "type": "archer",
+    "hp": 8,
+    "col": 1,
+    "row": 1
+   }
+  ],
+  "map": {
+   "width": 8,
+   "height": 6,
+   "visible": {
+    "0": "forest",
+    "1": "field",
+    "2": "field",
+    "3": "mountain",
+    "8": "field",
+    "9": "road",
+    "10": "road",
+    "11": "road",
+    "12": "bridge",
+    "16": "field",
+    "17": "road",
+    "18": "city",
+    "19": "resource",
+    "20": "resource",
+    "21": "river",
+    "24": "field",
+    "25": "road",
+    "26": "field",
+    "27": "resource",
+    "28": "field",
+    "29": "river",
+    "33": "field",
+    "34": "field",
+    "35": "road",
+    "36": "road",
+    "37": "bridge",
+    "42": "resource",
+    "43": "field",
+    "44": "mountain"
+   },
+   "explored": []
+  }
+ }
+};</script>
+<script>
+(function () {
+  const S = SCENARIO, W = 8, H = 6, HS = 34, OX = 44, OY = 40;
+  const SQ3 = Math.sqrt(3);
+  const T = { field:'#5a7d4a', forest:'#2f5d33', mountain:'#8a8f98', river:'#3d6e9e', road:'#b0925e',
+    bridge:'#7a5c3a', resource:'#6b6234', village:'#c9a86a', city:'#b03a3a' };
+  const RES = { food:'🌾', wood:'🪵', stone:'🪨', gold:'🪙' };
+  const BICON = { 'town-center':'🏛', house:'🏠', storage:'📦', barracks:'🏰', wall:'🧱', tower:'🗼' };
+  const UICON = { worker:'⛏', warrior:'🗡', archer:'🏹' };
+  let tickIdx = S.snapshots.length - 1, fog = true, sel = 20;
+  const $ = (id) => document.getElementById(id);
+  const snap = () => S.snapshots[tickIdx];
+  const idx = (c, r) => r * W + c;
+  const vis = new Set(S.visibility.p1 || []);
+  const exp = new Set((S.explored.viewers && S.explored.viewers.p1) || []);
+  const center = (c, r) => [OX + SQ3 * HS * (c + 0.5 * (r & 1)), OY + 1.5 * HS * r];
+  const hexPts = (x, y) => Array.from({ length: 6 }, (_, k) => {
+    const a = (Math.PI / 180) * (60 * k - 30);
+    return (x + HS * Math.cos(a)).toFixed(1) + ',' + (y + HS * Math.sin(a)).toFixed(1);
+  }).join(' ');
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const costText = (cost) => {
+    const parts = Object.entries(cost || {}).map(([k, v]) => `${RES[k]}${v}`);
+    return parts.length ? parts.join(' ') : 'free';
+  };
+  const afford = (cost, piles) => Object.entries(cost || {}).every(([k, v]) => (piles[k] || 0) >= v);
+
+  function render() {
+    const st = snap(), map = st.map, svg = $('map');
+    $('tick').textContent = 'TICK ' + st.tick;
+    const piles = (st.stockpiles && st.stockpiles.stockpiles.p1) || {};
+    $('res').innerHTML = ['food', 'wood', 'stone', 'gold'].map((k) =>
+      `<span>${RES[k]} <b>${piles[k] ?? 0}</b></span>`).join('') +
+      `<span>🏠 <b>${st.buildings ? st.buildings.buildings.p1.house : 0}</b> houses</span>`;
+    $('fogNote').textContent = fog ? 'fog: real visibility (range 2, final tick)' : 'full state (not a player view)';
+    let h = '';
+    for (const cell of map.cells) {
+      const i = idx(cell.col, cell.row), [x, y] = center(cell.col, cell.row);
+      const seen = vis.has(i), known = exp.has(i);
+      let fill = '#0a0c12', glyph = '', dim = '';
+      if (!fog || seen) { fill = T[cell.terrain]; }
+      else if (known) { fill = T[cell.terrain]; dim = 'opacity="0.45"'; }
+      if (!fog || seen || known) {
+        if (cell.terrain === 'city') glyph = `<text x="${x}" y="${y + 8}" text-anchor="middle" font-size="20">♜</text>`;
+        if (cell.terrain === 'village') glyph = `<text x="${x}" y="${y + 8}" text-anchor="middle" font-size="18">⌂</text>`;
+        if (cell.terrain === 'mountain') glyph = `<text x="${x}" y="${y + 7}" text-anchor="middle" font-size="16">▲</text>`;
+        if (cell.resource) glyph = `<text x="${x}" y="${y + 1}" text-anchor="middle" font-size="17">${RES[cell.resource.type]}</text>` +
+          `<text x="${x}" y="${y + 17}" text-anchor="middle" font-size="11" fill="#fff">${cell.resource.amount}</text>`;
+      }
+      h += `<polygon class="hex${i === sel ? ' sel' : ''}" points="${hexPts(x, y)}" fill="${fill}" ${dim} data-i="${i}"><title>${cell.terrain} (${cell.col},${cell.row})</title></polygon>` + glyph;
+    }
+    for (const u of (st.units ? st.units.units : [])) {
+      const i = idx(u.col, u.row);
+      const own = u.owner === 'p1';
+      if (fog && !own && !vis.has(i)) continue;
+      const [x, y] = center(u.col, u.row), col = own ? '#3d7dd6' : '#d64545';
+      const stats = S.configs.unitsScenario[u.type];
+      const frac = Math.max(0, Math.min(1, u.hp / stats.maxHp));
+      let shape = '';
+      if (u.type === 'worker') shape = `<circle cx="${x}" cy="${y - 6}" r="11" fill="${col}" stroke="#fff" stroke-width="2"/>`;
+      if (u.type === 'warrior') shape = `<rect x="${x - 10}" y="${y - 16}" width="20" height="20" fill="${col}" stroke="#fff" stroke-width="2"/>`;
+      if (u.type === 'archer') shape = `<polygon points="${x},${y - 18} ${x + 11},${y - 6} ${x},${y + 6} ${x - 11},${y - 6}" fill="${col}" stroke="#fff" stroke-width="2"/>`;
+      h += `${shape}<rect x="${x - 12}" y="${y + 9}" width="24" height="5" fill="#111" stroke="#000"/>` +
+        `<rect x="${x - 12}" y="${y + 9}" width="${(24 * frac).toFixed(1)}" height="5" fill="#57a773"/>` +
+        `<text x="${x}" y="${y + 24}" text-anchor="middle" font-size="10" fill="#fff">${u.id} ${u.hp}</text>`;
+    }
+    svg.innerHTML = h;
+    svg.querySelectorAll('.hex').forEach((p) => p.addEventListener('click', () => { sel = +p.dataset.i; render(); }));
+    renderTabs(st); renderMini(st);
+  }
+
+  function renderTabs(st) {
+    const c = st.map.cells[sel], piles = (st.stockpiles && st.stockpiles.stockpiles.p1) || {};
+    const here = (st.units ? st.units.units : []).filter((u) => idx(u.col, u.row) === sel)
+      .filter((u) => !fog || u.owner === 'p1' || vis.has(sel));
+    $('tab-cell').innerHTML = `<div class="card"><h4>Cell ${sel} (${c.col},${c.row}) — ${c.terrain}</h4>` +
+      (c.resource ? `<div>Node: ${RES[c.resource.type]} ${c.resource.type} × <b>${c.resource.amount}</b></div>` : '<div>No node here.</div>') +
+      (here.length ? here.map((u) => `<div>${UICON[u.type]} <b>${u.id}</b> ${u.type} · ${u.owner} · HP ${u.hp}/${S.configs.unitsScenario[u.type].maxHp}</div>`).join('') : '<div>No units here.</div>') + '</div>' +
+      `<div class="card"><h4>Orders (real dispatches)</h4>` +
+      S.outcomes.map((o, k) => `<div class="brow"><span>#${k + 1} ${esc(o.summary || o.reason || o.status)}</span><span class="cost">${o.status}</span></div>`).join('') + '</div>';
+    const bcfg = S.configs.buildings;
+    $('tab-build').innerHTML = `<div class="card"><h4>Build (real costs)</h4>` +
+      ['town-center', 'house', 'storage', 'barracks', 'wall', 'tower'].map((b) =>
+        `<div class="brow"><span>${BICON[b]} ${b} <span class="cost">${costText(bcfg[b].cost)} · ${bcfg[b].buildTime}t</span></span>` +
+        `<span><span class="${afford(bcfg[b].cost, piles) ? 'afford' : 'poor'}">${afford(bcfg[b].cost, piles) ? '✓' : '✗'}</span> <button class="mockbtn">queue</button></span></div>`).join('') + '</div>';
+    const city = st.cities && st.cities.cities.p1;
+    $('tab-city').innerHTML = city ? `<div class="card"><h4>Your city — level ${city.level}</h4>` +
+      (city.queue.length ? city.queue.map((q) => {
+        const total = bcfg[q.type].buildTime || 1;
+        const done = 100 * (1 - q.remaining / total);
+        return `<div>${BICON[q.type]} ${q.type} — ${q.remaining}t left<div class="qbar"><i style="width:${done}%"></i></div></div>`;
+      }).join('') : '<div>Queue idle.</div>') + `<div style="margin-top:6px"><a href="city.html">open city view →</a></div></div>` : '<div class="card">No city.</div>';
+    const evs = S.events.filter((e) => e.tick <= st.tick);
+    $('tab-log').innerHTML = `<div class="card log"><h4>Event log (real, ≤ tick ${st.tick})</h4>` +
+      evs.map((e) => `<div><span class="t">#${e.seq} t${e.tick}</span> <b>${e.type}</b> ${esc(JSON.stringify(e.payload))}</div>`).join('') + '</div>';
+  }
+
+  function renderMini(st) {
+    let h = '';
+    for (const cell of st.map.cells) {
+      const i = idx(cell.col, cell.row);
+      const fill = (!fog || vis.has(i)) ? T[cell.terrain] : (exp.has(i) ? '#2a3446' : '#0a0c12');
+      h += `<rect x="${cell.col * 20}" y="${cell.row * 20}" width="19" height="19" fill="${fill}"/>`;
+    }
+    for (const u of (st.units ? st.units.units : [])) {
+      const i = idx(u.col, u.row);
+      if (fog && u.owner !== 'p1' && !vis.has(i)) continue;
+      h += `<circle cx="${u.col * 20 + 10}" cy="${u.row * 20 + 10}" r="4" fill="${u.owner === 'p1' ? '#3d7dd6' : '#d64545'}"/>`;
+    }
+    $('mini').innerHTML = h;
+  }
+
+  document.querySelectorAll('.tabs button').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('.tabs button').forEach((x) => x.classList.remove('on'));
+    b.classList.add('on');
+    for (const t of ['cell', 'build', 'city', 'log']) $('tab-' + t).hidden = t !== b.dataset.tab;
+  }));
+  $('prev').addEventListener('click', () => { if (tickIdx > 0) { tickIdx--; render(); } });
+  $('next').addEventListener('click', () => { if (tickIdx < S.snapshots.length - 1) { tickIdx++; render(); } });
+  $('vFog').addEventListener('click', () => { fog = true; $('vFog').classList.add('on'); $('vFull').classList.remove('on'); render(); });
+  $('vFull').addEventListener('click', () => { fog = false; $('vFull').classList.add('on'); $('vFog').classList.remove('on'); render(); });
+  $('fine').textContent = 'Provenance: ' + S.meta.generatedBy + ' · ruleset standard v1 · ' +
+    S.events.length + ' events · snapshots t0–t' + S.snapshots[S.snapshots.length - 1].tick +
+    ' · fog/visibility/explored/perception computed by the real engine.';
+  render();
+})();
+</script>
+</body>
+</html>
