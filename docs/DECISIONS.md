@@ -452,3 +452,49 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
   persiste até M024 (não ataca, não é atacado — `unit/target down.`).
 - IMPLEMENTATION: `warfare.ts` L2 + `match.ts` (M023).
 - ESTADO: `ACCEPTED`.
+
+## D-017 — Resolução de dano: defesa do terreno, remoção, `unit.slain`; cura adiada (M024 pré-análise)
+
+- DECISION: `createAttackHandler(unitsConfig, defenseOf)` com
+  `DefenseOfTerrain = (terrain: string) => number` (predicado injectado
+  pelo Match a partir do terrainConfig — precedente M022 `passable`;
+  L2↛L2 impede warfare importar terrain). Fórmula aprovada pelo
+  utilizador 2026-09-11: `net = max(0, damage − defense)` (defesa do
+  terreno da célula do alvo; `max(0,…)` força — dano negativo seria
+  cura, sem fonte); `hp = max(0, foe.hp − net)` (isWord, precedente
+  M023); dano 0 aplica (facto honesto). Morte = remoção do alvo no
+  próprio dispatch (só o alvo — sem âncora para sweep); `nextId`
+  intacto. Produtor emendado (seam M023): alvo ausente no after →
+  `[unit.attacked (damage = was.hp, diff genuíno), unit.slain NORMAL
+  {player, unit, target}]` (cunhagem + NORMAL aprovadas pelo
+  utilizador 2026-09-11, analogia `unit.moved/moved`, `attacked`).
+  Summary: `attacked T for NET (hp A→B)[, slain]`. `unit/target
+  down.` mantêm-se (0hp inicial/crafted continua rejeitado).
+  `warfareHandlers(passable, unitsConfig, defenseOf)` (append,
+  precedente M023).
+- MOTIVE: D-014 (`dano`→M024; cura sem fonte — audit §7) + D-016
+  (remoção M024; seam produtor) + M011 (defense existe: mountain 2,
+  forest 1 — sem consumidor; tooltip mente) + M022 (molde
+  predicado-injectado) + aprovação explícita do utilizador 2026-09-11
+  (fórmula, cunhagem `unit.slain` NORMAL, cura adiada).
+- ALTERNATIVES: defesa ignorada (rejeitado pelo utilizador; config
+  sem consumidor persistia); sweep de 0hp (rejeitado: sem âncora —
+  handler resolve o alvo do dispatch); retaliação/armadura (adiado
+  M025+: sem config #83 / sem âncora); cura mecânica (adiado: sem
+  fonte; user aprovou adiamento); facto `unit.died` (pretermitted —
+  user escolheu `slain`); sem facto (rejeitado pelo utilizador;
+  morte de 1ª classe no log); `maxHp`-heal em defesa alta
+  (rejeitado: `max(0,…)` força, cura sem fonte).
+- ADVANTAGES: defense ganha consumidor (tooltip passa a verdade);
+  morte é remoção honesta (sem cadáveres-lógicos); facto de morte
+  permite animação P2; fórmula mínima sem stats novas.
+- DISADVANTAGES: assinatura warfareHandlers muda 2.ª vez (churn
+  contido: match.ts + testes); testes M023 de killing-blow reescritos
+  (0hp→remoção — emenda declarada); comentário terrain "M023"
+  corrigido para M024.
+- RISKS: baixo — combate puro + gate estrito; residual: unidades
+  0hp iniciais movem (M022 não checa hp — M022 owns, fora de âmbito);
+  remoção muda `unknown target.` para ids mortos (honesto: já não
+  existem).
+- IMPLEMENTATION: `warfare.ts` L2 + `match.ts` (M024).
+- ESTADO: `ACCEPTED`.

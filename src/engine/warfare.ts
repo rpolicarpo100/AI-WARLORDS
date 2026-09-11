@@ -168,6 +168,9 @@ export interface MoveParams {
 /** Structural passability predicate (Match injects the terrain-config closure). */
 export type PassableTerrain = (terrain: string) => boolean;
 
+/** Structural defense predicate (Match injects the terrain-config closure). */
+export type DefenseOfTerrain = (terrain: string) => number;
+
 /** Wire-shape pre-rule (game rules live in the handler, not here). */
 export function moveParamsRule(
   _caller: PlayerId,
@@ -258,9 +261,15 @@ export function attackParamsRule(
   return null;
 }
 
-export function createAttackHandler(unitsConfig: UnitsConfig): TransitionHandler<WorldState> {
+export function createAttackHandler(
+  unitsConfig: UnitsConfig,
+  defenseOf: DefenseOfTerrain,
+): TransitionHandler<WorldState> {
   if (!isUnitsConfig(unitsConfig)) {
     throw new Error('createAttackHandler: invalid units config.');
+  }
+  if (typeof defenseOf !== 'function') {
+    throw new Error('createAttackHandler: invalid defense predicate.');
   }
   return (ctx) => {
     // The pre-rule validated { id, target } shape on the dispatch path;
@@ -294,14 +303,17 @@ export function createAttackHandler(unitsConfig: UnitsConfig): TransitionHandler
     if (map === undefined) {
       return { applied: false, reason: 'attack: no map.' };
     }
-    const adjacent = neighborsOf(map, unit.col, unit.row).some(
+    const foeCell = neighborsOf(map, unit.col, unit.row).find(
       (cell) => cell.col === foe.col && cell.row === foe.row,
     );
-    if (!adjacent) {
+    if (foeCell === undefined) {
       return { applied: false, reason: 'attack: out of range.' };
     }
     const damage = unitsConfig[unit.type].damage;
-    const hp = Math.max(0, foe.hp - damage);
+    const defense = defenseOf(foeCell.terrain);
+    const net = Math.max(0, damage - defense);
+    const hp = Math.max(0, foe.hp - net);
+    const slain = hp <= 0;
     return {
       applied: true,
       state: {
@@ -309,10 +321,12 @@ export function createAttackHandler(unitsConfig: UnitsConfig): TransitionHandler
         units: {
           schemaVersion: UNITS_SCHEMA_VERSION,
           nextId: data.nextId,
-          units: data.units.map((entry) => (entry.id === target ? { ...entry, hp } : entry)),
+          units: slain
+            ? data.units.filter((entry) => entry.id !== target)
+            : data.units.map((entry) => (entry.id === target ? { ...entry, hp } : entry)),
         },
       },
-      summary: `attacked ${target} for ${damage} (hp ${foe.hp}→${hp})`,
+      summary: `attacked ${target} for ${net} (hp ${foe.hp}→${hp})${slain ? ', slain' : ''}`,
     };
   };
 }
@@ -320,10 +334,11 @@ export function createAttackHandler(unitsConfig: UnitsConfig): TransitionHandler
 export function warfareHandlers(
   passable: PassableTerrain,
   unitsConfig: UnitsConfig,
+  defenseOf: DefenseOfTerrain,
 ): Map<string, TransitionHandler<WorldState>> {
   return new Map([
     [MOVE_TRANSITION, createMoveHandler(passable)],
-    [ATTACK_TRANSITION, createAttackHandler(unitsConfig)],
+    [ATTACK_TRANSITION, createAttackHandler(unitsConfig, defenseOf)],
   ]);
 }
 
@@ -381,14 +396,22 @@ export function attackProducer(input: {
   }
   const was = unitById(beforeUnits, target);
   const now = unitById(afterUnits, target);
-  if (was === undefined || now === undefined) {
+  if (was === undefined) {
     throw new Error('attackProducer: missing target.');
   }
-  return [
+  const facts: { type: string; priority: 'normal'; payload: unknown }[] = [
     {
       type: 'unit.attacked',
       priority: 'normal',
-      payload: { player: input.caller, unit: id, target, damage: was.hp - now.hp },
+      payload: { player: input.caller, unit: id, target, damage: was.hp - (now === undefined ? 0 : now.hp) },
     },
   ];
+  if (now === undefined) {
+    facts.push({
+      type: 'unit.slain',
+      priority: 'normal',
+      payload: { player: input.caller, unit: id, target },
+    });
+  }
+  return facts;
 }

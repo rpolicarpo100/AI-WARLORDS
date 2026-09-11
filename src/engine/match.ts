@@ -260,7 +260,9 @@ export class Match {
     // M022: passable = finite move cost (Infinity/NaN block, fail-closed).
     const passable = (terrain: string): boolean =>
       Number.isFinite(modifiersFor(terrainConfig, terrain as TerrainId).move);
-    const warfare = warfareHandlers(passable, unitsConfig);
+    const defenseOf = (terrain: string): number =>
+      modifiersFor(terrainConfig, terrain as TerrainId).defense;
+    const warfare = warfareHandlers(passable, unitsConfig, defenseOf);
     const extra = init.extraHandlers ?? new Map<string, RngHandler<WorldState>>();
     const merged = new Map<string, RngHandler<WorldState>>([
       ...world,

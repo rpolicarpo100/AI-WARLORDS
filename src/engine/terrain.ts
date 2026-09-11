@@ -15,7 +15,7 @@ import { cellAt, isTerrainId, TERRAIN_IDS, type MapData, type TerrainId } from '
 export interface TerrainModifiers {
   /** Movement cost multiplier (≥0). +Infinity = impassable. */
   readonly move: number;
-  /** Additive defense bonus (interpreted in M023). */
+  /** Additive defense bonus (interpreted in M024). */
   readonly defense: number;
   /** Additive stealth bonus (mechanics arrive with their module). */
   readonly stealth: number;

@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 23 (M001–M023)  |
-| `PLANNED`  | 142 (M024–M165) |
+| `VERIFIED` | 24 (M001–M024)  |
+| `PLANNED`  | 141 (M025–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -84,6 +84,10 @@ Checkpoints `VERIFIED`:
 - **M023 @ 2026-09-11** — combate (ataque adjacente+dano #83, chão 0;
   `unit.attacked` NORMAL); 1096/1096 testes, 100×4, remoção→M024.
   Registo em `docs/modules/M023.md`.
+- **M024 @ 2026-09-11** — resolução de dano (`max(0, dano−defesa)`;
+  morte=remoção; `unit.slain` NORMAL; cura adiada); 1102/1102 testes,
+  100×4, tooltip de defesa passa a verdade.
+  Registo em `docs/modules/M024.md`.
 
 ---
 
@@ -134,7 +138,7 @@ Checkpoints `VERIFIED`:
 | M021   | Unit System       | `VERIFIED` |
 | M022   | Movement          | `VERIFIED` |
 | M023   | Combat            | `VERIFIED` |
-| M024   | Damage Resolution | `PLANNED`  |
+| M024   | Damage Resolution | `VERIFIED` |
 | M025   | Army Management   | `PLANNED`  |
 | M026   | Military Tests    | `PLANNED`  |
 
