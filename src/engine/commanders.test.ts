@@ -15,12 +15,18 @@ import {
   MAX_COMMANDER_ID_CHARS,
   MAX_HOLDER_ID_CHARS,
   type CommanderOrders,
+  type CommanderRefutation,
   type CommandersData,
 } from './commanders.js';
 import { isDnaTraits, TRAIT_IDS } from './dna.js';
 import { DOCTRINE_IDS, isDoctrineId } from './doctrines.js';
 import { isPersonalityId, PERSONALITY_IDS } from './personalities.js';
 import { isOrderQueue, ORDER_IDS } from './orders.js';
+import {
+  isCommanderRefutation,
+  MAX_REFUTATION_BY_CHARS,
+  REFUTATION_REASONS,
+} from './refutations.js';
 import { perceive } from './views.js';
 import { createWorldState, isWorldState } from './world-state.js';
 
@@ -108,7 +114,11 @@ describe('isCommandersData (unit)', () => {
   it('rejects duplicate ids', () => {
     const record = { id: 'c0', owner: 'p1', active: true } as const;
     expect(
-      isCommandersData({ schemaVersion: 1, nextId: 2, commanders: [record, { ...record, owner: 'p2' }] }),
+      isCommandersData({
+        schemaVersion: 1,
+        nextId: 2,
+        commanders: [record, { ...record, owner: 'p2' }],
+      }),
     ).toBe(false);
   });
 });
@@ -760,5 +770,73 @@ describe('order mirror cross-check (M044)', () => {
     expect(
       isCommanderRecord({ id: 'c0', owner: 'p1', active: true, orders: [...full, move] }),
     ).toBe(false);
+  });
+});
+
+describe('refutation mirror cross-check (M046)', () => {
+  const good: CommanderRefutation = {
+    orderIndex: 0,
+    kind: 'unit.move',
+    reason: 'blocked',
+    by: 'c1',
+  };
+
+  it('mirror agrees with canonical on challenges + abuse batteries', () => {
+    for (const reason of REFUTATION_REASONS) {
+      const refutation = { ...good, reason };
+      expect(isCommanderRefutation(refutation)).toBe(true);
+      expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true, refutation })).toBe(true);
+    }
+    for (const kind of ORDER_IDS) {
+      const refutation = { ...good, kind };
+      expect(isCommanderRefutation(refutation)).toBe(true);
+      expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true, refutation })).toBe(true);
+    }
+    const battery: ReadonlyArray<{ readonly refutation: unknown; readonly valid: boolean }> = [
+      { refutation: { ...good, orderIndex: 7 }, valid: true },
+      { refutation: { ...good, orderIndex: 0xffffffff }, valid: true },
+      { refutation: { ...good, by: 'c'.repeat(64) }, valid: true },
+      { refutation: { ...good, note: 'extra' }, valid: true },
+      { refutation: { ...good, orderIndex: -1 }, valid: false },
+      { refutation: { ...good, orderIndex: 1.5 }, valid: false },
+      { refutation: { ...good, orderIndex: 0x100000000 }, valid: false },
+      { refutation: { ...good, kind: 'city.upgrade' }, valid: false },
+      { refutation: { ...good, reason: 'doomed' }, valid: false },
+      { refutation: { ...good, by: '' }, valid: false },
+      { refutation: { ...good, by: 'c'.repeat(65) }, valid: false },
+      { refutation: { kind: 'unit.move', reason: 'blocked', by: 'c1' }, valid: false },
+      { refutation: 7, valid: false },
+      { refutation: null, valid: false },
+      { refutation: [], valid: false },
+    ];
+    for (const { refutation, valid } of battery) {
+      expect(isCommanderRefutation(refutation)).toBe(valid);
+      expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true, refutation })).toBe(valid);
+    }
+    expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true })).toBe(true);
+  });
+
+  it('locks the mirrored challenger-id ceiling', () => {
+    expect(MAX_REFUTATION_BY_CHARS).toBe(64);
+    expect(
+      isCommanderRecord({
+        id: 'c0',
+        owner: 'p1',
+        active: true,
+        refutation: { ...good, by: 'c'.repeat(64) },
+      }),
+    ).toBe(true);
+  });
+
+  it('copies refutations fresh (no aliasing)', () => {
+    const data: CommandersData = {
+      schemaVersion: COMMANDERS_SCHEMA_VERSION,
+      nextId: 1,
+      commanders: [{ id: 'c0', owner: 'p1', active: true, refutation: good }],
+    };
+    const [copy] = commandersOf(data, 'p1');
+    expect(copy?.refutation).toEqual(good);
+    expect(copy?.refutation).not.toBe(data.commanders[0]?.refutation);
+    expect(commanderById(data, 'c0')?.refutation).toEqual(good);
   });
 });

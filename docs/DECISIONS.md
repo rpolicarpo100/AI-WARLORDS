@@ -1298,3 +1298,38 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
 - RISKS: baixo-médio — composição; tuning
   (#92); sem auto-exec (manual/AI).
 - CUTS: auto-exec (M046+); cancel parcial.
+
+## D-040 — Refutation data M046 (voto refute-data)
+
+- DECISION: NOVO `refutations.ts` (L0, zero
+  imports): `REFUTATION_REASONS` fechado
+  (alfabético, locked) — blocked, out-of-range,
+  redundant, suicidal, unaffordable — +
+  `Refutation` {orderIndex uint32, kind
+  (espelho OrderKind, L0↛L0), reason, by
+  (holder-id 64)} + guards totais (extras
+  ignorados). Espelho em commanders.ts:
+  `refutation?` (ausente=nenhuma) + mirror
+  guard + copyRecord. Referência
+  auto-validável: kind confirma index
+  (mismatch=stale → M047 fail-closed). Pins
+  census+LAYERS 0. Zero transições/eventos/
+  readers até M047+.
+- MOTIVE: voto refute-data + M043 (data-first)
+  + M044 (espelho) — fundação do bloco
+  M046–M050 (refute→override→confidence→
+  counterfactual).
+- ALTERNATIVES: transição order.refute já
+  (rejeitado: voto; behavior sem vocabulário);
+  fila de refutações (rejeitado: M047 decide/
+  amenda); reason aberta (rejeitado:
+  fail-closed exige enum); importar orders.ts
+  (rejeitado: lei L0↛L0).
+- ADVANTAGES: desafio com reason auditável;
+  staleness detectável em dados; fail-closed.
+- DISADVANTAGES: 1 refutação/record (M047
+  pode amendar); reasons ainda não avaliadas.
+- RISKS: baixo — dados puros; avaliação →
+  M047/M048.
+- CUTS: transições/eventos/readers (M047+);
+  avaliação de reasons (M047/M048); queue.

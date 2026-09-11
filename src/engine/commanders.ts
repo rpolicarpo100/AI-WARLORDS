@@ -20,6 +20,8 @@
  * M044 amends storage to an optional FIFO queue (`orders?`, absent
  * means empty, capped — orders.ts canonical, same L0↛L0 law). A
  * stale M043 `order` key is ignored, never rejected (back-compat).
+ * M046 embeds an optional refutation challenge (shape mirror —
+ * refutations.ts canonical, L0↛L0; resolution NOT mirrored, M047+ owns).
  */
 
 export const COMMANDERS_SCHEMA_VERSION = 1;
@@ -64,6 +66,18 @@ export interface CommanderOrder {
 /** M044 FIFO queue of standing orders (absent means empty; capped). */
 export type CommanderOrders = readonly CommanderOrder[];
 
+/** M046 mirror of CommanderRefutation (refutations.ts canonical; L0↛L0: deliberately not imported). */
+export interface CommanderRefutation {
+  readonly orderIndex: number;
+  readonly kind: CommanderOrderKind;
+  readonly reason: CommanderRefutationReason;
+  readonly by: string;
+}
+
+/** M046 mirror of RefutationReason (refutations.ts canonical; L0↛L0: deliberately not imported). */
+export type CommanderRefutationReason =
+  'blocked' | 'out-of-range' | 'redundant' | 'suicidal' | 'unaffordable';
+
 export interface CommanderRecord {
   readonly id: string;
   readonly owner: string;
@@ -72,6 +86,7 @@ export interface CommanderRecord {
   readonly personality?: CommanderPersonality;
   readonly doctrine?: CommanderDoctrine;
   readonly orders?: CommanderOrders;
+  readonly refutation?: CommanderRefutation;
 }
 
 export interface CommandersData {
@@ -259,6 +274,40 @@ function isMirroredOrders(value: unknown): value is CommanderOrders {
   return true;
 }
 
+/** Mirrors REFUTATION_REASONS (refutations.ts). Leaf: deliberately not imported. */
+const MIRRORED_REFUTATION_REASONS: readonly string[] = [
+  'blocked',
+  'out-of-range',
+  'redundant',
+  'suicidal',
+  'unaffordable',
+];
+
+/** Mirrors MAX_REFUTATION_BY_CHARS (refutations.ts). Leaf: deliberately not imported. */
+const MIRRORED_MAX_REFUTATION_BY_CHARS = 64;
+
+/** Mirrors isRefutationReason (refutations.ts). */
+function isMirroredRefutationReason(value: unknown): value is CommanderRefutationReason {
+  return typeof value === 'string' && MIRRORED_REFUTATION_REASONS.includes(value);
+}
+
+/** Mirrors isCommanderRefutation (refutations.ts): total check, extras ignored (M015). */
+function isMirroredRefutation(value: unknown): value is CommanderRefutation {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const fields = value as Record<string, unknown>;
+  const by = fields['by'];
+  return (
+    isWord(fields['orderIndex']) &&
+    isMirroredOrderKind(fields['kind']) &&
+    isMirroredRefutationReason(fields['reason']) &&
+    typeof by === 'string' &&
+    by.length >= 1 &&
+    by.length <= MIRRORED_MAX_REFUTATION_BY_CHARS
+  );
+}
+
 export function isCommanderRecord(value: unknown): value is CommanderRecord {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     return false;
@@ -271,7 +320,8 @@ export function isCommanderRecord(value: unknown): value is CommanderRecord {
     (fields['dna'] === undefined || isMirroredDna(fields['dna'])) &&
     (fields['personality'] === undefined || isMirroredPersonality(fields['personality'])) &&
     (fields['doctrine'] === undefined || isMirroredDoctrine(fields['doctrine'])) &&
-    (fields['orders'] === undefined || isMirroredOrders(fields['orders']))
+    (fields['orders'] === undefined || isMirroredOrders(fields['orders'])) &&
+    (fields['refutation'] === undefined || isMirroredRefutation(fields['refutation']))
   );
 }
 
@@ -308,10 +358,7 @@ export function isCommandersData(value: unknown): value is CommandersData {
  * holders and absent data (fail-soft). Pure L0 builder (map.js loader
  * precedent): callers freeze the result into their own trees.
  */
-export function commandersOf(
-  data: CommandersData | undefined,
-  holder: string,
-): CommanderRecord[] {
+export function commandersOf(data: CommandersData | undefined, holder: string): CommanderRecord[] {
   if (data === undefined) {
     return [];
   }
@@ -320,7 +367,7 @@ export function commandersOf(
     .map((commander) => copyRecord(commander));
 }
 
-/** Fresh copy incl. nested DNA (M031) and queued orders (M044: spreads alias nested). */
+/** Fresh copy incl. nested DNA (M031), queued orders (M044: spreads alias nested) and refutation (M046: flat scalars, one spread suffices). */
 function copyRecord(commander: CommanderRecord): CommanderRecord {
   let copy: CommanderRecord = { ...commander };
   if (commander.dna !== undefined) {
@@ -328,6 +375,9 @@ function copyRecord(commander: CommanderRecord): CommanderRecord {
   }
   if (commander.orders !== undefined) {
     copy = { ...copy, orders: commander.orders.map((order) => copyOrder(order)) };
+  }
+  if (commander.refutation !== undefined) {
+    copy = { ...copy, refutation: { ...commander.refutation } };
   }
   return copy;
 }
