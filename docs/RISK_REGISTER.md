@@ -97,3 +97,4 @@
 | 2026-09-11 | M030      | L-28 CLOSED (visão stateful; writer canónico só-genuíno); tuning visão 2→#92; sem lost-contact |
 | 2026-09-11 | M031      | DNA live (vocabulário+guard+mirror, zero consumers); writer→FUTURO; mirror-drift coberto por battery |
 | 2026-09-11 | M032      | Personalities live (fixo-5+presets votados, zero behavior); tuning matriz→#92; extensão futura declarada |
+| 2026-09-11 | M033      | Doctrines live (fixo-6+deltas votados, zero behavior/composer); tuning matriz→#92; composição só-registada |

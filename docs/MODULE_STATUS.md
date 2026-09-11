@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 32 (M001–M032)  |
-| `PLANNED`  | 133 (M033–M165) |
+| `VERIFIED` | 33 (M001–M033)  |
+| `PLANNED`  | 132 (M034–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -125,6 +125,10 @@ Checkpoints `VERIFIED`:
   (fixo-5 + presets DNA votados + rótulo record;
   5 votos); 1346/1346 testes, 100 global.
   Registo em `docs/modules/M032.md`.
+- **M033 @ 2026-09-11** — Unit Doctrines data-first
+  (fixo-6 + deltas DNA votados + rótulo record;
+  5 votos); 1364/1364 testes, 100 global.
+  Registo em `docs/modules/M033.md`.
 
 ---
 
@@ -189,7 +193,8 @@ Checkpoints `VERIFIED`:
 | M030 | AI Foundation — Discovery Engine | `VERIFIED` |
 | M031 | Personalidade — AI DNA | `VERIFIED` |
 | M032 | Personalidade — AI Personalities | `VERIFIED` |
-| M033–M034 | Personalidade (Doctrines, Testing) | `PLANNED` |
+| M033 | Personalidade — Unit Doctrines | `VERIFIED` |
+| M034 | Personalidade — Testing | `PLANNED` |
 | M035–M042 | Strategic AI                                                        | `PLANNED` |
 | M043–M045 | Player → AI Command                                                 | `PLANNED` |
 | M046–M047 | AI Refutation + Override                                            | `PLANNED` |

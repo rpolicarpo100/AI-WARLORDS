@@ -898,3 +898,47 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
   (embed+mirror) + `commanders.test.ts` (battery) +
   phase1-gate (2 pins) (M032).
 - ESTADO: `ACCEPTED`.
+
+## D-027 — Doctrines data-first: rótulo + deltas DNA votados (M033 pré-análise + voto)
+
+- DECISION: `doctrines.ts` NOVO (LEAF L0, zero imports):
+  DOCTRINE_IDS (6, ordem #24, lowercase-hífen — molde
+  town-center) + DoctrineId + isDoctrineId + DoctrineDeltas
+  (shape estrutural 10 int — mirror de DnaTraits, L0↛L0),
+  DELTA_MIN/MAX (−30/+30), DOCTRINE_DNA_DELTAS (matriz
+  6×10 VOTADA 2026-09-11; neutro 0, primário ±25–30,
+  múltiplos de 5, frozen) + dnaDeltasOf (cópia fresca;
+  desconhecido→undefined fail-soft, molde dnaPresetOf).
+  `CommanderRecord.doctrine?` (embed votado; union mirror,
+  isMirroredDoctrine, battery — M016). Composição VOTADA
+  p/ futuros consumidores (só REGISTADA — composer seria
+  L2+, fora do âmbito; L0↛L0 impede-o na leaf): efetivo =
+  clamp(base + deltas, 0–100), base = record-DNA ??
+  preset-personalidade ?? neutro-50 (emperor votado).
+  Sem slot novo; views/Match/validation zero churn
+  (F-09 top-level); commission sem doctrine (M029);
+  sem writer (init-placed); sem behavior (M034+/M035+).
+- MOTIVE: 5 votos explícitos do utilizador 2026-09-11
+  (data-first; perfis; extend; matriz; aditivo) +
+  #24 (6 nomes+epítetos) + #21 (cada Commander possui
+  DOCTRINE) + #22 (influencia≠determina) + M032 (molde
+  presets-votados + mirror + forward-placed) + M016/M027,
+  constraints (layering dita record-only).
+- ALTERNATIVES: só-rótulo (preterido — perfis votados);
+  perfis inventados sem voto (rejeitado — matriz proposta
+  e APROVADA); pesos táticos/verbos (rejeitado: verbos
+  = mais superfície inventada; DNA-deltas reutiliza os
+  10 eixos votados); standalone (rejeitada); override/
+  ignore (rejeitados); composer em M033 (rejeitado:
+  L2+ = scope-creep; consumidores executam); writer (off).
+- ADVANTAGES: vocabulário fechado + modulação canónica;
+  cadeia especificidade completa (record→preset→neutro
+  →deltas); zero churn motor; consumers com tudo pronto.
+- DISADVANTAGES: 3.º mirror em commanders.ts; folha sem
+  importadores até M034+; tuning 60 deltas (#92).
+- RISKS: baixo — dados puros; residual: tuning matriz;
+  composição por executar (M035+).
+- IMPLEMENTATION: `doctrines.ts` + `doctrines.test.ts` +
+  `commanders.ts` (embed+mirror) + `commanders.test.ts`
+  (battery) + phase1-gate (2 pins) (M033).
+- ESTADO: `ACCEPTED`.

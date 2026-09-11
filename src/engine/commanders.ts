@@ -13,6 +13,8 @@
  * M032 embeds optional personality label (union mirror — personalities.ts
  * canonical, L0↛L0). Presets are NOT mirrored (lookup lives in
  * personalities.ts; the record carries only the label).
+ * M033 embeds optional doctrine label (union mirror — doctrines.ts
+ * canonical, L0↛L0; deltas NOT mirrored, same rationale).
  */
 
 export const COMMANDERS_SCHEMA_VERSION = 1;
@@ -35,12 +37,17 @@ export interface CommanderDna {
 export type CommanderPersonality =
   'conqueror' | 'strategist' | 'defender' | 'manipulator' | 'emperor';
 
+/** M033 mirror of DoctrineId (doctrines.ts canonical; L0↛L0: deliberately not imported). */
+export type CommanderDoctrine =
+  'blitz' | 'turtle' | 'economic-empire' | 'guerrilla' | 'siege-master' | 'counterstrike';
+
 export interface CommanderRecord {
   readonly id: string;
   readonly owner: string;
   readonly active: boolean;
   readonly dna?: CommanderDna;
   readonly personality?: CommanderPersonality;
+  readonly doctrine?: CommanderDoctrine;
 }
 
 export interface CommandersData {
@@ -97,6 +104,21 @@ function isMirroredTraitValue(value: unknown): value is number {
   );
 }
 
+/** Mirrors DOCTRINE_IDS (doctrines.ts). Leaf: deliberately not imported. */
+const MIRRORED_DOCTRINE_IDS: readonly string[] = [
+  'blitz',
+  'turtle',
+  'economic-empire',
+  'guerrilla',
+  'siege-master',
+  'counterstrike',
+];
+
+/** Mirrors isDoctrineId (doctrines.ts). */
+function isMirroredDoctrine(value: unknown): value is CommanderDoctrine {
+  return typeof value === 'string' && MIRRORED_DOCTRINE_IDS.includes(value);
+}
+
 /** Mirrors PERSONALITY_IDS (personalities.ts). Leaf: deliberately not imported. */
 const MIRRORED_PERSONALITY_IDS: readonly string[] = [
   'conqueror',
@@ -135,7 +157,8 @@ export function isCommanderRecord(value: unknown): value is CommanderRecord {
     isHolderId(fields['owner']) &&
     typeof fields['active'] === 'boolean' &&
     (fields['dna'] === undefined || isMirroredDna(fields['dna'])) &&
-    (fields['personality'] === undefined || isMirroredPersonality(fields['personality']))
+    (fields['personality'] === undefined || isMirroredPersonality(fields['personality'])) &&
+    (fields['doctrine'] === undefined || isMirroredDoctrine(fields['doctrine']))
   );
 }
 

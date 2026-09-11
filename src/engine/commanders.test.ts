@@ -17,6 +17,7 @@ import {
   type CommandersData,
 } from './commanders.js';
 import { isDnaTraits, TRAIT_IDS } from './dna.js';
+import { DOCTRINE_IDS, isDoctrineId } from './doctrines.js';
 import { isPersonalityId, PERSONALITY_IDS } from './personalities.js';
 import { perceive } from './views.js';
 import { createWorldState, isWorldState } from './world-state.js';
@@ -463,6 +464,60 @@ describe('personality mirror cross-check (M032)', () => {
           : { id: 'c0', owner: 'p1', active: true, personality: bad };
       // Absent label is valid (optional); every other abuse agrees both sides.
       const expected = bad === undefined ? true : isPersonalityId(bad);
+      expect(isCommanderRecord(record)).toBe(expected);
+    }
+  });
+});
+
+describe('doctrine embed (M033)', () => {
+  it('record without doctrine stays valid (backward compatible)', () => {
+    expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true })).toBe(true);
+  });
+
+  it.each([...DOCTRINE_IDS])('record with doctrine %s validates', (doctrine) => {
+    expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true, doctrine })).toBe(true);
+  });
+
+  it('record with unknown doctrine rejects (fixed-6 vocabulary)', () => {
+    for (const bad of ['conqueror', 'TURTLE', '', 7, null, [], {}]) {
+      expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true, doctrine: bad })).toBe(false);
+    }
+  });
+
+  it('WorldState slot round-trips doctrine alongside personality', () => {
+    const state = createWorldState({
+      players: [P1, P2],
+      commanders: {
+        schemaVersion: 1,
+        nextId: 1,
+        commanders: [{ id: 'c0', owner: 'p1', active: true, doctrine: 'turtle' }],
+      },
+    });
+    expect(state.commanders?.commanders[0]).toEqual({
+      id: 'c0',
+      owner: 'p1',
+      active: true,
+      doctrine: 'turtle',
+    });
+    expect(perceive(state, P1).commanders).toEqual([
+      { id: 'c0', owner: 'p1', active: true, doctrine: 'turtle' },
+    ]);
+  });
+});
+
+describe('doctrine mirror cross-check (M033)', () => {
+  it('mirror agrees with canonical on the six + abuse battery', () => {
+    for (const id of DOCTRINE_IDS) {
+      expect(isDoctrineId(id)).toBe(true);
+      expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true, doctrine: id })).toBe(true);
+    }
+    for (const bad of ['conqueror', 'TURTLE', '', 7, null, undefined, [], {}]) {
+      const record =
+        bad === undefined
+          ? { id: 'c0', owner: 'p1', active: true }
+          : { id: 'c0', owner: 'p1', active: true, doctrine: bad };
+      // Absent label is valid (optional); every other abuse agrees both sides.
+      const expected = bad === undefined ? true : isDoctrineId(bad);
       expect(isCommanderRecord(record)).toBe(expected);
     }
   });
