@@ -1180,3 +1180,27 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
 - DISADVANTAGES: drill fora tsc (rede eslint +
   execução); 80 facts/jogo-típico (bounded).
 - RISKS: baixo — só testes.
+
+## D-036 — Transversal suite M042 (voto transversal-suite)
+
+- DECISION: `src/engine/strategy-transversal.test.ts`
+  NOVO (2 testes, in-coverage, fecha bloco): journey
+  commission→flip→upgrade (cadeia M035–M040 viva:
+  counts; avg recomputado via composer real; flip
+  não mexe avg; upgrade emite EXACTAMENTE
+  2×ai.assessment que espelham queries; p2 vazio
+  honesto) + determinismo twin (snapshot+events+
+  queries deep-iguais). Zero prod; bundle
+  byte-idêntico; sem pins (census exclui teste).
+- MOTIVE: voto transversal-suite 2026-09-11 + M026
+  (molde fecho) + TESTING §1B + D-035 (pointer).
+- ALTERNATIVES: estender playtest c/ commander.*
+  (rejeitado: drill M041 já cobre; regen =
+  churn sem lacuna); 3.º teste (rejeitado:
+  redundante c/ journey, precedente M026); pins
+  (rejeitado: sem superfície prod).
+- ADVANTAGES: cadeia ponta-a-ponta pinada;
+  no-structural-fact do upgrade provado.
+- DISADVANTAGES: teste imóvel a goldens M038
+  (counts, não duplica golden).
+- RISKS: baixo — só testes.

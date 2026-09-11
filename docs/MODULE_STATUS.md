@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 41 (M001–M041)  |
-| `PLANNED`  | 124 (M042–M165) |
+| `VERIFIED` | 42 (M001–M042)  |
+| `PLANNED`  | 123 (M043–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -164,6 +164,11 @@ Checkpoints `VERIFIED`:
   1200 applied/0 violações, sans-ms idêntico);
   1415/1415 testes, 100 global.
   Registo em `docs/modules/M041.md`.
+- **M042 @ 2026-09-11** — Strategy Transversal
+  (suite votada: journey arco IA + determinismo
+  twin; zero prod); 1417/1417 testes, 100.
+  Registo em `docs/modules/M042.md`.
+  Bloco Strategic AI M035–M042 FECHADO.
 
 ---
 
@@ -237,7 +242,7 @@ Checkpoints `VERIFIED`:
 | M039 | Strategic AI — Army Posture | `VERIFIED` |
 | M040 | Strategic AI — AI Events | `VERIFIED` |
 | M041 | Strategic AI — Strategy Drill | `VERIFIED` |
-| M042 | Strategic AI | `PLANNED` |
+| M042 | Strategic AI — Transversal | `VERIFIED` |
 | M043–M045 | Player → AI Command                                                 | `PLANNED` |
 | M046–M047 | AI Refutation + Override                                            | `PLANNED` |
 | M048      | Confidence Engine                                                   | `PLANNED` |

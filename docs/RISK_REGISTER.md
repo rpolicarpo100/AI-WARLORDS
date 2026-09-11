@@ -106,3 +106,4 @@
 | 2026-09-11 | M039      | Posture live (L3 votada + query, 1.º consumer M037); 3 módulos p/ fechar bloco |
 | 2026-09-11 | M040      | AI events live (snapshots em upgrade, mockups regen +72/-0, latência unitsConfig fechada) |
 | 2026-09-11 | M041      | Strategy drill live (harness votado, 7 invariantes, 1200 applied/0 violações, sans-ms idêntico); 1 módulo p/ fechar bloco |
+| 2026-09-11 | M042      | Transversal live (suite votada, arco IA ponta-a-ponta, 1417/1417); bloco M035–M042 FECHADO |
