@@ -14,7 +14,8 @@
 > Exploration memory: `EXISTS` (M014 — VERIFIED)
 > Perception system: `EXISTS` (M015 — VERIFIED)
 > Resource engine: `EXISTS` (M016 — VERIFIED)
-> Domínio do jogo (economia, militar, AI): `NONE` (M017+; mapa+terreno+recursos+fog+explored+perception+stockpiles EXISTS)
+> Gathering: `EXISTS` (M017 — VERIFIED; primeiro produtor)
+> Domínio do jogo (economia, militar, AI): `NONE` (M018+; mapa+terreno+recursos+fog+explored+perception+stockpiles+gather EXISTS)
 > Arquitectura-alvo: `PLANNED` (transcrita do documento-mestre)
 > Data: 2026-09-11
 
@@ -76,22 +77,23 @@ nevoeiro computado — visibilidade determinística por viewer sobre hex (M013);
 memória explored — acumulação monótona por viewer, tri-state (M014);
 percepção por viewer — saber compatível com fog, secrets morto (M015);
 motor de recursos — stockpiles + config + ops exactas (M016);
+gathering — primeiro produtor, depleção nó→stockpile (M017);
 chain nunca substitui o engine (M101); dinheiro só após gate Fase 28.
 
 ## 3. Mapa de fases → camadas (PLANNED)
 
-| Fase(s) | Camada                      | Módulos                     |
-| ------- | --------------------------- | --------------------------- |
-| 0       | Foundation                  | M001–M002 (VERIFIED)        |
-| 1       | Game Engine                 | M003–M009 (VERIFIED)        |
-| 2       | World                       | M010–M015 (VERIFIED)        |
-| 3–4     | Economy + Military          | M016 (VERIFIED) → M017–M026 |
-| 5–8     | AI Foundation → Commands    | M027–M045                   |
-| 9–16    | Refutation → AI Arena       | M046–M068                   |
-| 17–20   | Multiplayer → Observability | M069–M093                   |
-| 21–22   | Economic sim → Free mode    | M094–M097                   |
-| 23–28   | Solana → Rewards            | M098–M124 (+gates)          |
-| 29–36   | Advanced                    | M125–M165                   |
+| Fase(s) | Camada                      | Módulos                          |
+| ------- | --------------------------- | -------------------------------- |
+| 0       | Foundation                  | M001–M002 (VERIFIED)             |
+| 1       | Game Engine                 | M003–M009 (VERIFIED)             |
+| 2       | World                       | M010–M015 (VERIFIED)             |
+| 3–4     | Economy + Military          | M016–M017 (VERIFIED) → M018–M026 |
+| 5–8     | AI Foundation → Commands    | M027–M045                        |
+| 9–16    | Refutation → AI Arena       | M046–M068                        |
+| 17–20   | Multiplayer → Observability | M069–M093                        |
+| 21–22   | Economic sim → Free mode    | M094–M097                        |
+| 23–28   | Solana → Rewards            | M098–M124 (+gates)               |
+| 29–36   | Advanced                    | M125–M165                        |
 
 ## 4. Decisões pendentes (`UNKNOWN` até ao módulo próprio)
 
@@ -120,12 +122,13 @@ chain nunca substitui o engine (M101); dinheiro só após gate Fase 28.
 - [x] Memória explored (M014: leaf+mark+monotonic — VERIFIED)
 - [x] Percepção por viewer (M015: perceive+membership — VERIFIED)
 - [x] Motor de recursos (M016: stockpiles+config+ops — VERIFIED)
+- [x] Gathering (M017: handler+producer+depleção — VERIFIED)
 
-## 5. Repo layout (actual, M016)
+## 5. Repo layout (actual, M017)
 
 ```text
 ai-warlords/
-  package.json / package-lock.json  scripts + deps pinned (intocados M003–M016)
+  package.json / package-lock.json  scripts + deps pinned (intocados M003–M017)
   tsconfig.json / tsconfig.build.json
   vitest.config.ts / eslint.config.js / .prettierrc.json
   src/
@@ -148,13 +151,13 @@ ai-warlords/
       explored.ts       memória explored + guard (VERIFIED, load-bearing)
       exploration.ts    acumulação + tri-state (VERIFIED, load-bearing)
       stockpiles.ts     armazéns + guard (VERIFIED, load-bearing)
-      economy.ts        config + ops exactas (VERIFIED, load-bearing)
+      economy.ts        config + ops + gather (VERIFIED, load-bearing)
       phase1-gate.test.ts  selo transversal M009 (14 testes, prova)
-      *.test.ts         689 testes colocados
+      *.test.ts         737 testes colocados
     *.test.ts           28 testes M002 (regressão)
   dist/              build (gitignored)
   docs/              audit, stack, riscos, status, tools, testes, decisões, processo
-  docs/modules/      registos por módulo (M002.md … M016.md)
+  docs/modules/      registos por módulo (M002.md … M017.md)
 ```
 
 AVISOS: `src/dev-server.ts` (M002) e `src/engine/harness.ts` (M003) são
@@ -185,3 +188,4 @@ stockpiles, economy.
 | 2026-09-11 | M014      | Explored EXISTS; leaf+mark+monotonic; 621 testes engine        |
 | 2026-09-11 | M015      | Percepção EXISTS; secrets morto; selo re-locked; 623 testes    |
 | 2026-09-11 | M016      | Motor EXISTS; stockpiles+config+ops; 689 testes engine         |
+| 2026-09-11 | M017      | Gather EXISTS; depleção+facto; map-preserved cede; 737 testes  |

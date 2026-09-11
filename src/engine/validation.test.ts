@@ -7,10 +7,12 @@ import {
   type TransitionHandler,
   type Untrusted,
 } from './authority.js';
+import { isMapData, type MapData } from './map.js';
 import { Match, STANDARD_RULESET } from './match.js';
 import { deriveSeed, SeededRng } from './rng.js';
 import {
   createWorldValidator,
+  mapsDepletionOnly,
   MAX_STATE_BYTES,
   noParamsRule,
   wrapWithValidation,
@@ -436,5 +438,133 @@ describe('rule failure loudness', () => {
       ),
     ).toEqual({ status: 'error', code: 'HANDLER_FAULT' });
     expect(kernel.getSnapshot()).toEqual(before);
+  });
+});
+
+describe('mapsDepletionOnly (unit: direct)', () => {
+  function dMap(): MapData {
+    const map: MapData = {
+      schemaVersion: 1,
+      id: 'direct' as MapData['id'],
+      width: 2,
+      height: 2,
+      stagger: 'odd',
+      cells: [
+        { col: 0, row: 0, terrain: 'resource', resource: { type: 'gold', amount: 5 } },
+        { col: 1, row: 0, terrain: 'field' },
+        { col: 0, row: 1, terrain: 'field' },
+        { col: 1, row: 1, terrain: 'field' },
+      ],
+      spawns: [],
+    };
+    if (!isMapData(map)) {
+      throw new Error('TEST BUG: dMap invalid');
+    }
+    return map;
+  }
+
+  function deplete(map: MapData, amount: number): MapData {
+    return {
+      ...map,
+      cells: map.cells.map((cell) =>
+        cell.col === 0 && cell.row === 0 ? { ...cell, resource: { type: 'gold', amount } } : cell,
+      ),
+    };
+  }
+
+  it('accepts identical maps and pure depletion', () => {
+    const map = dMap();
+    expect(mapsDepletionOnly(map, map)).toBe(true);
+    expect(mapsDepletionOnly(map, deplete(map, 4))).toBe(true);
+    expect(mapsDepletionOnly(map, deplete(map, 0))).toBe(true);
+  });
+
+  it('rejects missing maps (arrival/removal/both)', () => {
+    const map = dMap();
+    expect(mapsDepletionOnly(undefined, map)).toBe(false);
+    expect(mapsDepletionOnly(map, undefined)).toBe(false);
+    expect(mapsDepletionOnly(undefined, undefined)).toBe(false);
+  });
+
+  it.each([
+    ['id', (m: MapData): MapData => ({ ...m, id: 'forged' as MapData['id'] })],
+    ['width', (m: MapData): MapData => ({ ...m, width: 1 })],
+    ['height', (m: MapData): MapData => ({ ...m, height: 1 })],
+    ['stagger', (m: MapData): MapData => ({ ...m, stagger: 'even' })],
+    ['cell count', (m: MapData): MapData => ({ ...m, cells: m.cells.slice(1) })],
+  ] as Array<[string, (m: MapData) => MapData]>)('rejects header mutant %s', (_label, forge) => {
+    expect(mapsDepletionOnly(dMap(), forge(dMap()))).toBe(false);
+  });
+
+  it('rejects spawn diffs', () => {
+    const map = dMap();
+    expect(mapsDepletionOnly(map, { ...map, spawns: [{ playerIndex: 0, col: 0, row: 1 }] })).toBe(
+      false,
+    );
+  });
+
+  it.each([
+    [
+      'novel position',
+      (m: MapData): MapData => ({
+        ...m,
+        cells: [...m.cells.slice(1), { col: 5, row: 5, terrain: 'field' as const }],
+      }),
+    ],
+    [
+      'terrain flip',
+      (m: MapData): MapData => ({
+        ...m,
+        cells: m.cells.map((c, i) => (i === 0 ? { ...c, terrain: 'field' as const } : c)),
+      }),
+    ],
+    [
+      'detail removed',
+      (m: MapData): MapData => ({
+        ...m,
+        cells: m.cells.map((c, i) =>
+          i === 0 ? { col: 0, row: 0, terrain: 'resource' as const } : c,
+        ),
+      }),
+    ],
+    [
+      'detail added',
+      (m: MapData): MapData => ({
+        ...m,
+        cells: m.cells.map((c, i) =>
+          i === 1 ? { ...c, resource: { type: 'wood' as const, amount: 3 } } : c,
+        ),
+      }),
+    ],
+    [
+      'type swap',
+      (m: MapData): MapData => ({
+        ...m,
+        cells: m.cells.map((c, i) =>
+          i === 0 ? { ...c, resource: { type: 'wood' as const, amount: 5 } } : c,
+        ),
+      }),
+    ],
+    ['amount increase', (m: MapData): MapData => deplete(m, 6)],
+  ] as Array<[string, (m: MapData) => MapData]>)('rejects cell mutant %s', (_label, forge) => {
+    expect(mapsDepletionOnly(dMap(), forge(dMap()))).toBe(false);
+  });
+
+  it('duplicate positions collapse → novel position → false', () => {
+    const map = dMap();
+    const duped: MapData = {
+      ...map,
+      cells: map.cells.map((cell) =>
+        cell.col === 1 && cell.row === 1
+          ? {
+              col: 0,
+              row: 0,
+              terrain: 'resource' as const,
+              resource: { type: 'gold' as const, amount: 5 },
+            }
+          : cell,
+      ),
+    };
+    expect(mapsDepletionOnly(duped, map)).toBe(false);
   });
 });

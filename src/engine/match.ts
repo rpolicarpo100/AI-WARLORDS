@@ -26,6 +26,7 @@ import {
   createWorldValidator,
   noParamsRule,
   wrapWithValidation,
+  type PreRule,
   type RngHandler,
 } from './validation.js';
 import {
@@ -35,6 +36,14 @@ import {
   type VictoryCondition,
 } from './victory.js';
 import { isWorldState, worldHandlers, type WorldState } from './world-state.js';
+import {
+  DEFAULT_ECONOMY_CONFIG,
+  economyHandlers,
+  gatherParamsRule,
+  gatherProducer,
+  GATHER_TRANSITION,
+  isEconomyConfig,
+} from './economy.js';
 
 declare const matchBrand: unique symbol;
 declare const seedBrand: unique symbol;
@@ -77,10 +86,12 @@ export interface TimelineEntry {
 }
 
 /**
- * M005 registers time progression only. Domain transitions arrive with
- * their modules (via `extraHandlers`). Payload is deliberately ignored by
- * the handler itself; M006 rejects non-empty payloads to built-ins via the
- * no-params pre-rule (fail loud on caller mistakes).
+ * M005 registers time progression only. Economy arrives via the M017 seam
+ * (Match closes over a validated config); all other domain transitions
+ * arrive with their modules (via `extraHandlers`). Payload is deliberately
+ * ignored by the handler itself; M006 rejects non-empty payloads to
+ * no-param handlers via the no-params pre-rule (fail loud on caller
+ * mistakes).
  */
 export function matchHandlers(): Map<string, RngHandler<WorldState>> {
   const entries: Array<[string, RngHandler<WorldState>]> = [
@@ -109,6 +120,7 @@ export interface MatchInit {
   readonly extraHandlers?: ReadonlyMap<string, RngHandler<WorldState>>;
   readonly extraProducers?: ReadonlyMap<string, readonly EventProducer[]>;
   readonly extraConditions?: readonly VictoryCondition[];
+  readonly economyConfig?: unknown;
 }
 
 export type MatchDispatchOutcome =
@@ -183,15 +195,26 @@ export class Match {
     if (stateIds.size !== init.players.length || !init.players.every((id) => stateIds.has(id))) {
       throw new Error('Match: roster does not match initialState players.');
     }
+    const economyConfig = init.economyConfig ?? DEFAULT_ECONOMY_CONFIG;
+    if (!isEconomyConfig(economyConfig)) {
+      throw new Error('Match: invalid economy config.');
+    }
     const world = worldHandlers();
     const match = matchHandlers();
+    const economy = economyHandlers(economyConfig);
     const extra = init.extraHandlers ?? new Map<string, RngHandler<WorldState>>();
-    const merged = new Map<string, RngHandler<WorldState>>([...world, ...match, ...extra]);
-    if (merged.size !== world.size + match.size + extra.size) {
+    const merged = new Map<string, RngHandler<WorldState>>([
+      ...world,
+      ...match,
+      ...economy,
+      ...extra,
+    ]);
+    if (merged.size !== world.size + match.size + economy.size + extra.size) {
       throw new Error('Match: duplicate handler names.');
     }
     const validator = createWorldValidator();
-    const builtins = new Set([...world.keys(), ...match.keys()]);
+    const noParamHandlers = new Set([...world.keys(), ...match.keys()]);
+    const paramRules = new Map<string, PreRule>([[GATHER_TRANSITION, gatherParamsRule]]);
     let dispatchCount = 0;
     const nextSeq = (): number => {
       dispatchCount += 1;
@@ -202,10 +225,19 @@ export class Match {
       if (name.length === 0 || typeof handler !== 'function') {
         throw new Error('Match: invalid handler registration.');
       }
-      const pre = builtins.has(name) ? [noParamsRule(name), ...validator.pre] : validator.pre;
+      const paramRule = paramRules.get(name);
+      let pre: readonly PreRule[];
+      if (paramRule !== undefined) {
+        pre = [paramRule, ...validator.pre];
+      } else if (noParamHandlers.has(name)) {
+        pre = [noParamsRule(name), ...validator.pre];
+      } else {
+        pre = validator.pre;
+      }
       validated.set(name, wrapWithValidation(handler, { ...validator, pre }, this.seed, nextSeq));
     }
     const producers = new Map<string, readonly EventProducer[]>(matchProducers());
+    producers.set(GATHER_TRANSITION, [gatherProducer]);
     const extraProducers = init.extraProducers ?? new Map<string, readonly EventProducer[]>();
     for (const [name, extra] of extraProducers) {
       producers.set(name, [...(producers.get(name) ?? []), ...extra]);

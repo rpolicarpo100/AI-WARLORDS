@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 16 (M001–M016)  |
-| `PLANNED`  | 149 (M017–M165) |
+| `VERIFIED` | 17 (M001–M017)  |
+| `PLANNED`  | 148 (M018–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -59,6 +59,9 @@ Checkpoints `VERIFIED`:
 - **M016 @ 2026-09-11** — motor de recursos (stockpiles + config + ops
   exactas); 717/717 testes, 100×4, sem invariante (M020 owns).
   Registo em `docs/modules/M016.md`.
+- **M017 @ 2026-09-11** — gathering (primeiro produtor; depleção muda
+  amounts); 765/765 testes, 100×4, map-preserved cede só depleção.
+  Registo em `docs/modules/M017.md`. L-23 CLOSED.
 
 ---
 
@@ -97,7 +100,7 @@ Checkpoints `VERIFIED`:
 | Módulo | Nome               | Estado     |
 | ------ | ------------------ | ---------- |
 | M016   | Resource Engine    | `VERIFIED` |
-| M017   | Gathering          | `PLANNED`  |
+| M017   | Gathering          | `VERIFIED` |
 | M018   | Buildings          | `PLANNED`  |
 | M019   | City System        | `PLANNED`  |
 | M020   | Economy Validation | `PLANNED`  |
@@ -191,10 +194,10 @@ Alinhadas por número: 0, 1, 3, 4, 28. Divergentes:
 ## Ordem recomendada (estrita, sem saltos)
 
 ```text
-M001 → M002 → … → M014 → M015 → M016 (VERIFIED) → M017 → … → M165
+M001 → M002 → … → M015 → M016 → M017 (VERIFIED) → M018 → … → M165
 ```
 
-Próximo permitido: **M017 — Gathering**, apenas após autorização
+Próximo permitido: **M018 — Buildings**, apenas após autorização
 explícita. Saltos, paralelização ou batch = violação do §35 (recusar).
 
 ---

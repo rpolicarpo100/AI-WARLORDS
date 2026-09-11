@@ -238,14 +238,14 @@ describe('resource queries (unit)', () => {
 });
 
 describe('node integrity + blindness (security)', () => {
-  it('node mutation faults map-preserved', () => {
+  it('node forgery (increase) still faults map-preserved', () => {
     const state = createWorldState({ players: [P1], map: nodeMap() });
     const map = state.map;
     if (map === undefined) {
       throw new Error('test setup: expected a map');
     }
     const cells = map.cells.map((cell, i) =>
-      i === 2 ? { ...cell, resource: { type: 'gold' as const, amount: 1 } } : cell,
+      i === 2 ? { ...cell, resource: { type: 'gold' as const, amount: 501 } } : cell,
     );
     const wrapped = wrapWithValidation(
       () => ({ applied: true, state: { ...state, map: { ...map, cells } }, summary: 'mut' }),
@@ -254,6 +254,31 @@ describe('node integrity + blindness (security)', () => {
       () => 1,
     );
     expect(() => wrapped({ state, caller: P1, params: {} })).toThrow(/map-preserved/);
+  });
+
+  it('pure depletion passes map-preserved (M017 writer)', () => {
+    const state = createWorldState({ players: [P1], map: nodeMap() });
+    const map = state.map;
+    if (map === undefined) {
+      throw new Error('test setup: expected a map');
+    }
+    const cells = map.cells.map((cell, i) =>
+      i === 2 ? { ...cell, resource: { type: 'gold' as const, amount: 499 } } : cell,
+    );
+    const wrapped = wrapWithValidation(
+      () => ({ applied: true, state: { ...state, map: { ...map, cells } }, summary: 'mut' }),
+      createWorldValidator(),
+      7,
+      () => 1,
+    );
+    const result = wrapped({ state, caller: P1, params: {} });
+    if (result.applied !== true) {
+      throw new Error('test setup: depletion declined');
+    }
+    expect(resourceAt(result.state.map ?? nodeMap(), 0, 1)).toEqual({
+      type: 'gold',
+      amount: 499,
+    });
   });
 
   it('AI perception exposes no node details on a node-bearing map', () => {

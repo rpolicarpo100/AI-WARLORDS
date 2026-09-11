@@ -1,6 +1,6 @@
-# AI WARLORDS — RISK REGISTER (M016)
+# AI WARLORDS — RISK REGISTER (M017)
 
-> Data: 2026-09-11 · Actualizado por: M016
+> Data: 2026-09-11 · Actualizado por: M017
 > Convenção: `ACTIVE` = presente agora · `FUTURE` = fases vindouras ·
 > `MITIGATED` = tratado com residual declarado · `CLOSED` = encerrado
 
@@ -66,21 +66,22 @@
 
 ## 7. Alterações
 
-| Data       | Módulo    | Alteração                                                                              |
-| ---------- | --------- | -------------------------------------------------------------------------------------- |
-| 2026-09-10 | M002      | R-50 MITIGATED (residual declarado); R-51 sem impacto; R-52 criado                     |
-| 2026-09-10 | M003      | R-11 MITIGATED (residual declarado); R-53 criado (L-07 → M071/M085)                    |
-| 2026-09-10 | M004      | R-12 nota (mecanismo VERIFIED, fog real M015); R-54 criado (L-08 → M006)               |
-| 2026-09-10 | M005      | R-10 MITIGATED (E2E provado, residual M009/M069+); R-53 += timeline (L-09 → M062)      |
-| 2026-09-10 | M006      | R-54 MITIGATED (cap, L-08 CLOSED, residual L-12 → M088); L-10 CLOSED; R-11/R-20 notas  |
-| 2026-09-10 | M007      | R-53 += events (L-09 estendido → M062); L-15/L-16 criados (delivery/payloads futuros)  |
-| 2026-09-10 | M008      | L-17/L-18 criados (score/eliminação futuros); R-20 nota (verdict-integrity)            |
-| 2026-09-11 | M009      | R-50 CLOSED (Fase 1 prova stack); R-10 residual M009 cumprido; L-19 criado (scan)      |
-| 2026-09-11 | M010      | R-12/R-20 notas (blindness/map-preserved); L-20/L-21 criados (stagger/conteúdo)        |
-| 2026-09-11 | M011      | L-22 criado (high-ground⟺mountain, sem elevation); R-02/R-51 notas                     |
-| 2026-09-11 | M012      | R-20 nota (nós sob map-preserved); L-23 (amounts por tile); REPARO: dup §2–§4 removida |
-| 2026-09-11 | FIX-AUDIT | R-55 criado (integridade de registos); L-24/L-25 (tick-clock, spawn-roster)            |
-| 2026-09-11 | M013      | R-12 nota (computação fog); L-26/L-27 (on-demand, viewer-membership)                   |
-| 2026-09-11 | M014      | R-12 nota (memória explored); L-28 (anti-forge residual → M021+)                       |
-| 2026-09-11 | M015      | R-12 nota (fog real); L-04/L-27 CLOSED; L-29 (→ M028); selo re-locked                  |
-| 2026-09-11 | M016      | L-30/L-31 (grants→M019, caps→M018); sem invariante (M020 owns)                         |
+| Data       | Módulo    | Alteração                                                                                |
+| ---------- | --------- | ---------------------------------------------------------------------------------------- |
+| 2026-09-10 | M002      | R-50 MITIGATED (residual declarado); R-51 sem impacto; R-52 criado                       |
+| 2026-09-10 | M003      | R-11 MITIGATED (residual declarado); R-53 criado (L-07 → M071/M085)                      |
+| 2026-09-10 | M004      | R-12 nota (mecanismo VERIFIED, fog real M015); R-54 criado (L-08 → M006)                 |
+| 2026-09-10 | M005      | R-10 MITIGATED (E2E provado, residual M009/M069+); R-53 += timeline (L-09 → M062)        |
+| 2026-09-10 | M006      | R-54 MITIGATED (cap, L-08 CLOSED, residual L-12 → M088); L-10 CLOSED; R-11/R-20 notas    |
+| 2026-09-10 | M007      | R-53 += events (L-09 estendido → M062); L-15/L-16 criados (delivery/payloads futuros)    |
+| 2026-09-10 | M008      | L-17/L-18 criados (score/eliminação futuros); R-20 nota (verdict-integrity)              |
+| 2026-09-11 | M009      | R-50 CLOSED (Fase 1 prova stack); R-10 residual M009 cumprido; L-19 criado (scan)        |
+| 2026-09-11 | M010      | R-12/R-20 notas (blindness/map-preserved); L-20/L-21 criados (stagger/conteúdo)          |
+| 2026-09-11 | M011      | L-22 criado (high-ground⟺mountain, sem elevation); R-02/R-51 notas                       |
+| 2026-09-11 | M012      | R-20 nota (nós sob map-preserved); L-23 (amounts por tile); REPARO: dup §2–§4 removida   |
+| 2026-09-11 | FIX-AUDIT | R-55 criado (integridade de registos); L-24/L-25 (tick-clock, spawn-roster)              |
+| 2026-09-11 | M013      | R-12 nota (computação fog); L-26/L-27 (on-demand, viewer-membership)                     |
+| 2026-09-11 | M014      | R-12 nota (memória explored); L-28 (anti-forge residual → M021+)                         |
+| 2026-09-11 | M015      | R-12 nota (fog real); L-04/L-27 CLOSED; L-29 (→ M028); selo re-locked                    |
+| 2026-09-11 | M016      | L-30/L-31 (grants→M019, caps→M018); sem invariante (M020 owns)                           |
+| 2026-09-11 | M017      | R-20 nota (map-preserved cede depleção); L-23 CLOSED; L-32 (gather sem worker→M021/M022) |

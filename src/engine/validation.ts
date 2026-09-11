@@ -5,6 +5,7 @@ import type {
   TransitionResult,
 } from './authority.js';
 import { stableStringify } from './hash.js';
+import type { MapCell, MapData } from './map.js';
 import { deriveSeed, SeededRng } from './rng.js';
 import { isWorldState, type WorldState } from './world-state.js';
 
@@ -23,6 +24,8 @@ import { isWorldState, type WorldState } from './world-state.js';
  * M010 adds map-preserved (fail-closed geography integrity, O(1)).
  * M014 adds explored-monotonic (memory only accumulates; anti-forge
  * stays a documented residual until stateful vision exists, L-28).
+ * M017 relaxes map-preserved to depletion-only (gather mutates amounts;
+ * terrain/type/increase forgery still caught — mapsDepletionOnly).
  */
 
 /** A single failed check: which rule + deterministic detail. */
@@ -98,18 +101,66 @@ function sizeRule(_before: WorldState, after: WorldState): Violation | null {
 }
 
 /**
- * M010 geography integrity: no handler may replace the map object —
- * fail-closed (there are no map transitions yet; forged terrain is the
- * same threat class as R-20). Reference check is O(1): handlers that
- * merely spread state keep the same reference and pass untouched.
+ * M017 geography integrity: the map may only change by resource
+ * depletion (gather). Anything else — terrain/type/presence swaps,
+ * amount increases, header/spawn/cell-count diffs — is forgery (R-20
+ * class) and fails. Pure + exported: direct unit tests feed gate-invalid
+ * mutants too (defense in depth — the shape gate runs first, but the
+ * rule trusts nothing).
  */
+export function mapsDepletionOnly(
+  before: MapData | undefined,
+  after: MapData | undefined,
+): boolean {
+  if (before === undefined || after === undefined) {
+    return false;
+  }
+  if (
+    before.id !== after.id ||
+    before.width !== after.width ||
+    before.height !== after.height ||
+    before.stagger !== after.stagger ||
+    before.cells.length !== after.cells.length
+  ) {
+    return false;
+  }
+  if (stableStringify(before.spawns) !== stableStringify(after.spawns)) {
+    return false;
+  }
+  const seen = new Map<number, MapCell>();
+  for (const cell of before.cells) {
+    seen.set(cell.row * before.width + cell.col, cell);
+  }
+  return after.cells.every((cell) => {
+    const prev = seen.get(cell.row * after.width + cell.col);
+    if (prev === undefined) {
+      return false;
+    }
+    if (prev.terrain !== cell.terrain) {
+      return false;
+    }
+    const was = prev.resource;
+    const now = cell.resource;
+    if (was === undefined || now === undefined) {
+      return was === now;
+    }
+    if (was.type !== now.type) {
+      return false;
+    }
+    return now.amount <= was.amount;
+  });
+}
+
 function mapRule(before: WorldState, after: WorldState): Violation | null {
   if (before.map === after.map) {
     return null;
   }
+  if (mapsDepletionOnly(before.map, after.map)) {
+    return null;
+  }
   return {
     rule: 'map-preserved',
-    detail: 'map replaced without a map transition (none exist yet)',
+    detail: 'map changed beyond resource depletion',
   };
 }
 

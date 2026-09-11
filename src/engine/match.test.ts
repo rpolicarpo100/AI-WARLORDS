@@ -110,6 +110,13 @@ describe('constructor validation (failure)', () => {
     expect(() => new Match(baseInit({ ruleset }))).toThrow(message);
   });
 
+  it.each([[42], ['x'], [{}], [{ food: { value: 1, gatherYield: 1 } }]] as Array<[unknown]>)(
+    'rejects economyConfig %j',
+    (economyConfig) => {
+      expect(() => new Match(baseInit({ economyConfig }))).toThrow(/invalid economy config/);
+    },
+  );
+
   it('rejects garbage roster ids', () => {
     expect(() => makeMatch({ players: ['x'.repeat(65) as PlayerId] })).toThrow(/invalid player id/);
     expect(() => makeMatch({ players: [42 as unknown as PlayerId] })).toThrow(/invalid player id/);

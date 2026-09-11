@@ -8,8 +8,8 @@
  * hidden exploits); affordability checks fail soft (boolean).
  */
 
-import { freezeState, type PlayerId } from './authority.js';
-import { isResourceType, RESOURCE_TYPES, type ResourceType } from './map.js';
+import { freezeState, type PlayerId, type TransitionHandler } from './authority.js';
+import { cellAt, isResourceType, RESOURCE_TYPES, type ResourceType } from './map.js';
 import { MAX_UINT32 } from './rng.js';
 import {
   isStockpilesData,
@@ -18,6 +18,7 @@ import {
   type StockpilesData,
   type StockpileType,
 } from './stockpiles.js';
+import type { WorldState } from './world-state.js';
 
 export interface EconomyRates {
   readonly value: number;
@@ -159,4 +160,131 @@ export function canAfford(data: StockpilesData, holder: PlayerId, cost: Cost): b
     held.stone >= price.stone &&
     held.gold >= price.gold
   );
+}
+
+/**
+ * M017 — Gathering: the first producer (node → stockpile depletion).
+ *
+ * Structural types throughout (no validation/events imports — L2→L2
+ * edges are forbidden even for types; assignability is proven where
+ * match.ts wires these into its RngHandler/EventProducer maps).
+ */
+
+/** Transition name (single source — match.ts wires it, tests dispatch it). */
+export const GATHER_TRANSITION = 'economy.gather';
+
+/** Validated gather parameters: a map cell in offset coordinates. */
+export interface GatherParams {
+  readonly col: number;
+  readonly row: number;
+}
+
+/** Wire-shape pre-rule (game rules live in the handler, not here). */
+export function gatherParamsRule(
+  _caller: PlayerId,
+  params: unknown,
+): { readonly rule: string; readonly detail: string } | null {
+  if (typeof params !== 'object' || params === null || Array.isArray(params)) {
+    return { rule: 'gather-params', detail: 'gather takes { col, row }' };
+  }
+  const fields = params as Record<string, unknown>;
+  if (!isUint32(fields['col']) || !isUint32(fields['row'])) {
+    return { rule: 'gather-params', detail: 'gather takes { col, row } uint32' };
+  }
+  return null;
+}
+
+export function createGatherHandler(config: EconomyConfig): TransitionHandler<WorldState> {
+  if (!isEconomyConfig(config)) {
+    throw new Error('createGatherHandler: invalid economy config.');
+  }
+  return (ctx) => {
+    // The pre-rule validated { col, row } uints on the dispatch path;
+    // this cast documents the seam (match.ts `validated` precedent).
+    const { col, row } = ctx.params as GatherParams;
+    const map = ctx.state.map;
+    if (map === undefined) {
+      return { applied: false, reason: 'gather: no map.' };
+    }
+    const target = map.cells.find((cell) => cell.col === col && cell.row === row);
+    if (target === undefined) {
+      return { applied: false, reason: 'gather: out of bounds.' };
+    }
+    const node = target.resource;
+    if (node === undefined) {
+      return { applied: false, reason: 'gather: no node here.' };
+    }
+    if (node.amount === 0) {
+      return { applied: false, reason: 'gather: node depleted.' };
+    }
+    const taken = Math.min(config[node.type].gatherYield, node.amount);
+    if (taken === 0) {
+      return { applied: false, reason: 'gather: yield is zero.' };
+    }
+    const cells = map.cells.map((cell) =>
+      cell === target
+        ? { ...cell, resource: { type: node.type, amount: node.amount - taken } }
+        : cell,
+    );
+    const base: StockpilesData = ctx.state.stockpiles ?? {
+      schemaVersion: STOCKPILES_SCHEMA_VERSION,
+      stockpiles: {},
+    };
+    const stockpiles = credit(base, ctx.caller, node.type, taken);
+    return {
+      applied: true,
+      state: { ...ctx.state, map: { ...map, cells }, stockpiles },
+      summary: `gathered ${taken} ${node.type} at ${col},${row}`,
+    };
+  };
+}
+
+export function economyHandlers(config: EconomyConfig): Map<string, TransitionHandler<WorldState>> {
+  return new Map([[GATHER_TRANSITION, createGatherHandler(config)]]);
+}
+
+/** Structural EventProducer (assignability proven at the match.ts seam). */
+export function gatherProducer(input: {
+  readonly type: string;
+  readonly caller: PlayerId;
+  readonly params: unknown;
+  readonly before: WorldState;
+  readonly after: WorldState;
+}): ReadonlyArray<{
+  readonly type: string;
+  readonly priority: 'normal';
+  readonly payload: unknown;
+}> {
+  if (typeof input.params !== 'object' || input.params === null) {
+    throw new Error('gatherProducer: invalid params.');
+  }
+  const fields = input.params as Record<string, unknown>;
+  const col = fields['col'];
+  const row = fields['row'];
+  if (!isUint32(col) || !isUint32(row)) {
+    throw new Error('gatherProducer: invalid params.');
+  }
+  const beforeMap = input.before.map;
+  const afterMap = input.after.map;
+  if (beforeMap === undefined || afterMap === undefined) {
+    throw new Error('gatherProducer: map missing.');
+  }
+  const was = cellAt(beforeMap, col, row)?.resource;
+  const now = cellAt(afterMap, col, row)?.resource;
+  if (was === undefined || now === undefined) {
+    throw new Error('gatherProducer: node missing.');
+  }
+  return [
+    {
+      type: 'resource.gathered',
+      priority: 'normal',
+      payload: {
+        player: input.caller,
+        col,
+        row,
+        resource: was.type,
+        amount: was.amount - now.amount,
+      },
+    },
+  ];
 }

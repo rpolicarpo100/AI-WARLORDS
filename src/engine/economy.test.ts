@@ -3,11 +3,24 @@
  * (credit/debit/canAfford), WorldState extension, perception carry.
  */
 import { describe, expect, it } from 'vitest';
-import type { PlayerId } from './authority.js';
-import { canAfford, credit, debit, DEFAULT_ECONOMY_CONFIG, isEconomyConfig } from './economy.js';
+import { markUntrusted, type ClientRequest, type PlayerId, type Untrusted } from './authority.js';
+import {
+  canAfford,
+  createGatherHandler,
+  credit,
+  debit,
+  DEFAULT_ECONOMY_CONFIG,
+  gatherParamsRule,
+  gatherProducer,
+  GATHER_TRANSITION,
+  isEconomyConfig,
+  type EconomyConfig,
+} from './economy.js';
+import { isMapData, type MapData } from './map.js';
+import { Match, STANDARD_RULESET } from './match.js';
 import type { StockpilesData } from './stockpiles.js';
-import { createWorldValidator } from './validation.js';
-import { createWorldState, isWorldState } from './world-state.js';
+import { createWorldValidator, type RngHandler } from './validation.js';
+import { createWorldState, isWorldState, type WorldState } from './world-state.js';
 import { perceive } from './views.js';
 
 const P1 = 'p1' as PlayerId;
@@ -20,6 +33,65 @@ function held(): StockpilesData {
     schemaVersion: 1,
     stockpiles: { p1: { food: 5, wood: 3, stone: 0, gold: 1 } },
   };
+}
+
+/** Simulates untrusted wire bytes: unknown input, marked at the boundary. */
+function raw(value: unknown): Untrusted<ClientRequest> {
+  return markUntrusted(value as ClientRequest);
+}
+
+/** 2×2 map: gold node (0,0)×5, wood node (1,1)×4, fields elsewhere. */
+function nodeMap(): MapData {
+  const map: MapData = {
+    schemaVersion: 1,
+    id: 'test-nodes' as MapData['id'],
+    width: 2,
+    height: 2,
+    stagger: 'odd',
+    cells: [
+      { col: 0, row: 0, terrain: 'resource', resource: { type: 'gold', amount: 5 } },
+      { col: 1, row: 0, terrain: 'field' },
+      { col: 0, row: 1, terrain: 'field' },
+      { col: 1, row: 1, terrain: 'resource', resource: { type: 'wood', amount: 4 } },
+    ],
+    spawns: [{ playerIndex: 0, col: 0, row: 1 }],
+  };
+  if (!isMapData(map)) {
+    throw new Error('TEST BUG: nodeMap invalid');
+  }
+  return map;
+}
+
+/** Valid 1×1 field map (dims-swap forgery needs a gate-passing mutant). */
+function tinyMap(): MapData {
+  const map: MapData = {
+    schemaVersion: 1,
+    id: 'test-tiny' as MapData['id'],
+    width: 1,
+    height: 1,
+    stagger: 'odd',
+    cells: [{ col: 0, row: 0, terrain: 'field' }],
+    spawns: [],
+  };
+  if (!isMapData(map)) {
+    throw new Error('TEST BUG: tinyMap invalid');
+  }
+  return map;
+}
+
+/** Neutral default, but gold yields 3 (multi-take + partial-take coverage). */
+function yield3(): EconomyConfig {
+  return { ...DEFAULT_ECONOMY_CONFIG, gold: { value: 5, gatherYield: 3 } };
+}
+
+function gatherMatch(config?: EconomyConfig): Match {
+  return new Match({
+    seed: 7,
+    ruleset: STANDARD_RULESET,
+    players: [P1, P2],
+    initialState: createWorldState({ players: [P1, P2], map: nodeMap() }),
+    ...(config === undefined ? {} : { economyConfig: config }),
+  });
 }
 
 describe('isEconomyConfig (unit)', () => {
@@ -240,5 +312,463 @@ describe('perception carry (integration)', () => {
 describe('no validation rule (M020 owns)', () => {
   it('composition stays at 5 post-invariants (no snuck-in rule)', () => {
     expect(createWorldValidator().post).toHaveLength(5);
+  });
+});
+
+describe('gatherParamsRule (unit)', () => {
+  it('rejects non-object params', () => {
+    const shape = { rule: 'gather-params', detail: 'gather takes { col, row }' };
+    expect(gatherParamsRule(P1, 'x')).toEqual(shape);
+    expect(gatherParamsRule(P1, null)).toEqual(shape);
+    expect(gatherParamsRule(P1, [])).toEqual(shape);
+  });
+
+  it('rejects non-uint coords, accepts the shape', () => {
+    const uints = { rule: 'gather-params', detail: 'gather takes { col, row } uint32' };
+    expect(gatherParamsRule(P1, { col: 'x', row: 0 })).toEqual(uints);
+    expect(gatherParamsRule(P1, { col: 0 })).toEqual(uints);
+    expect(gatherParamsRule(P1, {})).toEqual(uints);
+    expect(gatherParamsRule(P1, { col: 1, row: 2 })).toBeNull();
+  });
+});
+
+describe('createGatherHandler (unit: direct)', () => {
+  function mapful(stockpiles?: StockpilesData): WorldState {
+    return stockpiles === undefined
+      ? createWorldState({ players: [P1, P2], map: nodeMap() })
+      : createWorldState({ players: [P1, P2], map: nodeMap(), stockpiles });
+  }
+
+  it('rejects an invalid config', () => {
+    expect(() => createGatherHandler({} as EconomyConfig)).toThrow(/invalid economy config/);
+  });
+
+  it('mapless state → applied:false', () => {
+    const handler = createGatherHandler(yield3());
+    expect(
+      handler({
+        state: createWorldState({ players: [P1, P2] }),
+        caller: P1,
+        params: { col: 0, row: 0 },
+      }),
+    ).toEqual({ applied: false, reason: 'gather: no map.' });
+  });
+
+  it('out of bounds → applied:false (both miss shapes)', () => {
+    const handler = createGatherHandler(yield3());
+    const state = mapful();
+    expect(handler({ state, caller: P1, params: { col: 9, row: 9 } })).toEqual({
+      applied: false,
+      reason: 'gather: out of bounds.',
+    });
+    expect(handler({ state, caller: P1, params: { col: 0, row: 9 } })).toEqual({
+      applied: false,
+      reason: 'gather: out of bounds.',
+    });
+  });
+
+  it('resourceless cell → applied:false', () => {
+    const handler = createGatherHandler(yield3());
+    expect(handler({ state: mapful(), caller: P1, params: { col: 1, row: 0 } })).toEqual({
+      applied: false,
+      reason: 'gather: no node here.',
+    });
+  });
+
+  it('depleted node → applied:false', () => {
+    const base = nodeMap();
+    const zeroed: MapData = {
+      ...base,
+      cells: base.cells.map((cell) =>
+        cell.col === 0 && cell.row === 0
+          ? { ...cell, resource: { type: 'gold', amount: 0 } }
+          : cell,
+      ),
+    };
+    if (!isMapData(zeroed)) {
+      throw new Error('TEST BUG: zeroed map invalid');
+    }
+    const handler = createGatherHandler(yield3());
+    const state = createWorldState({ players: [P1, P2], map: zeroed });
+    expect(handler({ state, caller: P1, params: { col: 0, row: 0 } })).toEqual({
+      applied: false,
+      reason: 'gather: node depleted.',
+    });
+  });
+
+  it('zero yield → applied:false (never an applied no-op)', () => {
+    const flat: EconomyConfig = { ...DEFAULT_ECONOMY_CONFIG, gold: { value: 5, gatherYield: 0 } };
+    const handler = createGatherHandler(flat);
+    expect(handler({ state: mapful(), caller: P1, params: { col: 0, row: 0 } })).toEqual({
+      applied: false,
+      reason: 'gather: yield is zero.',
+    });
+  });
+
+  it('golden: depletes the node, credits the caller, exact summary', () => {
+    const handler = createGatherHandler(yield3());
+    const before = mapful();
+    const result = handler({ state: before, caller: P1, params: { col: 0, row: 0 } });
+    if (result.applied !== true) {
+      throw new Error('TEST BUG: golden gather declined');
+    }
+    expect(result.summary).toBe('gathered 3 gold at 0,0');
+    expect(result.state.tick).toBe(0);
+    const afterMap = result.state.map;
+    if (afterMap === undefined) {
+      throw new Error('TEST BUG: golden gather dropped the map');
+    }
+    expect(afterMap).toEqual({
+      ...nodeMap(),
+      cells: [
+        { col: 0, row: 0, terrain: 'resource', resource: { type: 'gold', amount: 2 } },
+        { col: 1, row: 0, terrain: 'field' },
+        { col: 0, row: 1, terrain: 'field' },
+        { col: 1, row: 1, terrain: 'resource', resource: { type: 'wood', amount: 4 } },
+      ],
+    });
+    expect(afterMap.cells[1]).toBe(before.map?.cells[1]);
+    expect(result.state.stockpiles).toEqual({
+      schemaVersion: 1,
+      stockpiles: { p1: { food: 0, wood: 0, stone: 0, gold: 3 } },
+    });
+  });
+
+  it('accumulates onto existing stockpiles', () => {
+    const handler = createGatherHandler(yield3());
+    const result = handler({ state: mapful(held()), caller: P1, params: { col: 1, row: 1 } });
+    if (result.applied !== true) {
+      throw new Error('TEST BUG: accumulate gather declined');
+    }
+    expect(result.state.stockpiles).toEqual({
+      schemaVersion: 1,
+      stockpiles: { p1: { food: 5, wood: 4, stone: 0, gold: 1 } },
+    });
+  });
+
+  it('overflow stays loud (uint32 ceiling is bug-scale)', () => {
+    const full: StockpilesData = {
+      schemaVersion: 1,
+      stockpiles: { p1: { food: 0, wood: 0, stone: 0, gold: 4294967295 } },
+    };
+    const handler = createGatherHandler(yield3());
+    expect(() => handler({ state: mapful(full), caller: P1, params: { col: 0, row: 0 } })).toThrow(
+      /overflow/,
+    );
+  });
+});
+
+describe('gather E2E (real Match)', () => {
+  function gather(match: Match, rid: string, col: number, row: number) {
+    const session = match.join(P1);
+    return match.dispatch(
+      session,
+      raw({ requestId: rid, playerId: 'p1', type: GATHER_TRANSITION, payload: { col, row } }),
+    );
+  }
+
+  it('dispatches the registered gather: applied + depletion + credit + fact', () => {
+    const match = gatherMatch(yield3());
+    expect(gather(match, 'r1', 0, 0)).toEqual({
+      status: 'applied',
+      revision: 1,
+      summary: 'gathered 3 gold at 0,0',
+    });
+    const snapshot = match.getSnapshot();
+    const map = snapshot.map;
+    if (map === undefined) {
+      throw new Error('TEST BUG: E2E map missing');
+    }
+    const node = map.cells.find((cell) => cell.col === 0 && cell.row === 0)?.resource;
+    expect(node).toEqual({ type: 'gold', amount: 2 });
+    expect(snapshot.stockpiles).toEqual({
+      schemaVersion: 1,
+      stockpiles: { p1: { food: 0, wood: 0, stone: 0, gold: 3 } },
+    });
+    const timeline = match.getTimeline();
+    expect(timeline).toHaveLength(1);
+    expect(timeline[0]).toMatchObject({
+      type: GATHER_TRANSITION,
+      applied: true,
+      detail: 'gathered 3 gold at 0,0',
+    });
+    expect(match.getEvents()).toHaveLength(2);
+    expect(match.getEvents()[1]).toEqual({
+      seq: 2,
+      tick: 0,
+      revision: 1,
+      type: 'resource.gathered',
+      priority: 'normal',
+      payload: { player: 'p1', col: 0, row: 0, resource: 'gold', amount: 3 },
+    });
+  });
+
+  it('second gather takes the remainder; third is recorded-but-unapplied', () => {
+    const match = gatherMatch(yield3());
+    expect(gather(match, 'r1', 0, 0)).toMatchObject({ status: 'applied', revision: 1 });
+    expect(gather(match, 'r2', 0, 0)).toEqual({
+      status: 'applied',
+      revision: 2,
+      summary: 'gathered 2 gold at 0,0',
+    });
+    expect(match.getSnapshot().stockpiles).toEqual({
+      schemaVersion: 1,
+      stockpiles: { p1: { food: 0, wood: 0, stone: 0, gold: 5 } },
+    });
+    const before = match.getSnapshot();
+    expect(gather(match, 'r3', 0, 0)).toEqual({
+      status: 'rejected',
+      reason: 'gather: node depleted.',
+    });
+    expect(match.getSnapshot()).toEqual(before);
+    expect(match.getRevision()).toBe(2);
+    expect(match.getTimeline()).toHaveLength(3);
+    expect(match.getTimeline()[2]).toMatchObject({
+      applied: false,
+      detail: 'gather: node depleted.',
+    });
+    expect(match.getEvents()).toHaveLength(3);
+  });
+
+  it('malformed params rejected (pre-rule), state untouched', () => {
+    const match = gatherMatch(yield3());
+    const session = match.join(P1);
+    const before = match.getSnapshot();
+    expect(
+      match.dispatch(
+        session,
+        raw({ requestId: 'r1', playerId: 'p1', type: GATHER_TRANSITION, payload: 'x' }),
+      ),
+    ).toEqual({
+      status: 'rejected',
+      reason: 'validation: [gather-params] gather takes { col, row }',
+    });
+    expect(match.getSnapshot()).toEqual(before);
+    expect(match.getRevision()).toBe(0);
+  });
+
+  it('default config gathers at yield 1 (no economyConfig passed)', () => {
+    const match = gatherMatch();
+    expect(gather(match, 'r1', 1, 1)).toEqual({
+      status: 'applied',
+      revision: 1,
+      summary: 'gathered 1 wood at 1,1',
+    });
+    expect(match.getSnapshot().stockpiles).toEqual({
+      schemaVersion: 1,
+      stockpiles: { p1: { food: 0, wood: 1, stone: 0, gold: 0 } },
+    });
+  });
+
+  it('perceive reflects the gathered stockpile (own-only)', () => {
+    const match = gatherMatch(yield3());
+    gather(match, 'r1', 0, 0);
+    const snapshot = match.getSnapshot();
+    expect(perceive(snapshot, P1).stockpile).toEqual({ food: 0, wood: 0, stone: 0, gold: 3 });
+    expect(perceive(snapshot, P2).stockpile).toEqual({ food: 0, wood: 0, stone: 0, gold: 0 });
+  });
+});
+
+describe('map-preserved v2 (E2E forgery mutants)', () => {
+  function patch(
+    map: MapData,
+    col: number,
+    row: number,
+    resource: { type: 'gold' | 'wood'; amount: number },
+  ): MapData {
+    return {
+      ...map,
+      cells: map.cells.map((cell) =>
+        cell.col === col && cell.row === row ? { ...cell, resource } : cell,
+      ),
+    };
+  }
+
+  const mutants: Array<[string, (map: MapData) => MapData]> = [
+    [
+      'terrain flip',
+      (m) => ({ ...m, cells: m.cells.map((c, i) => (i === 1 ? { ...c, terrain: 'forest' } : c)) }),
+    ],
+    ['type swap', (m) => patch(m, 0, 0, { type: 'wood', amount: 5 })],
+    ['amount increase', (m) => patch(m, 0, 0, { type: 'gold', amount: 6 })],
+    ['id change', (m) => ({ ...m, id: 'forged' as MapData['id'] })],
+    ['stagger flip', (m) => ({ ...m, stagger: 'even' })],
+    ['spawn dropped', (m) => ({ ...m, spawns: [] })],
+    ['dims swap (valid 1x1)', () => tinyMap()],
+  ];
+
+  it.each(mutants)('forgery %s → HANDLER_FAULT, untouched', (_label, forge) => {
+    const forged = forge(nodeMap());
+    if (!isMapData(forged)) {
+      throw new Error('TEST BUG: forged map must pass the shape gate');
+    }
+    // TEST MOCK: forging writer (proves the post-rule catches gate-passing forgeries).
+    const handlers = new Map<string, RngHandler<WorldState>>([
+      [
+        'test.forge',
+        (ctx) => ({ applied: true, state: { ...ctx.state, map: forged }, summary: 'forge' }),
+      ],
+    ]);
+    const match = new Match({
+      seed: 7,
+      ruleset: STANDARD_RULESET,
+      players: [P1, P2],
+      initialState: createWorldState({ players: [P1, P2], map: nodeMap() }),
+      extraHandlers: handlers,
+    });
+    const session = match.join(P1);
+    const before = match.getSnapshot();
+    expect(
+      match.dispatch(
+        session,
+        raw({ requestId: 'r1', playerId: 'p1', type: 'test.forge', payload: {} }),
+      ),
+    ).toEqual({ status: 'error', code: 'HANDLER_FAULT' });
+    expect(match.getSnapshot()).toEqual(before);
+    expect(match.getRevision()).toBe(0);
+  });
+
+  it('arrival (mapless → map) → HANDLER_FAULT', () => {
+    const arrived = nodeMap();
+    // TEST MOCK: arriving writer.
+    const handlers = new Map<string, RngHandler<WorldState>>([
+      [
+        'test.arrive',
+        (ctx) => ({ applied: true, state: { ...ctx.state, map: arrived }, summary: 'arrive' }),
+      ],
+    ]);
+    const match = new Match({
+      seed: 7,
+      ruleset: STANDARD_RULESET,
+      players: [P1, P2],
+      initialState: createWorldState({ players: [P1, P2] }),
+      extraHandlers: handlers,
+    });
+    const session = match.join(P1);
+    const before = match.getSnapshot();
+    expect(
+      match.dispatch(
+        session,
+        raw({ requestId: 'r1', playerId: 'p1', type: 'test.arrive', payload: {} }),
+      ),
+    ).toEqual({ status: 'error', code: 'HANDLER_FAULT' });
+    expect(match.getSnapshot()).toEqual(before);
+  });
+
+  it('removal (map → mapless) → HANDLER_FAULT', () => {
+    // TEST MOCK: removing writer.
+    const handlers = new Map<string, RngHandler<WorldState>>([
+      [
+        'test.remove',
+        (ctx) => ({
+          applied: true,
+          state: createWorldState({ players: [P1, P2], tick: ctx.state.tick }),
+          summary: 'remove',
+        }),
+      ],
+    ]);
+    const match = new Match({
+      seed: 7,
+      ruleset: STANDARD_RULESET,
+      players: [P1, P2],
+      initialState: createWorldState({ players: [P1, P2], map: nodeMap() }),
+      extraHandlers: handlers,
+    });
+    const session = match.join(P1);
+    const before = match.getSnapshot();
+    expect(
+      match.dispatch(
+        session,
+        raw({ requestId: 'r1', playerId: 'p1', type: 'test.remove', payload: {} }),
+      ),
+    ).toEqual({ status: 'error', code: 'HANDLER_FAULT' });
+    expect(match.getSnapshot()).toEqual(before);
+  });
+});
+
+describe('gatherProducer (unit: direct)', () => {
+  function coerced(): { before: WorldState; after: WorldState } {
+    const before = createWorldState({ players: [P1, P2], map: nodeMap() });
+    const handler = createGatherHandler(yield3());
+    const result = handler({ state: before, caller: P1, params: { col: 0, row: 0 } });
+    if (result.applied !== true) {
+      throw new Error('TEST BUG: producer fixture declined');
+    }
+    return { before, after: result.state };
+  }
+
+  it('throws on invalid params', () => {
+    const { before, after } = coerced();
+    expect(() =>
+      gatherProducer({ type: GATHER_TRANSITION, caller: P1, params: 'x', before, after }),
+    ).toThrow(/invalid params/);
+    expect(() =>
+      gatherProducer({ type: GATHER_TRANSITION, caller: P1, params: null, before, after }),
+    ).toThrow(/invalid params/);
+    expect(() =>
+      gatherProducer({
+        type: GATHER_TRANSITION,
+        caller: P1,
+        params: { col: 'x', row: 0 },
+        before,
+        after,
+      }),
+    ).toThrow(/invalid params/);
+    expect(() =>
+      gatherProducer({ type: GATHER_TRANSITION, caller: P1, params: { col: 0 }, before, after }),
+    ).toThrow(/invalid params/);
+  });
+
+  it('throws when a map is missing', () => {
+    const { before, after } = coerced();
+    const mapless = createWorldState({ players: [P1, P2] });
+    expect(() =>
+      gatherProducer({
+        type: GATHER_TRANSITION,
+        caller: P1,
+        params: { col: 0, row: 0 },
+        before: mapless,
+        after,
+      }),
+    ).toThrow(/map missing/);
+    expect(() =>
+      gatherProducer({
+        type: GATHER_TRANSITION,
+        caller: P1,
+        params: { col: 0, row: 0 },
+        before,
+        after: mapless,
+      }),
+    ).toThrow(/map missing/);
+  });
+
+  it('throws when the node is missing', () => {
+    const { before, after } = coerced();
+    expect(() =>
+      gatherProducer({
+        type: GATHER_TRANSITION,
+        caller: P1,
+        params: { col: 9, row: 9 },
+        before,
+        after,
+      }),
+    ).toThrow(/node missing/);
+    // Intentionally gate-invalid: direct producer tests bypass the shape gate.
+    const flattened: MapData = {
+      ...nodeMap(),
+      cells: nodeMap().cells.map((cell) =>
+        cell.col === 0 && cell.row === 0 ? { col: 0, row: 0, terrain: 'resource' } : cell,
+      ),
+    };
+    const noNodeAfter: WorldState = { ...before, map: flattened };
+    expect(() =>
+      gatherProducer({
+        type: GATHER_TRANSITION,
+        caller: P1,
+        params: { col: 0, row: 0 },
+        before,
+        after: noNodeAfter,
+      }),
+    ).toThrow(/node missing/);
   });
 });

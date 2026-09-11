@@ -178,3 +178,43 @@
   Sem gathering (M017), sem custos (M018), sem score (L-17), sem trade.
 - IMPLEMENTATION: `stockpiles.ts` L0 + `economy.ts` L2 (M016).
 - ESTADO: `ACCEPTED`.
+
+## D-010 — Gather primeiro produtor; map-preserved cede só depleção (M017 pré-análise)
+
+- DECISION: `economy.gather` (params `{col,row}`) é o primeiro produtor:
+  factory `createGatherHandler(config)` + `gatherParamsRule` (só-shape)
+  - `gatherProducer` (diff via params+cellAt, facto `resource.gathered`)
+    em `economy.ts` (tipos ESTRUTURAIS — L2→L2 proibido até p/ types).
+    Match fecha sobre `economyConfig?` validado (seam M011; default neutro;
+    ruleset-versioning diferido à 1.ª variante); `builtins`→renomeado
+    `noParamHandlers` + mapa preRules (gather com params, resto intacto).
+    `map-preserved` RELAXA: `mapsDepletionOnly` exportado (header igual +
+    pareamento por posição via Map + terrain igual + type igual +
+    amount não-crescente); mutantes inválidos (gate-unreachable) testados
+    por chamada DIRECTA (execução real, §3 TESTING.md). SEM worker
+    (L-32 → M021/M022: qualquer jogador, qualquer célula).
+- MOTIVE: mestre #12 (GATHER no loop) + #15 (WORKER recolhe — desvio
+  declarado L-32) + evento RESOURCE_GATHERED (#factos) + M012 ("M017
+  muta amounts") + M016 (gatherYield). Pre=wire-shape/handler=regras
+  (camada única p/ lógica; cast documenta seam, precedente match.ts).
+  Guard exige length exacto + terrain⟺detail ⇒ parear por índice
+  seria unprovable p/ TS (`!`); Map.get + checks explícitos cobre tudo
+  sem assertion. Overflow→FAULT (tecto uint32 é escala-de-bug, L-31);
+  taken-0→applied:false (yield-0 nunca no-op applied); tick intacto.
+- ALTERNATIVES: amounts fora do MapData (rejeitado: contradiz M012
+  "nós são geografia" + coerência cross-field pior); excepção por nome
+  de handler (rejeitado: post-rules não recebem nome); totals-apenas
+  (rejeitado: teleport same-type invisível — pairing fecha o buraco);
+  gather via extraHandlers p/ caller (rejeitado: seam M011 manda Match
+  fechar sobre config); fog-gating (rejeitado: sem grounding no mestre).
+- ADVANTAGES: pairing fecha teleport (totals sós não chegavam);
+  writer único com goldens exactos; facto grounded (#factos) com
+  prioridade normal; composição presa em 5 (relax é rewrite, não regra).
+- DISADVANTAGES: `map-preserved` admite decrease (qualquer handler pode
+  depletar — handlers são código servidor trusted; M020 audita
+  conservação; forja de terreno/type/aumento continua apanhada).
+- RISKS: médio-baixo — primeiro invariante relaxado (mitigado: goldens
+  do writer + mutantes válidos-via-dispatch + directos inválidos +
+  selo intacto previsto). Sem workers (L-32), sem validação (M020).
+- IMPLEMENTATION: `economy.ts` + `match.ts` + `validation.ts` (M017).
+- ESTADO: `ACCEPTED`.
