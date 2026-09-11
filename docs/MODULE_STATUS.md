@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 42 (M001–M042)  |
-| `PLANNED`  | 123 (M043–M165) |
+| `VERIFIED` | 43 (M001–M043)  |
+| `PLANNED`  | 122 (M044–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -169,6 +169,12 @@ Checkpoints `VERIFIED`:
   twin; zero prod); 1417/1417 testes, 100.
   Registo em `docs/modules/M042.md`.
   Bloco Strategic AI M035–M042 FECHADO.
+- **M043 @ 2026-09-11** — Commander Orders Data
+  (fundação votada: 5 verbos engine, guards
+  totais, espelho L0↛L0, schema 1); 1451/1451
+  testes, 100 global.
+  Registo em `docs/modules/M043.md`.
+  Bloco Player → AI Command M043–M045 ABERTO.
 
 ---
 
@@ -243,7 +249,8 @@ Checkpoints `VERIFIED`:
 | M040 | Strategic AI — AI Events | `VERIFIED` |
 | M041 | Strategic AI — Strategy Drill | `VERIFIED` |
 | M042 | Strategic AI — Transversal | `VERIFIED` |
-| M043–M045 | Player → AI Command                                                 | `PLANNED` |
+| M043 | Player → AI Command — Orders Data | `VERIFIED` |
+| M044–M045 | Player → AI Command | `PLANNED` |
 | M046–M047 | AI Refutation + Override                                            | `PLANNED` |
 | M048      | Confidence Engine                                                   | `PLANNED` |
 | M049–M050 | Counterfactual AI                                                   | `PLANNED` |

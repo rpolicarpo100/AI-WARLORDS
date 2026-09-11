@@ -19,6 +19,7 @@ import {
 import { isDnaTraits, TRAIT_IDS } from './dna.js';
 import { DOCTRINE_IDS, isDoctrineId } from './doctrines.js';
 import { isPersonalityId, PERSONALITY_IDS } from './personalities.js';
+import { isCommanderOrder, ORDER_IDS } from './orders.js';
 import { perceive } from './views.js';
 import { createWorldState, isWorldState } from './world-state.js';
 
@@ -519,6 +520,199 @@ describe('doctrine mirror cross-check (M033)', () => {
       // Absent label is valid (optional); every other abuse agrees both sides.
       const expected = bad === undefined ? true : isDoctrineId(bad);
       expect(isCommanderRecord(record)).toBe(expected);
+    }
+  });
+});
+
+describe('order embed (M043)', () => {
+  it('record without order stays valid (backward compatible)', () => {
+    expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true })).toBe(true);
+  });
+
+  it.each([...ORDER_IDS])('record with order %s validates', (kind) => {
+    expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true, order: { kind } })).toBe(true);
+  });
+
+  it('record with unknown-kind order rejects (fixed-5 vocabulary)', () => {
+    for (const bad of ['city.upgrade', 'commander.commission', 'world.noop', '', 7, null, [], {}]) {
+      expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true, order: { kind: bad } })).toBe(
+        false,
+      );
+    }
+  });
+
+  it('record carries order params; malformed params reject', () => {
+    expect(
+      isCommanderRecord({
+        id: 'c0',
+        owner: 'p1',
+        active: true,
+        order: { kind: 'unit.move', params: { id: 'u1', col: 1, row: 2 } },
+      }),
+    ).toBe(true);
+    for (const params of [[], 5, { nested: {} }, { n: Number.NaN }, { '': 1 }]) {
+      expect(
+        isCommanderRecord({
+          id: 'c0',
+          owner: 'p1',
+          active: true,
+          order: { kind: 'unit.move', params },
+        }),
+      ).toBe(false);
+    }
+  });
+
+  it('mirror enforces the canonical bounds (8 keys, 32-char keys, 64-char values)', () => {
+    const eight: Record<string, number> = {};
+    for (let i = 0; i < 8; i += 1) {
+      eight[`k${i}`] = i;
+    }
+    const order = (params: unknown) => ({
+      id: 'c0',
+      owner: 'p1',
+      active: true,
+      order: { kind: 'unit.move', params },
+    });
+    expect(isCommanderRecord(order(eight))).toBe(true);
+    expect(isCommanderRecord(order({ ...eight, ninth: 9 }))).toBe(false);
+    expect(isCommanderRecord(order({ ['k'.repeat(32)]: 1 }))).toBe(true);
+    expect(isCommanderRecord(order({ ['k'.repeat(33)]: 1 }))).toBe(false);
+    expect(isCommanderRecord(order({ id: 'u'.repeat(64) }))).toBe(true);
+    expect(isCommanderRecord(order({ id: 'u'.repeat(65) }))).toBe(false);
+  });
+
+  it('WorldState slot round-trips order alongside the triple', () => {
+    const state = createWorldState({
+      players: [P1, P2],
+      commanders: {
+        schemaVersion: 1,
+        nextId: 1,
+        commanders: [
+          {
+            id: 'c0',
+            owner: 'p1',
+            active: true,
+            personality: 'strategist',
+            doctrine: 'turtle',
+            order: { kind: 'unit.attack', params: { id: 'u1', target: 'u9' } },
+          },
+        ],
+      },
+    });
+    expect(state.commanders?.commanders[0]).toEqual({
+      id: 'c0',
+      owner: 'p1',
+      active: true,
+      personality: 'strategist',
+      doctrine: 'turtle',
+      order: { kind: 'unit.attack', params: { id: 'u1', target: 'u9' } },
+    });
+    expect(perceive(state, P1).commanders).toEqual([
+      {
+        id: 'c0',
+        owner: 'p1',
+        active: true,
+        personality: 'strategist',
+        doctrine: 'turtle',
+        order: { kind: 'unit.attack', params: { id: 'u1', target: 'u9' } },
+      },
+    ]);
+  });
+
+  it('queries return order params by fresh copy (dna + order combined)', () => {
+    const data: CommandersData = {
+      schemaVersion: 1,
+      nextId: 1,
+      commanders: [
+        {
+          id: 'c0',
+          owner: 'p1',
+          active: true,
+          dna: {
+            aggression: 60,
+            defense: 50,
+            economy: 50,
+            exploration: 50,
+            risk: 50,
+            expansion: 50,
+            diplomacy: 50,
+            patience: 50,
+            greed: 50,
+            adaptability: 50,
+          },
+          order: { kind: 'unit.move', params: { id: 'u1', col: 1, row: 2 } },
+        },
+      ],
+    };
+    const seen = commandersOf(data, 'p1');
+    expect(seen[0]?.order?.params).toEqual({ id: 'u1', col: 1, row: 2 });
+    if (seen[0]?.order?.params !== undefined) {
+      (seen[0].order.params as unknown as Record<string, unknown>)['id'] = 'MUT';
+    }
+    if (seen[0]?.dna !== undefined) {
+      (seen[0].dna as unknown as Record<string, number>).aggression = 0;
+    }
+    expect(commandersOf(data, 'p1')[0]?.order?.params).toEqual({ id: 'u1', col: 1, row: 2 });
+    expect(commandersOf(data, 'p1')[0]?.dna?.aggression).toBe(60);
+    const solo = commanderById(data, 'c0');
+    if (solo?.order?.params !== undefined) {
+      (solo.order.params as unknown as Record<string, unknown>)['id'] = 'MUT';
+    }
+    expect(commanderById(data, 'c0')?.order?.params).toEqual({ id: 'u1', col: 1, row: 2 });
+    expect(data.commanders[0]?.order).toEqual({
+      kind: 'unit.move',
+      params: { id: 'u1', col: 1, row: 2 },
+    });
+  });
+
+  it('queries copy paramless orders by value (never live refs)', () => {
+    const data: CommandersData = {
+      schemaVersion: 1,
+      nextId: 2,
+      commanders: [{ id: 'c1', owner: 'p1', active: true, order: { kind: 'city.build' } }],
+    };
+    const seen = commandersOf(data, 'p1')[0]?.order;
+    expect(seen).toEqual({ kind: 'city.build' });
+    expect(seen).not.toBe(data.commanders[0]?.order);
+    expect(commanderById(data, 'c1')?.order).toEqual({ kind: 'city.build' });
+    expect(commanderById(data, 'c1')?.order).not.toBe(data.commanders[0]?.order);
+  });
+});
+
+describe('order mirror cross-check (M043)', () => {
+  it('mirror agrees with canonical on the five + kind/params abuse batteries', () => {
+    for (const kind of ORDER_IDS) {
+      expect(isCommanderOrder({ kind })).toBe(true);
+      expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true, order: { kind } })).toBe(
+        true,
+      );
+    }
+    for (const bad of ['city.upgrade', 'UNIT.MOVE', '', 7, null, undefined, [], {}]) {
+      const order = bad === undefined ? undefined : { kind: bad };
+      const record =
+        order === undefined
+          ? { id: 'c0', owner: 'p1', active: true }
+          : { id: 'c0', owner: 'p1', active: true, order };
+      // Absent order is valid (optional); every other abuse agrees both sides.
+      const expected = order === undefined ? true : isCommanderOrder(order);
+      expect(isCommanderRecord(record)).toBe(expected);
+    }
+    const paramsBattery: ReadonlyArray<{ readonly params: unknown; readonly valid: boolean }> = [
+      { params: { id: 'u1', col: 1, row: 2 }, valid: true },
+      { params: {}, valid: true },
+      { params: [], valid: false },
+      { params: { nested: {} }, valid: false },
+      { params: { n: Number.NaN }, valid: false },
+      { params: { ['k'.repeat(33)]: 1 }, valid: false },
+    ];
+    for (const { params, valid } of paramsBattery) {
+      const order = { kind: 'unit.move', params };
+      expect(isCommanderOrder(order)).toBe(valid);
+      expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true, order })).toBe(valid);
+    }
+    for (const order of [7, 'unit.move', null, []]) {
+      expect(isCommanderOrder(order)).toBe(false);
+      expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true, order })).toBe(false);
     }
   });
 });

@@ -1204,3 +1204,31 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
 - DISADVANTAGES: teste imóvel a goldens M038
   (counts, não duplica golden).
 - RISKS: baixo — só testes.
+
+## D-037 — Orders data-first M043 (votos orders-data + engine-verbs)
+
+- DECISION: `src/engine/orders.ts` NOVO (L0 leaf, zero
+  imports): ORDER_IDS c/ 5 orderables (city.build,
+  economy.gather, unit.attack/move/train — nomes de
+  transição existentes, alfabetico); CommanderOrder
+  {kind, params?} (params plano: string≤64, número
+  finito, boolean; ≤8 chaves; extras ignorados);
+  guards totais. `commanders.ts` espelha (molde
+  M031–M033): campo `order?`, guard, copyRecord
+  deep; schema 1 (aditivo). Zero transições.
+- MOTIVE: votos 2026-09-11 + M027 (data-first) +
+  M031–M033 (espelho L0↛L0) + pre-rules (5 shapes
+  planos grounded) + tripwire (L0↛L0).
+- ALTERNATIVES: whitelist do user (rejeitado:
+  voto engine-verbs); kinds opacos (rejeitado:
+  voto); importar orders (rejeitado: tripwire);
+  transições já (rejeitado: M044 own); nested
+  params (rejeitado: 5 shapes planos).
+- ADVANTAGES: fundação sem invenção; cobre os 5
+  shapes; mirror fail-loud; schema intacto.
+- DISADVANTAGES: kinds presos aos verbos (novo
+  verbo→amend); não-uint passam (M044 aperta).
+- RISKS: baixo — data só; sem leitores→M044+.
+- CUTS: commander.* (lifecycle meta);
+  city.upgrade (progressão player); world.noop
+  (=ausência de ordem).
