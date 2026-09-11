@@ -975,3 +975,32 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
 - RISKS: baixo — só testes; residual: bots maus
   estrategas (irrelevante — invariantes contam);
   ms instável (mitiga: prova sans-ms).
+
+## D-029 — Effective-DNA composer L1 (M035 executa D-027)
+
+- DECISION: `src/engine/effective-dna.ts` NOVO (L1 —
+  importa 4 leaves L0, strictly-downward): NEUTRAL_DNA
+  (10×50 frozen + conformance = dnaPresetOf emperor
+  votado) + effectiveDnaOf(record): DnaTraits (total,
+  pura): base = record-dna ?? preset ?? NEUTRAL;
+  deltas = doctrine ?? zero; clamp(base+delta,0–100)
+  por traço. Labels desconhecidos fail-soft (leaf
+  undefined = ausente). Output fresco; input nunca
+  mutado. Zero wiring (consumers M036+).
+- MOTIVE: regra + schedule AMBOS votados (M033 5.º
+  voto: aditivo executado por M035+; D-027) + L0↛L0
+  (composer fora das leaves) + phase1-gate
+  (downward; L1 sobre L0) + M029 (bare records).
+- ALTERNATIVES: composer nas leaves (rejeitado:
+  L0↛L0); `dnaPresetOf(emperor)!` inline (rejeitado:
+  `|undefined` força cast ou branch imensurável —
+  NEUTRAL local + conformance cobre 100%); wiring
+  já (rejeitado: sem consumer — invenção); tactic
+  weights (rejeitado: D-027).
+- ADVANTAGES: primeira semântica executável do
+  bloco; 84-combo battery prova DNA-válido-∀;
+  goldens travam matrizes votadas.
+- DISADVANTAGES: NEUTRAL duplica 50s (mitiga:
+  conformance test vs emperor); folha L1 sem
+  importadores até M036+.
+- RISKS: baixo — pura+total; residual: tuning (#92).

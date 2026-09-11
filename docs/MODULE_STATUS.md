@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 34 (M001–M034)  |
-| `PLANNED`  | 131 (M035–M165) |
+| `VERIFIED` | 35 (M001–M035)  |
+| `PLANNED`  | 130 (M036–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -134,6 +134,11 @@ Checkpoints `VERIFIED`:
   zero prod); 1366/1366 testes, 100 global.
   Registo em `docs/modules/M034.md`.
   Bloco Personalidade M031–M034 CLOSED.
+- **M035 @ 2026-09-11** — Effective DNA (executa
+  D-027 votado: composer total+puro L1; zero wiring);
+  1379/1379 testes, 100 global.
+  Registo em `docs/modules/M035.md`.
+  Bloco Strategic AI M035–M042 ABERTO.
 
 ---
 
@@ -200,7 +205,8 @@ Checkpoints `VERIFIED`:
 | M032 | Personalidade — AI Personalities | `VERIFIED` |
 | M033 | Personalidade — Unit Doctrines | `VERIFIED` |
 | M034 | Personalidade — Testing | `VERIFIED` |
-| M035–M042 | Strategic AI                                                        | `PLANNED` |
+| M035 | Strategic AI — Effective DNA | `VERIFIED` |
+| M036–M042 | Strategic AI                                                        | `PLANNED` |
 | M043–M045 | Player → AI Command                                                 | `PLANNED` |
 | M046–M047 | AI Refutation + Override                                            | `PLANNED` |
 | M048      | Confidence Engine                                                   | `PLANNED` |
