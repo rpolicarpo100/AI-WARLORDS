@@ -1,7 +1,7 @@
 /**
  * M016 — Resource economy: server configuration + pure stockpile ops.
  *
- * LAYER L2 (imports authority/buildings/map/rng/stockpiles, all downward). Config
+ * LAYER L2 (imports authority/buildings/city/map/rng/stockpiles, all downward). Config
  * lives OUTSIDE canonical state (mestre #84, M011 seam): validated here,
  * consumed by M017 (gatherYield) and future score (value, L-17). Ops are
  * exact: overflow and overdraft throw loud (never silent saturation —
@@ -18,6 +18,13 @@ import {
   type BuildingId,
   type BuildingsData,
 } from './buildings.js';
+import {
+  CITIES_SCHEMA_VERSION,
+  cityOf,
+  type CitiesData,
+  type CityState,
+  type QueueItem,
+} from './city.js';
 import { cellAt, isResourceType, RESOURCE_TYPES, type ResourceType } from './map.js';
 import { MAX_UINT32 } from './rng.js';
 import {
@@ -482,4 +489,202 @@ export function capOf(
     throw new Error('capOf: overflow.');
   }
   return cap;
+}
+
+/**
+ * M019 — City System: construction + progression (city data lives in
+ * city.js L0; build costs/times come from BuildingsConfig). Builds are
+ * prepaid at enqueue and complete on time (completeConstructions runs
+ * inside match.advance — time owns progress). Upgrades are free
+ * (costs/effects ungrounded — neutral). Wired by match.ts (seam).
+ */
+
+/** Transition names (single source — match.ts wires them, tests dispatch them). */
+export const BUILD_TRANSITION = 'city.build';
+export const UPGRADE_TRANSITION = 'city.upgrade';
+
+/** Validated build parameters: which building to construct. */
+export interface BuildParams {
+  readonly type: string;
+}
+
+/** Wire-shape pre-rule (game rules live in the handler, not here). */
+export function buildParamsRule(
+  _caller: PlayerId,
+  params: unknown,
+): { readonly rule: string; readonly detail: string } | null {
+  if (typeof params !== 'object' || params === null || Array.isArray(params)) {
+    return { rule: 'build-params', detail: 'build takes { type }' };
+  }
+  const fields = params as Record<string, unknown>;
+  if (typeof fields['type'] !== 'string') {
+    return { rule: 'build-params', detail: 'build takes a string type' };
+  }
+  return null;
+}
+
+export function createBuildHandler(config: BuildingsConfig): TransitionHandler<WorldState> {
+  if (!isBuildingsConfig(config)) {
+    throw new Error('createBuildHandler: invalid buildings config.');
+  }
+  return (ctx) => {
+    // The pre-rule validated a { type } string on the dispatch path;
+    // this cast documents the seam (match.ts `validated` precedent).
+    const { type } = ctx.params as BuildParams;
+    if (!isBuildingId(type)) {
+      return { applied: false, reason: 'build: unknown building.' };
+    }
+    const cost = costOf(config, type);
+    const funds: StockpilesData = ctx.state.stockpiles ?? {
+      schemaVersion: STOCKPILES_SCHEMA_VERSION,
+      stockpiles: {},
+    };
+    if (!canAfford(funds, ctx.caller, cost)) {
+      return { applied: false, reason: 'build: cannot afford.' };
+    }
+    const paid = payCost(funds, ctx.caller, cost);
+    const time = buildTimeOf(config, type);
+    const city = cityOf(ctx.state.cities, ctx.caller);
+    const known = ctx.state.cities?.cities ?? {};
+    const cities: CitiesData = {
+      schemaVersion: CITIES_SCHEMA_VERSION,
+      cities: {
+        ...known,
+        [ctx.caller]: { level: city.level, queue: [...city.queue, { type, remaining: time }] },
+      },
+    };
+    return {
+      applied: true,
+      state: { ...ctx.state, cities, stockpiles: paid },
+      summary: `started ${type} (${time} ticks)`,
+    };
+  };
+}
+
+export function createUpgradeHandler(): TransitionHandler<WorldState> {
+  return (ctx) => {
+    const city = cityOf(ctx.state.cities, ctx.caller);
+    if (city.level >= 3) {
+      return { applied: false, reason: 'upgrade: already max level.' };
+    }
+    const level = city.level === 1 ? 2 : 3;
+    const known = ctx.state.cities?.cities ?? {};
+    const cities: CitiesData = {
+      schemaVersion: CITIES_SCHEMA_VERSION,
+      cities: { ...known, [ctx.caller]: { level, queue: city.queue } },
+    };
+    return {
+      applied: true,
+      state: { ...ctx.state, cities },
+      summary: `upgraded to level ${level}`,
+    };
+  };
+}
+
+export function cityHandlers(config: BuildingsConfig): Map<string, TransitionHandler<WorldState>> {
+  return new Map([
+    [BUILD_TRANSITION, createBuildHandler(config)],
+    [UPGRADE_TRANSITION, createUpgradeHandler()],
+  ]);
+}
+
+export interface CompletedBuilding {
+  readonly holder: string;
+  readonly type: BuildingId;
+}
+
+export function completeConstructions(
+  cities: CitiesData,
+  buildings: BuildingsData | undefined,
+): { readonly cities: CitiesData; readonly buildings: BuildingsData | undefined } {
+  const next: { [holder: string]: CityState } = {};
+  const done: CompletedBuilding[] = [];
+  for (const [holder, city] of Object.entries(cities.cities)) {
+    const queue: QueueItem[] = [];
+    for (const item of city.queue) {
+      const remaining = item.remaining - 1;
+      if (remaining <= 0) {
+        done.push({ holder, type: item.type });
+      } else {
+        queue.push({ type: item.type, remaining });
+      }
+    }
+    next[holder] = { level: city.level, queue };
+  }
+  let raised: BuildingsData | undefined = buildings;
+  for (const item of done) {
+    const base = raised ?? { schemaVersion: BUILDINGS_SCHEMA_VERSION, buildings: {} };
+    raised = addBuilding(base, item.holder as PlayerId, item.type);
+  }
+  return { cities: { schemaVersion: CITIES_SCHEMA_VERSION, cities: next }, buildings: raised };
+}
+
+/** Structural EventProducer: build.started from validated params. */
+export function buildStartedProducer(input: {
+  readonly type: string;
+  readonly caller: PlayerId;
+  readonly params: unknown;
+  readonly before: WorldState;
+  readonly after: WorldState;
+}): ReadonlyArray<{
+  readonly type: string;
+  readonly priority: 'normal';
+  readonly payload: unknown;
+}> {
+  if (typeof input.params !== 'object' || input.params === null) {
+    throw new Error('buildStartedProducer: invalid params.');
+  }
+  const fields = input.params as Record<string, unknown>;
+  if (typeof fields['type'] !== 'string') {
+    throw new Error('buildStartedProducer: invalid params.');
+  }
+  return [
+    {
+      type: 'build.started',
+      priority: 'normal',
+      payload: { player: input.caller, building: fields['type'] },
+    },
+  ];
+}
+
+/**
+ * Structural EventProducer: build.completed facts from counts-diff
+ * (completions are the only counts writer — exact; holders sorted +
+ * BUILDING_IDS order keep facts deterministic).
+ */
+export function completionProducer(input: {
+  readonly type: string;
+  readonly caller: PlayerId;
+  readonly params: unknown;
+  readonly before: WorldState;
+  readonly after: WorldState;
+}): ReadonlyArray<{
+  readonly type: string;
+  readonly priority: 'normal';
+  readonly payload: unknown;
+}> {
+  const facts: Array<{
+    readonly type: string;
+    readonly priority: 'normal';
+    readonly payload: unknown;
+  }> = [];
+  const before = input.before.buildings?.buildings ?? {};
+  const after = input.after.buildings?.buildings ?? {};
+  const holders = [...new Set([...Object.keys(before), ...Object.keys(after)])].sort();
+  for (const holder of holders) {
+    const was = countsOf(input.before.buildings, holder);
+    const now = countsOf(input.after.buildings, holder);
+    for (const id of BUILDING_IDS) {
+      const type = id as BuildingId;
+      const completed = now[type] - was[type];
+      for (let i = 0; i < completed; i += 1) {
+        facts.push({
+          type: 'build.completed',
+          priority: 'normal',
+          payload: { player: holder, building: type },
+        });
+      }
+    }
+  }
+  return facts;
 }

@@ -1,5 +1,6 @@
 import { isPlayerId, type PlayerId, type TransitionHandler } from './authority.js';
 import { isBuildingsData, type BuildingsData } from './buildings.js';
+import { isCitiesData, type CitiesData } from './city.js';
 import { isExploredData, type ExploredData } from './explored.js';
 import { isMapData, type MapData } from './map.js';
 import { isStockpilesData, type StockpilesData } from './stockpiles.js';
@@ -42,6 +43,12 @@ export interface WorldState {
    * Counts are static data until M019 construction transitions.
    */
   readonly buildings?: BuildingsData;
+  /**
+   * Per-holder cities (M019, optional compatible extension).
+   * Map-independent; holders shape-checked only (M014 doctrine).
+   * Cities materialize on first build/upgrade; init-placed allowed.
+   */
+  readonly cities?: CitiesData;
 }
 
 export interface WorldStateInit {
@@ -51,6 +58,7 @@ export interface WorldStateInit {
   readonly explored?: ExploredData;
   readonly stockpiles?: StockpilesData;
   readonly buildings?: BuildingsData;
+  readonly cities?: CitiesData;
 }
 
 /**
@@ -113,6 +121,10 @@ export function isWorldState(value: unknown): value is WorldState {
   if (buildings !== undefined && !isBuildingsData(buildings)) {
     return false;
   }
+  const cities = fields['cities'];
+  if (cities !== undefined && !isCitiesData(cities)) {
+    return false;
+  }
   return true;
 }
 
@@ -125,6 +137,7 @@ export function createWorldState(init: WorldStateInit): WorldState {
     ...(init.explored === undefined ? {} : { explored: init.explored }),
     ...(init.stockpiles === undefined ? {} : { stockpiles: init.stockpiles }),
     ...(init.buildings === undefined ? {} : { buildings: init.buildings }),
+    ...(init.cities === undefined ? {} : { cities: init.cities }),
   };
   if (!isWorldState(candidate)) {
     throw new Error('createWorldState: invalid initial world.');

@@ -255,3 +255,41 @@ buildings?` + percepção own-only. L-31 DECIDIDA: caps DERIVADOS
 - IMPLEMENTATION: `buildings.ts` L0 (novo) + `economy.ts` L2
   (extensão) + world-state/views (M018).
 - ESTADO: `ACCEPTED`.
+
+## D-012 — Cidade: lazy-cities + queue + conclusão-no-advance; L-30 fecha sem grants (M019 pré-análise)
+
+- DECISION: `city.ts` L0 (CityLevel 1|2|3 + QueueItem + CitiesData
+  holder-map + guards + `cityOf` fail-soft) + economy L2
+  (`completeConstructions` + build/upgrade handlers + `buildParamsRule`
+  + 2 produtores) + seam `buildingsConfig?` + advance emendado
+  (tick+conclusão, preserva-ausência) + `WorldState.cities?` + `city`
+  own-only. L-30 FECHADA sem auto-grants (init stockpiles SÃO grants;
+  gather bootstrap). Upgrade FREE →3 (custos/efeitos ungrounded).
+  Sem found (materializa-no-uso + init); sem capture (→combate);
+  sem cap de queue (state-cap auto-limita); sem regra (M020, 5).
+- MOTIVE: #16 (uma cidade, 1→2→3, modular) + #20 (BUILD_STARTED/
+  COMPLETED) + #83 (BUILD TIME) + #99 (1 CITY) + L-30 + M018
+  (consumers D-006 aterram). Lazy-cities (precedente stockpileOf);
+  conclusão-no-advance (tempo é dono do progresso; precedente
+  gather multi-domínio); preserva-ausência (selo+M005 intactos);
+  factos por counts-diff (exactos, ordenados, determinísticos).
+- ALTERNATIVES: found + grants-config (rejeitado: founding
+  ungrounded; init cobre cenários; grants sem consumidores);
+  conclusão via transição separada (rejeitado: polling); lazy
+  on-read (rejeitado: muta — M008 só serve veredictos puros);
+  factos por queue-diff (rejeitado: itens sem id, ambíguo);
+  gates por nível (rejeitado: thresholds ungrounded); buildings
+  por-cidade (rejeitado: sem churn em VERIFIED); custos upgrade
+  (rejeitado: neutral free); cap queue (rejeitado: state-cap chega).
+- ADVANTAGES: consumers M018 aterram (costOf/buildTimeOf/payCost/
+  addBuilding em dispatch); tempo+construção unidos; selo+M005
+  verdes por preserva-ausência; factos reconstruíveis.
+- DISADVANTAGES: 1.ª emenda de comportamento VERIFIED (fenced);
+  upgrades free + níveis sem efeitos = progressão fina (theater
+  até efeitos); builds free+sem-cap spamáveis até tuning.
+- RISKS: médio — 1.ª emenda VERIFIED + 1.º domínio acoplado ao
+  tempo (mitigado: ident E2E sem-cidade, selo, goldens conclusão
+  c/ ordem, []-proofs nas suites existentes).
+- IMPLEMENTATION: `city.ts` L0 (novo) + `economy.ts` L2 + `match.ts`
+  + world-state/views (M019).
+- ESTADO: `ACCEPTED`.

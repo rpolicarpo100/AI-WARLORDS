@@ -117,6 +117,13 @@ describe('constructor validation (failure)', () => {
     },
   );
 
+  it.each([[42], ['x'], [{}], [{ caps: { base: 1, perStorage: 1 } }]] as Array<[unknown]>)(
+    'rejects buildingsConfig %j',
+    (buildingsConfig) => {
+      expect(() => new Match(baseInit({ buildingsConfig }))).toThrow(/invalid buildings config/);
+    },
+  );
+
   it('rejects garbage roster ids', () => {
     expect(() => makeMatch({ players: ['x'.repeat(65) as PlayerId] })).toThrow(/invalid player id/);
     expect(() => makeMatch({ players: [42 as unknown as PlayerId] })).toThrow(/invalid player id/);

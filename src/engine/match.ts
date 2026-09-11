@@ -37,12 +37,21 @@ import {
 } from './victory.js';
 import { isWorldState, worldHandlers, type WorldState } from './world-state.js';
 import {
+  buildParamsRule,
+  buildStartedProducer,
+  BUILD_TRANSITION,
+  cityHandlers,
+  completeConstructions,
+  completionProducer,
+  DEFAULT_BUILDINGS_CONFIG,
   DEFAULT_ECONOMY_CONFIG,
   economyHandlers,
   gatherParamsRule,
   gatherProducer,
   GATHER_TRANSITION,
+  isBuildingsConfig,
   isEconomyConfig,
+  UPGRADE_TRANSITION,
 } from './economy.js';
 
 declare const matchBrand: unique symbol;
@@ -86,9 +95,10 @@ export interface TimelineEntry {
 }
 
 /**
- * M005 registers time progression only. Economy arrives via the M017 seam
- * (Match closes over a validated config); all other domain transitions
- * arrive with their modules (via `extraHandlers`). Payload is deliberately
+ * M005 registers time progression only; M019 completes constructions
+ * inside advance (cityless identity preserved). Seams: M017 economy
+ * config, M019 buildings config. All other domain transitions arrive
+ * with their modules (via `extraHandlers`). Payload is deliberately
  * ignored by the handler itself; M006 rejects non-empty payloads to
  * no-param handlers via the no-params pre-rule (fail loud on caller
  * mistakes).
@@ -99,9 +109,24 @@ export function matchHandlers(): Map<string, RngHandler<WorldState>> {
       'match.advance',
       (ctx) => {
         const next = ctx.state.tick + 1;
+        // M019: time completes constructions. Cityless matches take the
+        // original path untouched (M005 identity — seal stays green).
+        if (ctx.state.cities === undefined) {
+          return {
+            applied: true,
+            state: { ...ctx.state, tick: next },
+            summary: `tick=${next}`,
+          };
+        }
+        const built = completeConstructions(ctx.state.cities, ctx.state.buildings);
         return {
           applied: true,
-          state: { ...ctx.state, tick: next },
+          state: {
+            ...ctx.state,
+            tick: next,
+            cities: built.cities,
+            ...(built.buildings === undefined ? {} : { buildings: built.buildings }),
+          },
           summary: `tick=${next}`,
         };
       },
@@ -121,6 +146,7 @@ export interface MatchInit {
   readonly extraProducers?: ReadonlyMap<string, readonly EventProducer[]>;
   readonly extraConditions?: readonly VictoryCondition[];
   readonly economyConfig?: unknown;
+  readonly buildingsConfig?: unknown;
 }
 
 export type MatchDispatchOutcome =
@@ -199,22 +225,31 @@ export class Match {
     if (!isEconomyConfig(economyConfig)) {
       throw new Error('Match: invalid economy config.');
     }
+    const buildingsConfig = init.buildingsConfig ?? DEFAULT_BUILDINGS_CONFIG;
+    if (!isBuildingsConfig(buildingsConfig)) {
+      throw new Error('Match: invalid buildings config.');
+    }
     const world = worldHandlers();
     const match = matchHandlers();
     const economy = economyHandlers(economyConfig);
+    const city = cityHandlers(buildingsConfig);
     const extra = init.extraHandlers ?? new Map<string, RngHandler<WorldState>>();
     const merged = new Map<string, RngHandler<WorldState>>([
       ...world,
       ...match,
       ...economy,
+      ...city,
       ...extra,
     ]);
-    if (merged.size !== world.size + match.size + economy.size + extra.size) {
+    if (merged.size !== world.size + match.size + economy.size + city.size + extra.size) {
       throw new Error('Match: duplicate handler names.');
     }
     const validator = createWorldValidator();
-    const noParamHandlers = new Set([...world.keys(), ...match.keys()]);
-    const paramRules = new Map<string, PreRule>([[GATHER_TRANSITION, gatherParamsRule]]);
+    const noParamHandlers = new Set([...world.keys(), ...match.keys(), UPGRADE_TRANSITION]);
+    const paramRules = new Map<string, PreRule>([
+      [GATHER_TRANSITION, gatherParamsRule],
+      [BUILD_TRANSITION, buildParamsRule],
+    ]);
     let dispatchCount = 0;
     const nextSeq = (): number => {
       dispatchCount += 1;
@@ -238,8 +273,15 @@ export class Match {
     }
     const producers = new Map<string, readonly EventProducer[]>(matchProducers());
     producers.set(GATHER_TRANSITION, [gatherProducer]);
+    producers.set(BUILD_TRANSITION, [buildStartedProducer]);
     const extraProducers = init.extraProducers ?? new Map<string, readonly EventProducer[]>();
-    for (const [name, extra] of extraProducers) {
+    // (M019) The completion producer rides the same append path as caller extras:
+    // structurally after matchAdvanced, ahead of caller extras.
+    const orderedExtras: Array<[string, readonly EventProducer[]]> = [
+      ['match.advance', [completionProducer]],
+      ...extraProducers,
+    ];
+    for (const [name, extra] of orderedExtras) {
       producers.set(name, [...(producers.get(name) ?? []), ...extra]);
     }
     this.producers = producers;

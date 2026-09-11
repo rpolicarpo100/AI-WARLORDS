@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 18 (M001–M018)  |
-| `PLANNED`  | 147 (M019–M165) |
+| `VERIFIED` | 19 (M001–M019)  |
+| `PLANNED`  | 146 (M020–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -65,6 +65,10 @@ Checkpoints `VERIFIED`:
 - **M018 @ 2026-09-11** — edifícios (6 tipos #16; counts+config+custos
   +caps derivados); 845/845 testes, 100×4, sem transições (M019 owns).
   Registo em `docs/modules/M018.md`. L-31 CLOSED.
+- **M019 @ 2026-09-11** — cidade (lazy-cities+queue+conclusão; factos
+  build.started/completed; upgrade 1→2→3 gratuito, sem grants);
+  932/932 testes, 100×4, sem invariante nova (M020 owns).
+  Registo em `docs/modules/M019.md`. L-30 CLOSED.
 
 ---
 
@@ -105,7 +109,7 @@ Checkpoints `VERIFIED`:
 | M016   | Resource Engine    | `VERIFIED` |
 | M017   | Gathering          | `VERIFIED` |
 | M018   | Buildings          | `VERIFIED` |
-| M019   | City System        | `PLANNED`  |
+| M019   | City System        | `VERIFIED` |
 | M020   | Economy Validation | `PLANNED`  |
 
 ## Fase 4 — Military
@@ -197,7 +201,7 @@ Alinhadas por número: 0, 1, 3, 4, 28. Divergentes:
 ## Ordem recomendada (estrita, sem saltos)
 
 ```text
-M001 → M002 → … → M016 → M017 → M018 (VERIFIED) → M019 → … → M165
+M001 → M002 → … → M017 → M018 → M019 (VERIFIED) → M020 → … → M165
 ```
 
 Próximo permitido: **M019 — City System**, apenas após autorização

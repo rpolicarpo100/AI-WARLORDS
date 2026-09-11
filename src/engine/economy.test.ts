@@ -5,13 +5,22 @@
 import { describe, expect, it } from 'vitest';
 import { markUntrusted, type ClientRequest, type PlayerId, type Untrusted } from './authority.js';
 import type { BuildingsData } from './buildings.js';
+import type { CitiesData } from './city.js';
 import {
   addBuilding,
+  buildParamsRule,
+  buildStartedProducer,
   buildTimeOf,
+  BUILD_TRANSITION,
   canAfford,
   capOf,
+  cityHandlers,
+  completeConstructions,
+  completionProducer,
   costOf,
+  createBuildHandler,
   createGatherHandler,
+  createUpgradeHandler,
   credit,
   debit,
   DEFAULT_BUILDINGS_CONFIG,
@@ -22,6 +31,7 @@ import {
   isBuildingsConfig,
   isEconomyConfig,
   payCost,
+  UPGRADE_TRANSITION,
   type BuildingsConfig,
   type EconomyConfig,
 } from './economy.js';
@@ -122,6 +132,50 @@ function housed(): BuildingsData {
       p1: { 'town-center': 1, house: 2, storage: 1, barracks: 0, wall: 0, tower: 0 },
     },
   };
+}
+
+function flush(): StockpilesData {
+  const full = { food: 50, wood: 50, stone: 50, gold: 50 };
+  return { schemaVersion: 1, stockpiles: { p1: { ...full }, p2: { ...full } } };
+}
+
+function cityMatch(
+  buildings?: BuildingsConfig,
+  funds?: StockpilesData,
+  cities?: CitiesData,
+): Match {
+  return new Match({
+    seed: 11,
+    ruleset: STANDARD_RULESET,
+    players: [P1, P2],
+    initialState: createWorldState({
+      players: [P1, P2],
+      ...(funds === undefined ? {} : { stockpiles: funds }),
+      ...(cities === undefined ? {} : { cities }),
+    }),
+    ...(buildings === undefined ? {} : { buildingsConfig: buildings }),
+  });
+}
+
+function build(match: Match, rid: string, player: PlayerId, type: string) {
+  return match.dispatch(
+    match.join(player),
+    raw({ requestId: rid, playerId: player, type: BUILD_TRANSITION, payload: { type } }),
+  );
+}
+
+function raise(match: Match, rid: string, player: PlayerId) {
+  return match.dispatch(
+    match.join(player),
+    raw({ requestId: rid, playerId: player, type: UPGRADE_TRANSITION, payload: {} }),
+  );
+}
+
+function tick(match: Match, rid: string, player: PlayerId) {
+  return match.dispatch(
+    match.join(player),
+    raw({ requestId: rid, playerId: player, type: 'match.advance', payload: {} }),
+  );
 }
 
 describe('isEconomyConfig (unit)', () => {
@@ -1145,5 +1199,554 @@ describe('perception carry: buildings (integration)', () => {
       wall: 0,
       tower: 0,
     });
+  });
+});
+
+describe('buildParamsRule (unit)', () => {
+  it.each([[null], [[]], ['x']] as Array<[unknown]>)('rejects non-object %j', (value) => {
+    expect(buildParamsRule(P1, value)).toEqual({
+      rule: 'build-params',
+      detail: 'build takes { type }',
+    });
+  });
+
+  it('rejects non-string types, accepts the shape', () => {
+    const detail = { rule: 'build-params', detail: 'build takes a string type' };
+    expect(buildParamsRule(P1, {})).toEqual(detail);
+    expect(buildParamsRule(P1, { type: 42 })).toEqual(detail);
+    expect(buildParamsRule(P1, { type: 'tower' })).toBeNull();
+  });
+});
+
+describe('createBuildHandler (unit: direct)', () => {
+  function funded(stockpiles?: StockpilesData, cities?: CitiesData): WorldState {
+    return createWorldState({
+      players: [P1, P2],
+      ...(stockpiles === undefined ? {} : { stockpiles }),
+      ...(cities === undefined ? {} : { cities }),
+    });
+  }
+
+  it('rejects an invalid config', () => {
+    expect(() => createBuildHandler({} as BuildingsConfig)).toThrow(/invalid buildings config/);
+  });
+
+  it('unknown building → applied:false', () => {
+    const handler = createBuildHandler(customBuildings());
+    expect(handler({ state: funded(flush()), caller: P1, params: { type: 'lava' } })).toEqual({
+      applied: false,
+      reason: 'build: unknown building.',
+    });
+  });
+
+  it('unaffordable → applied:false', () => {
+    const handler = createBuildHandler(customBuildings());
+    expect(handler({ state: funded(held()), caller: P1, params: { type: 'barracks' } })).toEqual({
+      applied: false,
+      reason: 'build: cannot afford.',
+    });
+  });
+
+  it('golden: pays, materializes the city, enqueues (summary exact)', () => {
+    const handler = createBuildHandler(customBuildings());
+    const result = handler({ state: funded(flush()), caller: P1, params: { type: 'tower' } });
+    if (result.applied !== true) {
+      throw new Error('TEST BUG: golden build declined');
+    }
+    expect(result.summary).toBe('started tower (1 ticks)');
+    expect(result.state.stockpiles).toEqual({
+      schemaVersion: 1,
+      stockpiles: {
+        p1: { food: 50, wood: 48, stone: 49, gold: 50 },
+        p2: { food: 50, wood: 50, stone: 50, gold: 50 },
+      },
+    });
+    expect(result.state.cities).toEqual({
+      schemaVersion: 1,
+      cities: { p1: { level: 1, queue: [{ type: 'tower', remaining: 1 }] } },
+    });
+  });
+
+  it('free costs build on absent funds (writes a zeros entry)', () => {
+    const handler = createBuildHandler(DEFAULT_BUILDINGS_CONFIG);
+    const result = handler({ state: funded(), caller: P1, params: { type: 'wall' } });
+    if (result.applied !== true) {
+      throw new Error('TEST BUG: free build declined');
+    }
+    expect(result.state.stockpiles).toEqual({
+      schemaVersion: 1,
+      stockpiles: { p1: { food: 0, wood: 0, stone: 0, gold: 0 } },
+    });
+    expect(result.state.cities).toEqual({
+      schemaVersion: 1,
+      cities: { p1: { level: 1, queue: [{ type: 'wall', remaining: 0 }] } },
+    });
+  });
+});
+
+describe('cityHandlers (unit)', () => {
+  it('registers build + upgrade; invalid config throws', () => {
+    const handlers = cityHandlers(customBuildings());
+    expect([...handlers.keys()].sort()).toEqual(['city.build', 'city.upgrade']);
+    expect(() => cityHandlers({} as BuildingsConfig)).toThrow(/invalid buildings config/);
+  });
+});
+
+describe('createUpgradeHandler (unit: direct)', () => {
+  it('materializes and climbs; caps at 3 (invalid params impossible by construction)', () => {
+    const before = createWorldState({ players: [P1, P2] });
+    const handler = createUpgradeHandler();
+    expect(handler({ state: before, caller: P1, params: {} })).toEqual({
+      applied: true,
+      summary: 'upgraded to level 2',
+      state: {
+        ...before,
+        cities: { schemaVersion: 1, cities: { p1: { level: 2, queue: [] } } },
+      },
+    });
+    const capped = createWorldState({
+      players: [P1, P2],
+      cities: { schemaVersion: 1, cities: { p1: { level: 3, queue: [] } } },
+    });
+    expect(handler({ state: capped, caller: P1, params: {} })).toEqual({
+      applied: false,
+      reason: 'upgrade: already max level.',
+    });
+  });
+});
+
+describe('completeConstructions (unit: direct)', () => {
+  function queued(): CitiesData {
+    return {
+      schemaVersion: 1,
+      cities: {
+        p1: {
+          level: 2,
+          queue: [
+            { type: 'tower', remaining: 1 },
+            { type: 'house', remaining: 2 },
+          ],
+        },
+        p2: { level: 1, queue: [{ type: 'wall', remaining: 1 }] },
+        p3: { level: 1, queue: [] },
+      },
+    };
+  }
+
+  it('golden: decrements, completes due, threads counts, preserves levels', () => {
+    const out = completeConstructions(queued(), housed());
+    expect(out.cities).toEqual({
+      schemaVersion: 1,
+      cities: {
+        p1: { level: 2, queue: [{ type: 'house', remaining: 1 }] },
+        p2: { level: 1, queue: [] },
+        p3: { level: 1, queue: [] },
+      },
+    });
+    expect(out.buildings).toEqual({
+      schemaVersion: 1,
+      buildings: {
+        p1: { 'town-center': 1, house: 2, storage: 1, barracks: 0, wall: 0, tower: 1 },
+        p2: { 'town-center': 0, house: 0, storage: 0, barracks: 0, wall: 1, tower: 0 },
+      },
+    });
+  });
+
+  it('first completion materializes absent buildings', () => {
+    const out = completeConstructions(queued(), undefined);
+    expect(out.buildings).toEqual({
+      schemaVersion: 1,
+      buildings: {
+        p1: { 'town-center': 0, house: 0, storage: 0, barracks: 0, wall: 0, tower: 1 },
+        p2: { 'town-center': 0, house: 0, storage: 0, barracks: 0, wall: 1, tower: 0 },
+      },
+    });
+  });
+
+  it('no-due passes buildings through untouched (same ref)', () => {
+    const idle: CitiesData = {
+      schemaVersion: 1,
+      cities: { p1: { level: 1, queue: [{ type: 'house', remaining: 5 }] } },
+    };
+    const before = housed();
+    const out = completeConstructions(idle, before);
+    expect(out.buildings).toBe(before);
+    expect(out.cities).toEqual({
+      schemaVersion: 1,
+      cities: { p1: { level: 1, queue: [{ type: 'house', remaining: 4 }] } },
+    });
+  });
+
+  it('empty cities complete nothing', () => {
+    const out = completeConstructions({ schemaVersion: 1, cities: {} }, housed());
+    expect(out).toEqual({
+      cities: { schemaVersion: 1, cities: {} },
+      buildings: housed(),
+    });
+  });
+});
+
+describe('buildStartedProducer (unit: direct)', () => {
+  it('throws on invalid params (golden via E2E)', () => {
+    const state = createWorldState({ players: [P1, P2] });
+    expect(() =>
+      buildStartedProducer({
+        type: BUILD_TRANSITION,
+        caller: P1,
+        params: 'x',
+        before: state,
+        after: state,
+      }),
+    ).toThrow(/invalid params/);
+    expect(() =>
+      buildStartedProducer({
+        type: BUILD_TRANSITION,
+        caller: P1,
+        params: { type: 42 },
+        before: state,
+        after: state,
+      }),
+    ).toThrow(/invalid params/);
+  });
+});
+
+describe('completionProducer (unit: direct)', () => {
+  function states(before: BuildingsData | undefined, after: BuildingsData | undefined) {
+    const mk = (buildings: BuildingsData | undefined): WorldState =>
+      buildings === undefined
+        ? createWorldState({ players: [P1, P2] })
+        : createWorldState({ players: [P1, P2], buildings });
+    return { before: mk(before), after: mk(after) };
+  }
+
+  it('emits nothing without buildings on either side', () => {
+    const { before, after } = states(undefined, undefined);
+    expect(
+      completionProducer({ type: 'match.advance', caller: P1, params: {}, before, after }),
+    ).toEqual([]);
+  });
+
+  it('ignores decreases (robustness; no decrements exist)', () => {
+    const { before, after } = states(housed(), undefined);
+    expect(
+      completionProducer({ type: 'match.advance', caller: P1, params: {}, before, after }),
+    ).toEqual([]);
+  });
+
+  it('golden: one fact per unit, holders sorted, BUILDING_IDS order', () => {
+    const after: BuildingsData = {
+      schemaVersion: 1,
+      buildings: {
+        p2: { 'town-center': 0, house: 0, storage: 0, barracks: 0, wall: 1, tower: 1 },
+        p1: { 'town-center': 0, house: 1, storage: 0, barracks: 0, wall: 2, tower: 0 },
+      },
+    };
+    const { before, after: world } = states(undefined, after);
+    expect(
+      completionProducer({ type: 'match.advance', caller: P1, params: {}, before, after: world }),
+    ).toEqual([
+      { type: 'build.completed', priority: 'normal', payload: { player: 'p1', building: 'house' } },
+      { type: 'build.completed', priority: 'normal', payload: { player: 'p1', building: 'wall' } },
+      { type: 'build.completed', priority: 'normal', payload: { player: 'p1', building: 'wall' } },
+      { type: 'build.completed', priority: 'normal', payload: { player: 'p2', building: 'wall' } },
+      { type: 'build.completed', priority: 'normal', payload: { player: 'p2', building: 'tower' } },
+    ]);
+  });
+});
+
+describe('city E2E (real Match)', () => {
+  it('build golden: paid + enqueued + build.started fact', () => {
+    const match = cityMatch(customBuildings(), flush());
+    expect(build(match, 'r1', P1, 'tower')).toEqual({
+      status: 'applied',
+      revision: 1,
+      summary: 'started tower (1 ticks)',
+    });
+    const snapshot = match.getSnapshot();
+    expect(snapshot.cities).toEqual({
+      schemaVersion: 1,
+      cities: { p1: { level: 1, queue: [{ type: 'tower', remaining: 1 }] } },
+    });
+    expect(match.getEvents()).toHaveLength(2);
+    expect(match.getEvents()[1]).toEqual({
+      seq: 2,
+      tick: 0,
+      revision: 1,
+      type: 'build.started',
+      priority: 'normal',
+      payload: { player: 'p1', building: 'tower' },
+    });
+  });
+
+  it('advance completes due builds: counts + build.completed in sequence', () => {
+    const match = cityMatch(customBuildings(), flush());
+    build(match, 'r1', P1, 'tower');
+    expect(tick(match, 'r2', P1)).toEqual({ status: 'applied', revision: 2, summary: 'tick=1' });
+    const snapshot = match.getSnapshot();
+    expect(snapshot.cities).toEqual({
+      schemaVersion: 1,
+      cities: { p1: { level: 1, queue: [] } },
+    });
+    expect(snapshot.buildings).toEqual({
+      schemaVersion: 1,
+      buildings: { p1: { 'town-center': 0, house: 0, storage: 0, barracks: 0, wall: 0, tower: 1 } },
+    });
+    expect(match.getEvents().map((e) => e.type)).toEqual([
+      'match.started',
+      'build.started',
+      'match.advanced',
+      'build.completed',
+    ]);
+    expect(match.getEvents()[3]).toEqual({
+      seq: 4,
+      tick: 1,
+      revision: 2,
+      type: 'build.completed',
+      priority: 'normal',
+      payload: { player: 'p1', building: 'tower' },
+    });
+  });
+
+  it('two-tick build: first advance only decrements (no counts, no fact)', () => {
+    const match = cityMatch(customBuildings(), flush());
+    build(match, 'r1', P1, 'house');
+    tick(match, 'r2', P1);
+    const mid = match.getSnapshot();
+    expect(mid.tick).toBe(1);
+    expect(mid.cities).toEqual({
+      schemaVersion: 1,
+      cities: { p1: { level: 1, queue: [{ type: 'house', remaining: 1 }] } },
+    });
+    expect('buildings' in mid).toBe(false);
+    expect(match.getEvents().map((e) => e.type)).toEqual([
+      'match.started',
+      'build.started',
+      'match.advanced',
+    ]);
+    tick(match, 'r3', P1);
+    expect(match.getSnapshot().buildings).toEqual({
+      schemaVersion: 1,
+      buildings: { p1: { 'town-center': 0, house: 1, storage: 0, barracks: 0, wall: 0, tower: 0 } },
+    });
+    expect(match.getEvents()).toHaveLength(5);
+  });
+
+  it('multi-completion order: holders sorted, BUILDING_IDS within (deterministic)', () => {
+    const fast: BuildingsConfig = {
+      ...customBuildings(),
+      house: { cost: {}, buildTime: 1 },
+      wall: { cost: {}, buildTime: 1 },
+      tower: { cost: {}, buildTime: 1 },
+    };
+    const match = cityMatch(fast, flush());
+    build(match, 'r1', P1, 'wall');
+    build(match, 'r2', P1, 'house');
+    build(match, 'r3', P2, 'tower');
+    tick(match, 'r4', P1);
+    expect(
+      match
+        .getEvents()
+        .filter((e) => e.type === 'build.completed')
+        .map((e) => e.payload),
+    ).toEqual([
+      { player: 'p1', building: 'house' },
+      { player: 'p1', building: 'wall' },
+      { player: 'p2', building: 'tower' },
+    ]);
+  });
+
+  it('default config: free zero-time builds complete on next advance', () => {
+    const match = cityMatch();
+    build(match, 'r1', P1, 'tower');
+    expect(match.getSnapshot().cities).toEqual({
+      schemaVersion: 1,
+      cities: { p1: { level: 1, queue: [{ type: 'tower', remaining: 0 }] } },
+    });
+    tick(match, 'r2', P1);
+    expect(match.getSnapshot().buildings).toEqual({
+      schemaVersion: 1,
+      buildings: { p1: { 'town-center': 0, house: 0, storage: 0, barracks: 0, wall: 0, tower: 1 } },
+    });
+  });
+
+  it('unaffordable → recorded-but-unapplied, untouched', () => {
+    const match = cityMatch(customBuildings(), held());
+    const before = match.getSnapshot();
+    expect(build(match, 'r1', P1, 'barracks')).toEqual({
+      status: 'rejected',
+      reason: 'build: cannot afford.',
+    });
+    expect(match.getSnapshot()).toEqual(before);
+    expect(match.getRevision()).toBe(0);
+  });
+
+  it('unknown building → recorded-but-unapplied, untouched', () => {
+    const match = cityMatch(customBuildings(), flush());
+    const before = match.getSnapshot();
+    expect(build(match, 'r1', P1, 'lava')).toEqual({
+      status: 'rejected',
+      reason: 'build: unknown building.',
+    });
+    expect(match.getSnapshot()).toEqual(before);
+  });
+
+  it('malformed params rejected (pre-rule), state untouched', () => {
+    const match = cityMatch(customBuildings(), flush());
+    const session = match.join(P1);
+    const before = match.getSnapshot();
+    expect(
+      match.dispatch(
+        session,
+        raw({ requestId: 'r1', playerId: 'p1', type: BUILD_TRANSITION, payload: 'x' }),
+      ),
+    ).toEqual({
+      status: 'rejected',
+      reason: 'validation: [build-params] build takes { type }',
+    });
+    expect(
+      match.dispatch(
+        session,
+        raw({ requestId: 'r2', playerId: 'p1', type: BUILD_TRANSITION, payload: {} }),
+      ),
+    ).toEqual({
+      status: 'rejected',
+      reason: 'validation: [build-params] build takes a string type',
+    });
+    expect(
+      match.dispatch(
+        session,
+        raw({ requestId: 'r3', playerId: 'p1', type: BUILD_TRANSITION, payload: { type: 42 } }),
+      ),
+    ).toEqual({
+      status: 'rejected',
+      reason: 'validation: [build-params] build takes a string type',
+    });
+    expect(match.getSnapshot()).toEqual(before);
+    expect(match.getRevision()).toBe(0);
+  });
+
+  it('upgrade flow: materializes, climbs to 3, caps recorded', () => {
+    const match = cityMatch(customBuildings(), flush());
+    expect(raise(match, 'r1', P1)).toEqual({
+      status: 'applied',
+      revision: 1,
+      summary: 'upgraded to level 2',
+    });
+    expect(match.getSnapshot().cities).toEqual({
+      schemaVersion: 1,
+      cities: { p1: { level: 2, queue: [] } },
+    });
+    expect(raise(match, 'r2', P1)).toEqual({
+      status: 'applied',
+      revision: 2,
+      summary: 'upgraded to level 3',
+    });
+    const before = match.getSnapshot();
+    expect(raise(match, 'r3', P1)).toEqual({
+      status: 'rejected',
+      reason: 'upgrade: already max level.',
+    });
+    expect(match.getSnapshot()).toEqual(before);
+    expect(match.getRevision()).toBe(2);
+    expect(match.getTimeline()).toHaveLength(3);
+  });
+
+  it('init-placed city: build preserves level, upgrade preserves queue', () => {
+    const placed: CitiesData = {
+      schemaVersion: 1,
+      cities: { p1: { level: 2, queue: [{ type: 'house', remaining: 5 }] } },
+    };
+    const match = cityMatch(customBuildings(), flush(), placed);
+    build(match, 'r1', P1, 'tower');
+    expect(match.getSnapshot().cities).toEqual({
+      schemaVersion: 1,
+      cities: {
+        p1: {
+          level: 2,
+          queue: [
+            { type: 'house', remaining: 5 },
+            { type: 'tower', remaining: 1 },
+          ],
+        },
+      },
+    });
+    raise(match, 'r2', P1);
+    const city = match.getSnapshot().cities?.cities['p1'];
+    expect(city?.level).toBe(3);
+    expect(city?.queue).toHaveLength(2);
+  });
+
+  it('upgrade takes no params (no-params pre-rule)', () => {
+    const match = cityMatch();
+    const session = match.join(P1);
+    expect(
+      match.dispatch(
+        session,
+        raw({ requestId: 'r1', playerId: 'p1', type: UPGRADE_TRANSITION, payload: { x: 1 } }),
+      ),
+    ).toEqual({
+      status: 'rejected',
+      reason: 'validation: [no-params] city.upgrade takes no parameters',
+    });
+  });
+
+  it('cityless advance keeps M005 identity (tick-only, no extra facts)', () => {
+    const match = cityMatch(customBuildings(), flush());
+    const before = match.getSnapshot();
+    expect(tick(match, 'r1', P1)).toEqual({ status: 'applied', revision: 1, summary: 'tick=1' });
+    expect(match.getSnapshot()).toEqual({ ...before, tick: 1 });
+    expect(match.getEvents().map((e) => e.type)).toEqual(['match.started', 'match.advanced']);
+  });
+});
+
+describe('WorldState extension: cities (integration)', () => {
+  it('accepts cities without a map (cities are map-independent)', () => {
+    const placed: CitiesData = {
+      schemaVersion: 1,
+      cities: { p1: { level: 2, queue: [{ type: 'house', remaining: 5 }] } },
+    };
+    const world = createWorldState({ players: [P1, P2], cities: placed });
+    expect(world.cities).toEqual(placed);
+  });
+
+  it('rejects malformed cities', () => {
+    expect(() => createWorldState({ players: [P1, P2], cities: {} as CitiesData })).toThrow(
+      /invalid initial world/,
+    );
+    const world = createWorldState({ players: [P1, P2] });
+    expect(isWorldState({ ...world, cities: { schemaVersion: 1, cities: {} } })).toBe(true);
+    expect(isWorldState({ ...world, cities: { schemaVersion: 2, cities: {} } })).toBe(false);
+  });
+
+  it('omits cities when absent (bytes intact)', () => {
+    const world = createWorldState({ players: [P1, P2] });
+    expect('cities' in world).toBe(false);
+  });
+});
+
+describe('perception carry: city (integration)', () => {
+  it('perceive carries the city alongside knowledge (golden)', () => {
+    const placed: CitiesData = {
+      schemaVersion: 1,
+      cities: { p1: { level: 2, queue: [{ type: 'house', remaining: 5 }] } },
+    };
+    const world = createWorldState({ players: [P1, P2], cities: placed });
+    const known = perceive(world, P1);
+    expect(known.city).toEqual({ level: 2, queue: [{ type: 'house', remaining: 5 }] });
+    expect(known.exploredCells).toEqual([]);
+  });
+
+  it('virtual idle when absent; others cities stay out (fail-closed)', () => {
+    const world = createWorldState({ players: [P1, P2] });
+    expect(perceive(world, P1).city).toEqual({ level: 1, queue: [] });
+    const crowded: CitiesData = {
+      schemaVersion: 1,
+      cities: {
+        p1: { level: 2, queue: [] },
+        zx: { level: 3, queue: [{ type: 'tower', remaining: 9 }] },
+      },
+    };
+    const known = perceive(createWorldState({ players: [P1, P2], cities: crowded }), P1);
+    expect(known.city).toEqual({ level: 2, queue: [] });
   });
 });

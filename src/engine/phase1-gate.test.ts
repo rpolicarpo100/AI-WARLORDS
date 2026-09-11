@@ -428,6 +428,7 @@ describe('determinism hygiene (static security review)', () => {
     expect(engineSources()).toEqual([
       'authority.ts',
       'buildings.ts',
+      'city.ts',
       'economy.ts',
       'events.ts',
       'exploration.ts',
@@ -503,6 +504,7 @@ describe('architecture boundary (static review)', () => {
     explored: 0,
     stockpiles: 0,
     buildings: 0,
+    city: 0,
     'world-state': 1,
     economy: 2,
     exploration: 2,
