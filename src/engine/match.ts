@@ -56,7 +56,17 @@ import {
 } from './economy.js';
 import type { TerrainId } from './map.js';
 import { DEFAULT_TERRAIN_CONFIG, isTerrainConfig, modifiersFor } from './terrain.js';
-import { MOVE_TRANSITION, moveParamsRule, moveProducer, warfareHandlers } from './warfare.js';
+import {
+  ATTACK_TRANSITION,
+  attackParamsRule,
+  attackProducer,
+  DEFAULT_UNITS_CONFIG,
+  isUnitsConfig,
+  MOVE_TRANSITION,
+  moveParamsRule,
+  moveProducer,
+  warfareHandlers,
+} from './warfare.js';
 
 declare const matchBrand: unique symbol;
 declare const seedBrand: unique symbol;
@@ -152,6 +162,7 @@ export interface MatchInit {
   readonly economyConfig?: unknown;
   readonly buildingsConfig?: unknown;
   readonly terrainConfig?: unknown;
+  readonly unitsConfig?: unknown;
 }
 
 export type MatchDispatchOutcome =
@@ -238,6 +249,10 @@ export class Match {
     if (!isTerrainConfig(terrainConfig)) {
       throw new Error('Match: invalid terrain config.');
     }
+    const unitsConfig = init.unitsConfig ?? DEFAULT_UNITS_CONFIG;
+    if (!isUnitsConfig(unitsConfig)) {
+      throw new Error('Match: invalid units config.');
+    }
     const world = worldHandlers();
     const match = matchHandlers();
     const economy = economyHandlers(economyConfig, buildingsConfig);
@@ -245,7 +260,7 @@ export class Match {
     // M022: passable = finite move cost (Infinity/NaN block, fail-closed).
     const passable = (terrain: string): boolean =>
       Number.isFinite(modifiersFor(terrainConfig, terrain as TerrainId).move);
-    const warfare = warfareHandlers(passable);
+    const warfare = warfareHandlers(passable, unitsConfig);
     const extra = init.extraHandlers ?? new Map<string, RngHandler<WorldState>>();
     const merged = new Map<string, RngHandler<WorldState>>([
       ...world,
@@ -273,6 +288,7 @@ export class Match {
       [GATHER_TRANSITION, gatherParamsRule],
       [BUILD_TRANSITION, buildParamsRule],
       [MOVE_TRANSITION, moveParamsRule],
+      [ATTACK_TRANSITION, attackParamsRule],
     ]);
     let dispatchCount = 0;
     const nextSeq = (): number => {
@@ -299,6 +315,7 @@ export class Match {
     producers.set(GATHER_TRANSITION, [gatherProducer]);
     producers.set(BUILD_TRANSITION, [buildStartedProducer]);
     producers.set(MOVE_TRANSITION, [moveProducer]);
+    producers.set(ATTACK_TRANSITION, [attackProducer]);
     const extraProducers = init.extraProducers ?? new Map<string, readonly EventProducer[]>();
     // (M019) The completion producer rides the same append path as caller extras:
     // structurally after matchAdvanced, ahead of caller extras.

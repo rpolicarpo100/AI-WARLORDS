@@ -413,3 +413,42 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
   E2E worker/no-worker ambos os lados; goldens move+facto).
 - IMPLEMENTATION: `warfare.ts` L2 + `economy.ts` (gate) + `match.ts` (M022).
 - ESTADO: `ACCEPTED`.
+
+## D-016 — Combate adjacente com dano; morte/remoção em M024 (M023 pré-análise)
+
+- DECISION: `ATTACK_TRANSITION` (`unit.attack`) em `warfare.ts` L2:
+  `createAttackHandler(unitsConfig)` + `attackParamsRule` ({id string,
+  target string}) + `attackProducer` (`unit.attacked`, priority NORMAL,
+  `{player, unit, target, damage}` — dano = diff hp before/after,
+  genuíno) + `warfareHandlers(passable, unitsConfig)` (assinatura
+  estendida — emenda declarada M022). Regras: sem units→
+  `attack: no units.`; id→`unknown unit.`; dono→`not your unit.`;
+  atacante a 0→`unit down.`; alvo→`unknown target.`; amigo (incl.
+  self)→`not an enemy.`; alvo a 0→`target down.`; sem mapa→`no map.`;
+  não-adjacente (neighborsOf; same-cell excluído, precedente
+  M022)→`out of range.`. Dano = `damage` #83 do atacante, HP com
+  chão 0 (forçado por isWord; unidade a 0 persiste — remoção M024).
+  Dano 0 aplica (facto honesto). Match: seam `unitsConfig?` (default
+  neutro M021) + merge + paramRule + producer.
+- MOTIVE: M021 (damage #83 sem consumidor) + D-014 (`dano`→M024;
+  `remoção` M024) + M022 (molde handler/rule/producer; neighborsOf) +
+  aprovação explícita do utilizador 2026-09-11 (chão 0, só-adjacente,
+  facto NORMAL). Nome/parâmetros/facto por analogia a
+  `unit.move`/`unit.moved` (sem vocabulário de combate no repo —
+  cunhagem aprovada).
+- ALTERNATIVES: sem HP em M023 (rejeitado: facto afirmaria o
+  inexistente); chão 1 (rejeitado pelo utilizador; regra inventada);
+  arqueiro alcance 2 (rejeitado: sem âncora — #83 fecha config;
+  papéis #15 fora do repo); range em UnitsConfig (rejeitado:
+  contradiz #83); dano no produtor via config (rejeitado: diff
+  before/after é genuíno e robusto); rejeitar dano 0 (rejeitado:
+  targeting legal + config verdadeira = aplica).
+- ADVANTAGES: #83 ganha consumidor; 0hp é estado honesto (isWord);
+  diferenciação futura de alcance fica isolada em `out of range.`.
+- DISADVANTAGES: assinatura warfareHandlers muda (churn contido:
+  match.ts + 1 teste); produtor assume alvo presente no after (seam
+  conhecido — M024 emenda se remover).
+- RISKS: baixo — combate puro + validação estrita; residual: 0hp
+  persiste até M024 (não ataca, não é atacado — `unit/target down.`).
+- IMPLEMENTATION: `warfare.ts` L2 + `match.ts` (M023).
+- ESTADO: `ACCEPTED`.

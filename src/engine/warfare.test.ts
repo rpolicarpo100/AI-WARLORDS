@@ -11,6 +11,10 @@ import { DEFAULT_TERRAIN_CONFIG, type TerrainConfig } from './terrain.js';
 import { createWorldState, isWorldState, type WorldState } from './world-state.js';
 import { perceive } from './views.js';
 import {
+  ATTACK_TRANSITION,
+  attackParamsRule,
+  attackProducer,
+  createAttackHandler,
   createMoveHandler,
   DEFAULT_UNITS_CONFIG,
   isUnitsConfig,
@@ -410,10 +414,16 @@ describe('createMoveHandler (unit: direct)', () => {
 });
 
 describe('warfareHandlers (unit)', () => {
-  it('registers move; invalid predicate throws', () => {
-    expect([...warfareHandlers(() => true).keys()]).toEqual(['unit.move']);
-    expect(() => warfareHandlers(42 as unknown as PassableTerrain)).toThrow(
+  it('registers move+attack; invalid predicate/config throws', () => {
+    expect([...warfareHandlers(() => true, customUnits()).keys()]).toEqual([
+      'unit.move',
+      'unit.attack',
+    ]);
+    expect(() => warfareHandlers(42 as unknown as PassableTerrain, customUnits())).toThrow(
       /invalid passable predicate/,
+    );
+    expect(() => warfareHandlers(() => true, 42 as unknown as UnitsConfig)).toThrow(
+      /invalid units config/,
     );
   });
 });
@@ -591,5 +601,518 @@ describe('move E2E (real Match)', () => {
       summary: 'moved u0 to 0,0',
     });
     expect(match.getEvents().filter((e) => e.type === 'unit.moved')).toHaveLength(2);
+  });
+});
+
+describe('attackParamsRule (unit)', () => {
+  it.each([[null], [[]], ['x']] as Array<[unknown]>)('rejects non-object %j', (value) => {
+    expect(attackParamsRule(P1, value)).toEqual({
+      rule: 'attack-params',
+      detail: 'attack takes { id, target }',
+    });
+  });
+
+  it('rejects mistyped fields, accepts the shape', () => {
+    const detail = { rule: 'attack-params', detail: 'attack takes { id string, target string }' };
+    expect(attackParamsRule(P1, {})).toEqual(detail);
+    expect(attackParamsRule(P1, { id: 42, target: 'u1' })).toEqual(detail);
+    expect(attackParamsRule(P1, { id: 'u0', target: 7 })).toEqual(detail);
+    expect(attackParamsRule(P1, { id: 'u0', target: 'u1' })).toBeNull();
+  });
+});
+
+describe('createAttackHandler (unit: direct)', () => {
+  function warMap(): MapData {
+    const cells: MapCell[] = [];
+    for (let row = 0; row < 3; row += 1) {
+      for (let col = 0; col < 3; col += 1) {
+        cells.push({ col, row, terrain: 'field' });
+      }
+    }
+    const map: MapData = {
+      schemaVersion: 1,
+      id: 'test-clash' as MapData['id'],
+      width: 3,
+      height: 3,
+      stagger: 'odd',
+      cells,
+      spawns: [],
+    };
+    if (!isMapData(map)) {
+      throw new Error('TEST BUG: warMap invalid');
+    }
+    return map;
+  }
+
+  function neighborOf(map: MapData, col: number, row: number): { col: number; row: number } {
+    const first = neighborsOf(map, col, row)[0];
+    if (first === undefined) {
+      throw new Error('TEST BUG: isolated cell');
+    }
+    return { col: first.col, row: first.row };
+  }
+
+  function squad(map: MapData): UnitsData {
+    const nb = neighborOf(map, 0, 0);
+    return {
+      schemaVersion: 1,
+      nextId: 4,
+      units: [
+        { id: 'u0', owner: 'p1', type: 'warrior', hp: 12, col: 0, row: 0 },
+        { id: 'u1', owner: 'p2', type: 'warrior', hp: 12, col: nb.col, row: nb.row },
+        { id: 'u2', owner: 'p2', type: 'archer', hp: 8, col: 2, row: 2 },
+        { id: 'u3', owner: 'p1', type: 'worker', hp: 5, col: 0, row: 0 },
+      ],
+    };
+  }
+
+  function warState(map?: MapData, units?: UnitsData): WorldState {
+    return createWorldState({
+      players: [P1, P2],
+      ...(map === undefined ? {} : { map }),
+      ...(units === undefined ? {} : { units }),
+    });
+  }
+
+  function withHp(units: UnitsData, id: string, hp: number): UnitsData {
+    return {
+      ...units,
+      units: units.units.map((u) => (u.id === id ? { ...u, hp } : u)),
+    };
+  }
+
+  it('rejects an invalid units config', () => {
+    expect(() => createAttackHandler(42 as unknown as UnitsConfig)).toThrow(/invalid units config/);
+  });
+
+  it('no units → applied:false', () => {
+    const handler = createAttackHandler(customUnits());
+    expect(
+      handler({ state: warState(warMap()), caller: P1, params: { id: 'u0', target: 'u1' } }),
+    ).toEqual({
+      applied: false,
+      reason: 'attack: no units.',
+    });
+  });
+
+  it('unknown unit → applied:false', () => {
+    const map = warMap();
+    const handler = createAttackHandler(customUnits());
+    expect(
+      handler({
+        state: warState(map, squad(map)),
+        caller: P1,
+        params: { id: 'u9', target: 'u1' },
+      }),
+    ).toEqual({ applied: false, reason: 'attack: unknown unit.' });
+  });
+
+  it('foe unit → applied:false', () => {
+    const map = warMap();
+    const handler = createAttackHandler(customUnits());
+    expect(
+      handler({
+        state: warState(map, squad(map)),
+        caller: P1,
+        params: { id: 'u1', target: 'u0' },
+      }),
+    ).toEqual({ applied: false, reason: 'attack: not your unit.' });
+  });
+
+  it('down attacker → applied:false', () => {
+    const map = warMap();
+    const handler = createAttackHandler(customUnits());
+    expect(
+      handler({
+        state: warState(map, withHp(squad(map), 'u0', 0)),
+        caller: P1,
+        params: { id: 'u0', target: 'u1' },
+      }),
+    ).toEqual({ applied: false, reason: 'attack: unit down.' });
+  });
+
+  it('unknown target → applied:false', () => {
+    const map = warMap();
+    const handler = createAttackHandler(customUnits());
+    expect(
+      handler({
+        state: warState(map, squad(map)),
+        caller: P1,
+        params: { id: 'u0', target: 'u9' },
+      }),
+    ).toEqual({ applied: false, reason: 'attack: unknown target.' });
+  });
+
+  it('own unit and self → applied:false (not an enemy)', () => {
+    const map = warMap();
+    const handler = createAttackHandler(customUnits());
+    const state = warState(map, squad(map));
+    expect(handler({ state, caller: P1, params: { id: 'u0', target: 'u3' } })).toEqual({
+      applied: false,
+      reason: 'attack: not an enemy.',
+    });
+    expect(handler({ state, caller: P1, params: { id: 'u0', target: 'u0' } })).toEqual({
+      applied: false,
+      reason: 'attack: not an enemy.',
+    });
+  });
+
+  it('down target → applied:false', () => {
+    const map = warMap();
+    const handler = createAttackHandler(customUnits());
+    expect(
+      handler({
+        state: warState(map, withHp(squad(map), 'u1', 0)),
+        caller: P1,
+        params: { id: 'u0', target: 'u1' },
+      }),
+    ).toEqual({ applied: false, reason: 'attack: target down.' });
+  });
+
+  it('no map → applied:false', () => {
+    const handler = createAttackHandler(customUnits());
+    expect(
+      handler({
+        state: warState(undefined, squad(warMap())),
+        caller: P1,
+        params: { id: 'u0', target: 'u1' },
+      }),
+    ).toEqual({ applied: false, reason: 'attack: no map.' });
+  });
+
+  it('distant foe → applied:false (out of range)', () => {
+    const map = warMap();
+    const handler = createAttackHandler(customUnits());
+    expect(
+      handler({
+        state: warState(map, squad(map)),
+        caller: P1,
+        params: { id: 'u0', target: 'u2' },
+      }),
+    ).toEqual({ applied: false, reason: 'attack: out of range.' });
+  });
+
+  it('golden: adjacent foe loses attacker damage, rest untouched', () => {
+    const map = warMap();
+    const handler = createAttackHandler(customUnits());
+    const out = handler({
+      state: warState(map, squad(map)),
+      caller: P1,
+      params: { id: 'u0', target: 'u1' },
+    });
+    expect(out).toEqual({
+      applied: true,
+      state: expect.objectContaining({
+        units: {
+          schemaVersion: 1,
+          nextId: 4,
+          units: [
+            { id: 'u0', owner: 'p1', type: 'warrior', hp: 12, col: 0, row: 0 },
+            {
+              id: 'u1',
+              owner: 'p2',
+              type: 'warrior',
+              hp: 8,
+              col: neighborOf(map, 0, 0).col,
+              row: neighborOf(map, 0, 0).row,
+            },
+            { id: 'u2', owner: 'p2', type: 'archer', hp: 8, col: 2, row: 2 },
+            { id: 'u3', owner: 'p1', type: 'worker', hp: 5, col: 0, row: 0 },
+          ],
+        },
+      }),
+      summary: 'attacked u1 for 4 (hp 12→8)',
+    });
+    if (out.applied !== true) {
+      throw new Error('TEST BUG: golden did not apply');
+    }
+    expect(isWorldState(out.state)).toBe(true);
+  });
+
+  it('overkill floors at 0; the unit stays (removal is M024)', () => {
+    const map = warMap();
+    const handler = createAttackHandler(customUnits());
+    const out = handler({
+      state: warState(map, withHp(squad(map), 'u1', 2)),
+      caller: P1,
+      params: { id: 'u0', target: 'u1' },
+    });
+    expect(out).toEqual({
+      applied: true,
+      state: expect.objectContaining({
+        units: expect.objectContaining({
+          units: expect.arrayContaining([expect.objectContaining({ id: 'u1', hp: 0 })]),
+        }),
+      }),
+      summary: 'attacked u1 for 4 (hp 2→0)',
+    });
+  });
+
+  it('harmless config applies with 0 damage (hp untouched)', () => {
+    const map = warMap();
+    const handler = createAttackHandler(DEFAULT_UNITS_CONFIG);
+    expect(
+      handler({
+        state: warState(map, squad(map)),
+        caller: P1,
+        params: { id: 'u0', target: 'u1' },
+      }),
+    ).toEqual({
+      applied: true,
+      state: expect.objectContaining({
+        units: expect.objectContaining({
+          units: expect.arrayContaining([expect.objectContaining({ id: 'u1', hp: 12 })]),
+        }),
+      }),
+      summary: 'attacked u1 for 0 (hp 12→12)',
+    });
+  });
+
+  it('same-cell enemy is out of range (neighborsOf excludes self, M022 precedent)', () => {
+    const map = warMap();
+    const handler = createAttackHandler(customUnits());
+    const stacked: UnitsData = {
+      ...squad(map),
+      units: squad(map).units.map((u) => (u.id === 'u1' ? { ...u, col: 0, row: 0 } : u)),
+    };
+    expect(
+      handler({
+        state: warState(map, stacked),
+        caller: P1,
+        params: { id: 'u0', target: 'u1' },
+      }),
+    ).toEqual({ applied: false, reason: 'attack: out of range.' });
+  });
+});
+
+describe('attackProducer (unit: direct)', () => {
+  function crewed(units?: UnitsData): WorldState {
+    return createWorldState({
+      players: [P1, P2],
+      ...(units === undefined ? {} : { units }),
+    });
+  }
+
+  function pair(targetHp: number): UnitsData {
+    return {
+      schemaVersion: 1,
+      nextId: 2,
+      units: [
+        { id: 'u0', owner: 'p1', type: 'warrior', hp: 12, col: 0, row: 0 },
+        { id: 'u1', owner: 'p2', type: 'warrior', hp: targetHp, col: 1, row: 0 },
+      ],
+    };
+  }
+
+  it('throws on invalid params', () => {
+    const state = crewed(pair(12));
+    expect(() =>
+      attackProducer({
+        type: ATTACK_TRANSITION,
+        caller: P1,
+        params: 'x',
+        before: state,
+        after: state,
+      }),
+    ).toThrow(/invalid params/);
+    expect(() =>
+      attackProducer({
+        type: ATTACK_TRANSITION,
+        caller: P1,
+        params: { id: 'u0' },
+        before: state,
+        after: state,
+      }),
+    ).toThrow(/invalid params/);
+  });
+
+  it('throws when units are missing on either side', () => {
+    const full = crewed(pair(12));
+    const empty = crewed(undefined);
+    const params = { id: 'u0', target: 'u1' };
+    expect(() =>
+      attackProducer({ type: ATTACK_TRANSITION, caller: P1, params, before: empty, after: full }),
+    ).toThrow(/missing units/);
+    expect(() =>
+      attackProducer({ type: ATTACK_TRANSITION, caller: P1, params, before: full, after: empty }),
+    ).toThrow(/missing units/);
+  });
+
+  it('throws when the target is missing on either side', () => {
+    const full = crewed(pair(12));
+    const noTarget = crewed({
+      schemaVersion: 1,
+      nextId: 2,
+      units: [{ id: 'u0', owner: 'p1', type: 'warrior', hp: 12, col: 0, row: 0 }],
+    });
+    const params = { id: 'u0', target: 'u1' };
+    expect(() =>
+      attackProducer({
+        type: ATTACK_TRANSITION,
+        caller: P1,
+        params,
+        before: noTarget,
+        after: full,
+      }),
+    ).toThrow(/missing target/);
+    expect(() =>
+      attackProducer({
+        type: ATTACK_TRANSITION,
+        caller: P1,
+        params,
+        before: full,
+        after: noTarget,
+      }),
+    ).toThrow(/missing target/);
+  });
+
+  it('golden: unit.attacked NORMAL with player+unit+target+damage', () => {
+    expect(
+      attackProducer({
+        type: ATTACK_TRANSITION,
+        caller: P1,
+        params: { id: 'u0', target: 'u1' },
+        before: crewed(pair(12)),
+        after: crewed(pair(8)),
+      }),
+    ).toEqual([
+      {
+        type: 'unit.attacked',
+        priority: 'normal',
+        payload: { player: 'p1', unit: 'u0', target: 'u1', damage: 4 },
+      },
+    ]);
+  });
+});
+
+describe('attack E2E (real Match)', () => {
+  function clashMap(): MapData {
+    const map: MapData = {
+      schemaVersion: 1,
+      id: 'test-clash' as MapData['id'],
+      width: 3,
+      height: 1,
+      stagger: 'odd',
+      cells: [
+        { col: 0, row: 0, terrain: 'field' },
+        { col: 1, row: 0, terrain: 'field' },
+        { col: 2, row: 0, terrain: 'field' },
+      ],
+      spawns: [],
+    };
+    if (!isMapData(map)) {
+      throw new Error('TEST BUG: clashMap invalid');
+    }
+    return map;
+  }
+
+  function clashMatch(units?: UnitsConfig): Match {
+    return new Match({
+      seed: 23,
+      ruleset: STANDARD_RULESET,
+      players: [P1, P2],
+      initialState: createWorldState({
+        players: [P1, P2],
+        map: clashMap(),
+        units: {
+          schemaVersion: 1,
+          nextId: 3,
+          units: [
+            { id: 'u0', owner: 'p1', type: 'warrior', hp: 12, col: 0, row: 0 },
+            { id: 'u1', owner: 'p2', type: 'warrior', hp: 12, col: 1, row: 0 },
+            { id: 'u2', owner: 'p2', type: 'archer', hp: 8, col: 2, row: 0 },
+          ],
+        },
+      }),
+      ...(units === undefined ? {} : { unitsConfig: units }),
+    });
+  }
+
+  function strike(match: Match, rid: string, player: PlayerId, id: string, target: string) {
+    return match.dispatch(
+      match.join(player),
+      raw({ requestId: rid, playerId: player, type: ATTACK_TRANSITION, payload: { id, target } }),
+    );
+  }
+
+  it('golden: applied + summary + unit.attacked fact in sequence', () => {
+    const match = clashMatch(customUnits());
+    expect(strike(match, 'r1', P1, 'u0', 'u1')).toEqual({
+      status: 'applied',
+      revision: 1,
+      summary: 'attacked u1 for 4 (hp 12→8)',
+    });
+    expect(unitById(match.getSnapshot().units, 'u1')).toEqual({
+      id: 'u1',
+      owner: 'p2',
+      type: 'warrior',
+      hp: 8,
+      col: 1,
+      row: 0,
+    });
+    expect(match.getEvents().map((e) => e.type)).toEqual(['match.started', 'unit.attacked']);
+    expect(match.getEvents()[1]).toEqual({
+      seq: 2,
+      tick: 0,
+      revision: 1,
+      type: 'unit.attacked',
+      priority: 'normal',
+      payload: { player: 'p1', unit: 'u0', target: 'u1', damage: 4 },
+    });
+  });
+
+  it('default config: harmless attack applies, hp untouched', () => {
+    const match = clashMatch();
+    expect(strike(match, 'r1', P1, 'u0', 'u1')).toEqual({
+      status: 'applied',
+      revision: 1,
+      summary: 'attacked u1 for 0 (hp 12→12)',
+    });
+    expect(unitById(match.getSnapshot().units, 'u1')).toMatchObject({ hp: 12 });
+  });
+
+  it('distant foe rejects (out of range), state untouched', () => {
+    const match = clashMatch(customUnits());
+    const before = match.getSnapshot();
+    expect(strike(match, 'r1', P1, 'u0', 'u2')).toEqual({
+      status: 'rejected',
+      reason: 'attack: out of range.',
+    });
+    expect(match.getSnapshot()).toEqual(before);
+    expect(match.getRevision()).toBe(0);
+  });
+
+  it('malformed params rejected (pre-rule), state untouched', () => {
+    const match = clashMatch(customUnits());
+    const session = match.join(P1);
+    const before = match.getSnapshot();
+    const payloads: unknown[] = ['x', {}, { id: 'u0' }];
+    payloads.forEach((payload, index) => {
+      expect(
+        match.dispatch(
+          session,
+          raw({ requestId: `r${index + 1}`, playerId: 'p1', type: ATTACK_TRANSITION, payload }),
+        ),
+      ).toMatchObject({ status: 'rejected' });
+    });
+    expect(match.getSnapshot()).toEqual(before);
+    expect(match.getRevision()).toBe(0);
+  });
+
+  it('barrage: three dispatches, three facts, floor at 0', () => {
+    const match = clashMatch(customUnits());
+    expect(strike(match, 'r1', P1, 'u0', 'u1')).toMatchObject({ status: 'applied' });
+    expect(strike(match, 'r2', P1, 'u0', 'u1')).toMatchObject({ status: 'applied' });
+    expect(strike(match, 'r3', P1, 'u0', 'u1')).toEqual({
+      status: 'applied',
+      revision: 3,
+      summary: 'attacked u1 for 4 (hp 4→0)',
+    });
+    expect(unitById(match.getSnapshot().units, 'u1')).toMatchObject({ hp: 0 });
+    expect(match.getEvents().filter((e) => e.type === 'unit.attacked')).toHaveLength(3);
+    expect(strike(match, 'r4', P1, 'u0', 'u1')).toEqual({
+      status: 'rejected',
+      reason: 'attack: target down.',
+    });
   });
 });

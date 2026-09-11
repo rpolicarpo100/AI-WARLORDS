@@ -20,7 +20,8 @@
 > Economy validation: `EXISTS` (M020 — VERIFIED; caps+conservação)
 > Unit system: `EXISTS` (M021 — VERIFIED; dados+config+spawn)
 > Movement: `EXISTS` (M022 — VERIFIED; 1-step+passabilidade)
-> Domínio do jogo (militar, AI): `NONE` (M023+; economia EXISTS + units + move)
+> Combat: `EXISTS` (M023 — VERIFIED; ataque adjacente+dano)
+> Domínio do jogo (militar, AI): `NONE` (M024+; economia EXISTS + units + move + attack)
 > Arquitectura-alvo: `PLANNED` (transcrita do documento-mestre)
 > Data: 2026-09-11
 
@@ -88,6 +89,7 @@ cidade — lazy-cities, queue+conclusão no advance (M019);
 validação económica — caps+conservação, gather rejeita cheio (M020);
 unidades — 3 tipos, instâncias+config+spawn (M021);
 movimento — 1-step, passabilidade, gather-com-worker (M022);
+combate — ataque adjacente, dano #83, chão 0 (M023);
 chain nunca substitui o engine (M101); dinheiro só após gate Fase 28.
 
 ## 3. Mapa de fases → camadas (PLANNED)
@@ -97,7 +99,7 @@ chain nunca substitui o engine (M101); dinheiro só após gate Fase 28.
 | 0       | Foundation                  | M001–M002 (VERIFIED)             |
 | 1       | Game Engine                 | M003–M009 (VERIFIED)             |
 | 2       | World                       | M010–M015 (VERIFIED)             |
-| 3–4     | Economy + Military          | M016–M022 (VERIFIED) → M023–M026 |
+| 3–4     | Economy + Military          | M016–M023 (VERIFIED) → M024–M026 |
 | 5–8     | AI Foundation → Commands    | M027–M045                        |
 | 9–16    | Refutation → AI Arena       | M046–M068                        |
 | 17–20   | Multiplayer → Observability | M069–M093                        |
@@ -138,12 +140,13 @@ chain nunca substitui o engine (M101); dinheiro só após gate Fase 28.
 - [x] Validação económica (M020: caps+conservação — VERIFIED)
 - [x] Sistema de unidades (M021: dados+config+spawn — VERIFIED)
 - [x] Movimento (M022: 1-step+passabilidade+gate — VERIFIED)
+- [x] Combate (M023: ataque+dano+facto — VERIFIED)
 
-## 5. Repo layout (actual, M022)
+## 5. Repo layout (actual, M023)
 
 ```text
 ai-warlords/
-  package.json / package-lock.json  scripts + deps pinned (intocados M003–M022)
+  package.json / package-lock.json  scripts + deps pinned (intocados M003–M023)
   tsconfig.json / tsconfig.build.json
   vitest.config.ts / eslint.config.js / .prettierrc.json
   src/
@@ -170,13 +173,13 @@ ai-warlords/
       buildings.ts      dados + guard (VERIFIED, load-bearing)
       city.ts           lazy-cities + queue + guard (VERIFIED, load-bearing)
       units.ts          instâncias + guard + queries (VERIFIED, load-bearing)
-      warfare.ts        config + spawn + move + gate (VERIFIED, load-bearing)
+      warfare.ts        config + spawn + move + attack + gate (VERIFIED, load-bearing)
       phase1-gate.test.ts  selo transversal M009 (14 testes, prova)
-      *.test.ts         1037 testes colocados
+      *.test.ts         1068 testes colocados
     *.test.ts           28 testes M002 (regressão)
   dist/              build (gitignored)
   docs/              audit, stack, riscos, status, tools, testes, decisões, processo
-  docs/modules/      registos por módulo (M002.md … M022.md)
+  docs/modules/      registos por módulo (M002.md … M023.md)
 ```
 
 AVISOS: `src/dev-server.ts` (M002) e `src/engine/harness.ts` (M003) são
@@ -213,3 +216,4 @@ stockpiles, economy.
 | 2026-09-11 | M020      | Validação EXISTS; caps+conservação; gather-caps; 927 testes    |
 | 2026-09-11 | M021      | Unidades EXISTS; 3 tipos+spawn+percepção; 1007 testes          |
 | 2026-09-11 | M022      | Movimento EXISTS; 1-step+gate worker; 1037 testes              |
+| 2026-09-11 | M023      | Combate EXISTS; ataque+dano+facto NORMAL; 1068 testes          |

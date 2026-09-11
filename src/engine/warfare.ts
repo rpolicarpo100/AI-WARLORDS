@@ -234,10 +234,97 @@ export function createMoveHandler(passable: PassableTerrain): TransitionHandler<
   };
 }
 
+/** Transition name (single source — match.ts wires it, tests dispatch it). */
+export const ATTACK_TRANSITION = 'unit.attack';
+
+/** Validated attack parameters: attacker id plus target unit id. */
+export interface AttackParams {
+  readonly id: string;
+  readonly target: string;
+}
+
+/** Wire-shape pre-rule (game rules live in the handler, not here). */
+export function attackParamsRule(
+  _caller: PlayerId,
+  params: unknown,
+): { readonly rule: string; readonly detail: string } | null {
+  if (typeof params !== 'object' || params === null || Array.isArray(params)) {
+    return { rule: 'attack-params', detail: 'attack takes { id, target }' };
+  }
+  const fields = params as Record<string, unknown>;
+  if (typeof fields['id'] !== 'string' || typeof fields['target'] !== 'string') {
+    return { rule: 'attack-params', detail: 'attack takes { id string, target string }' };
+  }
+  return null;
+}
+
+export function createAttackHandler(unitsConfig: UnitsConfig): TransitionHandler<WorldState> {
+  if (!isUnitsConfig(unitsConfig)) {
+    throw new Error('createAttackHandler: invalid units config.');
+  }
+  return (ctx) => {
+    // The pre-rule validated { id, target } shape on the dispatch path;
+    // this cast documents the seam (match.ts `validated` precedent).
+    const { id, target } = ctx.params as AttackParams;
+    const data = ctx.state.units;
+    if (data === undefined) {
+      return { applied: false, reason: 'attack: no units.' };
+    }
+    const unit = unitById(data, id);
+    if (unit === undefined) {
+      return { applied: false, reason: 'attack: unknown unit.' };
+    }
+    if (unit.owner !== ctx.caller) {
+      return { applied: false, reason: 'attack: not your unit.' };
+    }
+    if (unit.hp <= 0) {
+      return { applied: false, reason: 'attack: unit down.' };
+    }
+    const foe = unitById(data, target);
+    if (foe === undefined) {
+      return { applied: false, reason: 'attack: unknown target.' };
+    }
+    if (foe.owner === ctx.caller) {
+      return { applied: false, reason: 'attack: not an enemy.' };
+    }
+    if (foe.hp <= 0) {
+      return { applied: false, reason: 'attack: target down.' };
+    }
+    const map = ctx.state.map;
+    if (map === undefined) {
+      return { applied: false, reason: 'attack: no map.' };
+    }
+    const adjacent = neighborsOf(map, unit.col, unit.row).some(
+      (cell) => cell.col === foe.col && cell.row === foe.row,
+    );
+    if (!adjacent) {
+      return { applied: false, reason: 'attack: out of range.' };
+    }
+    const damage = unitsConfig[unit.type].damage;
+    const hp = Math.max(0, foe.hp - damage);
+    return {
+      applied: true,
+      state: {
+        ...ctx.state,
+        units: {
+          schemaVersion: UNITS_SCHEMA_VERSION,
+          nextId: data.nextId,
+          units: data.units.map((entry) => (entry.id === target ? { ...entry, hp } : entry)),
+        },
+      },
+      summary: `attacked ${target} for ${damage} (hp ${foe.hp}→${hp})`,
+    };
+  };
+}
+
 export function warfareHandlers(
   passable: PassableTerrain,
+  unitsConfig: UnitsConfig,
 ): Map<string, TransitionHandler<WorldState>> {
-  return new Map([[MOVE_TRANSITION, createMoveHandler(passable)]]);
+  return new Map([
+    [MOVE_TRANSITION, createMoveHandler(passable)],
+    [ATTACK_TRANSITION, createAttackHandler(unitsConfig)],
+  ]);
 }
 
 /** Structural EventProducer: unit.moved from validated params (LOW per #priorities). */
@@ -263,5 +350,45 @@ export function moveProducer(input: {
   }
   return [
     { type: 'unit.moved', priority: 'low', payload: { player: input.caller, unit: id, col, row } },
+  ];
+}
+
+/** Structural EventProducer: unit.attacked from validated params (NORMAL per M023 approval). */
+export function attackProducer(input: {
+  readonly type: string;
+  readonly caller: PlayerId;
+  readonly params: unknown;
+  readonly before: WorldState;
+  readonly after: WorldState;
+}): ReadonlyArray<{
+  readonly type: string;
+  readonly priority: 'normal';
+  readonly payload: unknown;
+}> {
+  const params = input.params;
+  if (typeof params !== 'object' || params === null || Array.isArray(params)) {
+    throw new Error('attackProducer: invalid params.');
+  }
+  const fields = params as Record<string, unknown>;
+  const { id, target } = fields;
+  if (typeof id !== 'string' || typeof target !== 'string') {
+    throw new Error('attackProducer: invalid params.');
+  }
+  const beforeUnits = input.before.units;
+  const afterUnits = input.after.units;
+  if (beforeUnits === undefined || afterUnits === undefined) {
+    throw new Error('attackProducer: missing units.');
+  }
+  const was = unitById(beforeUnits, target);
+  const now = unitById(afterUnits, target);
+  if (was === undefined || now === undefined) {
+    throw new Error('attackProducer: missing target.');
+  }
+  return [
+    {
+      type: 'unit.attacked',
+      priority: 'normal',
+      payload: { player: input.caller, unit: id, target, damage: was.hp - now.hp },
+    },
   ];
 }
