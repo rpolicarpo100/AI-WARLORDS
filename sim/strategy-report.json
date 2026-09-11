@@ -1,0 +1,369 @@
+{
+ "meta": {
+  "kind": "ai-strategy-drill",
+  "games": 20,
+  "stepsPerGame": 60,
+  "seeds": [
+   1000,
+   1001,
+   1002,
+   1003,
+   1004,
+   1005,
+   1006,
+   1007,
+   1008,
+   1009,
+   1010,
+   1011,
+   1012,
+   1013,
+   1014,
+   1015,
+   1016,
+   1017,
+   1018,
+   1019
+  ],
+  "ms": 684,
+  "note": "AI wiring (queries + upgrade snapshots) checked against live Matches every dispatch. Deterministic per seed."
+ },
+ "totals": {
+  "applied": 1200,
+  "rejected": 393,
+  "violations": 0,
+  "upgrades": 80,
+  "aiFacts": 160,
+  "appliedByType": {
+   "city.build": 300,
+   "world.noop": 278,
+   "city.upgrade": 80,
+   "commander.commission": 264,
+   "commander.deactivate": 190,
+   "commander.activate": 88
+  }
+ },
+ "violations": [],
+ "games": [
+  {
+   "seed": 1000,
+   "applied": 60,
+   "rejected": 19,
+   "appliedByType": {
+    "city.build": 14,
+    "world.noop": 12,
+    "city.upgrade": 4,
+    "commander.commission": 16,
+    "commander.deactivate": 10,
+    "commander.activate": 4
+   },
+   "upgrades": 4,
+   "aiFacts": 8,
+   "commandersFinal": 18
+  },
+  {
+   "seed": 1001,
+   "applied": 60,
+   "rejected": 13,
+   "appliedByType": {
+    "world.noop": 15,
+    "city.build": 14,
+    "commander.commission": 16,
+    "city.upgrade": 4,
+    "commander.deactivate": 10,
+    "commander.activate": 1
+   },
+   "upgrades": 4,
+   "aiFacts": 8,
+   "commandersFinal": 18
+  },
+  {
+   "seed": 1002,
+   "applied": 60,
+   "rejected": 19,
+   "appliedByType": {
+    "world.noop": 16,
+    "city.build": 16,
+    "commander.commission": 14,
+    "commander.deactivate": 7,
+    "city.upgrade": 4,
+    "commander.activate": 3
+   },
+   "upgrades": 4,
+   "aiFacts": 8,
+   "commandersFinal": 16
+  },
+  {
+   "seed": 1003,
+   "applied": 60,
+   "rejected": 17,
+   "appliedByType": {
+    "commander.deactivate": 9,
+    "world.noop": 15,
+    "city.build": 17,
+    "commander.activate": 6,
+    "city.upgrade": 4,
+    "commander.commission": 9
+   },
+   "upgrades": 4,
+   "aiFacts": 8,
+   "commandersFinal": 11
+  },
+  {
+   "seed": 1004,
+   "applied": 60,
+   "rejected": 25,
+   "appliedByType": {
+    "city.upgrade": 4,
+    "world.noop": 20,
+    "city.build": 10,
+    "commander.deactivate": 9,
+    "commander.commission": 13,
+    "commander.activate": 4
+   },
+   "upgrades": 4,
+   "aiFacts": 8,
+   "commandersFinal": 15
+  },
+  {
+   "seed": 1005,
+   "applied": 60,
+   "rejected": 16,
+   "appliedByType": {
+    "commander.deactivate": 10,
+    "world.noop": 14,
+    "commander.commission": 12,
+    "city.upgrade": 4,
+    "city.build": 15,
+    "commander.activate": 5
+   },
+   "upgrades": 4,
+   "aiFacts": 8,
+   "commandersFinal": 14
+  },
+  {
+   "seed": 1006,
+   "applied": 60,
+   "rejected": 24,
+   "appliedByType": {
+    "commander.deactivate": 10,
+    "city.upgrade": 4,
+    "city.build": 15,
+    "commander.activate": 6,
+    "commander.commission": 16,
+    "world.noop": 9
+   },
+   "upgrades": 4,
+   "aiFacts": 8,
+   "commandersFinal": 18
+  },
+  {
+   "seed": 1007,
+   "applied": 60,
+   "rejected": 22,
+   "appliedByType": {
+    "commander.deactivate": 11,
+    "city.build": 19,
+    "commander.activate": 5,
+    "world.noop": 8,
+    "commander.commission": 13,
+    "city.upgrade": 4
+   },
+   "upgrades": 4,
+   "aiFacts": 8,
+   "commandersFinal": 15
+  },
+  {
+   "seed": 1008,
+   "applied": 60,
+   "rejected": 17,
+   "appliedByType": {
+    "commander.commission": 13,
+    "commander.deactivate": 9,
+    "world.noop": 15,
+    "commander.activate": 5,
+    "city.build": 14,
+    "city.upgrade": 4
+   },
+   "upgrades": 4,
+   "aiFacts": 8,
+   "commandersFinal": 15
+  },
+  {
+   "seed": 1009,
+   "applied": 60,
+   "rejected": 22,
+   "appliedByType": {
+    "city.build": 17,
+    "world.noop": 15,
+    "city.upgrade": 4,
+    "commander.commission": 14,
+    "commander.deactivate": 8,
+    "commander.activate": 2
+   },
+   "upgrades": 4,
+   "aiFacts": 8,
+   "commandersFinal": 16
+  },
+  {
+   "seed": 1010,
+   "applied": 60,
+   "rejected": 28,
+   "appliedByType": {
+    "city.upgrade": 4,
+    "world.noop": 11,
+    "city.build": 17,
+    "commander.deactivate": 11,
+    "commander.commission": 12,
+    "commander.activate": 5
+   },
+   "upgrades": 4,
+   "aiFacts": 8,
+   "commandersFinal": 14
+  },
+  {
+   "seed": 1011,
+   "applied": 60,
+   "rejected": 25,
+   "appliedByType": {
+    "commander.commission": 15,
+    "city.build": 10,
+    "commander.deactivate": 10,
+    "world.noop": 17,
+    "commander.activate": 4,
+    "city.upgrade": 4
+   },
+   "upgrades": 4,
+   "aiFacts": 8,
+   "commandersFinal": 17
+  },
+  {
+   "seed": 1012,
+   "applied": 60,
+   "rejected": 13,
+   "appliedByType": {
+    "world.noop": 15,
+    "city.upgrade": 4,
+    "commander.deactivate": 11,
+    "city.build": 12,
+    "commander.commission": 11,
+    "commander.activate": 7
+   },
+   "upgrades": 4,
+   "aiFacts": 8,
+   "commandersFinal": 13
+  },
+  {
+   "seed": 1013,
+   "applied": 60,
+   "rejected": 22,
+   "appliedByType": {
+    "commander.deactivate": 8,
+    "world.noop": 14,
+    "city.upgrade": 4,
+    "commander.commission": 14,
+    "city.build": 16,
+    "commander.activate": 4
+   },
+   "upgrades": 4,
+   "aiFacts": 8,
+   "commandersFinal": 16
+  },
+  {
+   "seed": 1014,
+   "applied": 60,
+   "rejected": 15,
+   "appliedByType": {
+    "commander.deactivate": 9,
+    "city.upgrade": 4,
+    "city.build": 14,
+    "commander.commission": 13,
+    "commander.activate": 4,
+    "world.noop": 16
+   },
+   "upgrades": 4,
+   "aiFacts": 8,
+   "commandersFinal": 15
+  },
+  {
+   "seed": 1015,
+   "applied": 60,
+   "rejected": 25,
+   "appliedByType": {
+    "city.upgrade": 4,
+    "commander.deactivate": 12,
+    "commander.activate": 7,
+    "world.noop": 11,
+    "city.build": 16,
+    "commander.commission": 10
+   },
+   "upgrades": 4,
+   "aiFacts": 8,
+   "commandersFinal": 12
+  },
+  {
+   "seed": 1016,
+   "applied": 60,
+   "rejected": 16,
+   "appliedByType": {
+    "commander.commission": 15,
+    "city.upgrade": 4,
+    "city.build": 18,
+    "world.noop": 13,
+    "commander.deactivate": 8,
+    "commander.activate": 2
+   },
+   "upgrades": 4,
+   "aiFacts": 8,
+   "commandersFinal": 17
+  },
+  {
+   "seed": 1017,
+   "applied": 60,
+   "rejected": 24,
+   "appliedByType": {
+    "city.build": 20,
+    "world.noop": 10,
+    "commander.deactivate": 9,
+    "city.upgrade": 4,
+    "commander.activate": 8,
+    "commander.commission": 9
+   },
+   "upgrades": 4,
+   "aiFacts": 8,
+   "commandersFinal": 11
+  },
+  {
+   "seed": 1018,
+   "applied": 60,
+   "rejected": 14,
+   "appliedByType": {
+    "city.upgrade": 4,
+    "world.noop": 16,
+    "commander.commission": 16,
+    "commander.deactivate": 10,
+    "city.build": 11,
+    "commander.activate": 3
+   },
+   "upgrades": 4,
+   "aiFacts": 8,
+   "commandersFinal": 18
+  },
+  {
+   "seed": 1019,
+   "applied": 60,
+   "rejected": 17,
+   "appliedByType": {
+    "world.noop": 16,
+    "commander.deactivate": 9,
+    "city.upgrade": 4,
+    "commander.activate": 3,
+    "city.build": 15,
+    "commander.commission": 13
+   },
+   "upgrades": 4,
+   "aiFacts": 8,
+   "commandersFinal": 15
+  }
+ ]
+}

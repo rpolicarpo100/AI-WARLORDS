@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 40 (M001–M040)  |
-| `PLANNED`  | 125 (M041–M165) |
+| `VERIFIED` | 41 (M001–M041)  |
+| `PLANNED`  | 124 (M042–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -159,6 +159,11 @@ Checkpoints `VERIFIED`:
   canal IA→stream votado: snapshots em upgrade;
   mockups regen +72/-0); 1415/1415 testes, 100.
   Registo em `docs/modules/M040.md`.
+- **M041 @ 2026-09-11** — Strategy Drill (harness
+  votado: Matches reais, 7 invariantes wiring,
+  1200 applied/0 violações, sans-ms idêntico);
+  1415/1415 testes, 100 global.
+  Registo em `docs/modules/M041.md`.
 
 ---
 
@@ -231,7 +236,8 @@ Checkpoints `VERIFIED`:
 | M038 | Strategic AI — Match Wiring | `VERIFIED` |
 | M039 | Strategic AI — Army Posture | `VERIFIED` |
 | M040 | Strategic AI — AI Events | `VERIFIED` |
-| M041–M042 | Strategic AI                                                        | `PLANNED` |
+| M041 | Strategic AI — Strategy Drill | `VERIFIED` |
+| M042 | Strategic AI | `PLANNED` |
 | M043–M045 | Player → AI Command                                                 | `PLANNED` |
 | M046–M047 | AI Refutation + Override                                            | `PLANNED` |
 | M048      | Confidence Engine                                                   | `PLANNED` |

@@ -20,6 +20,7 @@
     "clean": "rm -rf dist coverage",
     "sim": "tsx sim/playtest.ts",
     "sim:personality": "tsx sim/personality-drill.ts",
+    "sim:strategy": "tsx sim/strategy-drill.ts",
     "mockups": "tsx mockups/generate-state.ts && node mockups/build.mjs",
     "godot:sync": "node tools/sync-godot-data.mjs",
     "engine": "node tools/build-engine.mjs",

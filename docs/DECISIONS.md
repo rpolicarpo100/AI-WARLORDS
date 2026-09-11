@@ -1154,3 +1154,29 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
   mockups (revista); avg undefined→JSON drop.
 - RISKS: médio — 1.º evento IA; residual: página
   copia factos (tolerante); tuning (#92).
+
+## D-035 — Strategy drill sim (M041 voto drill)
+
+- DECISION: `sim/strategy-drill.ts` NOVO (toolchain,
+  fora coverage — M026/M034): Matches reais × seed
+  (triples + units + cities L1 + funds); bots
+  commission/flips/build/upgrade/noop (oráculo);
+  7 invariantes pós-applied (query-coerência:
+  counts, military recomputado independente,
+  stances válidas, maioria∈argmax ordem-livre,
+  economy deep-equal, ai-facts shape + clichê
+  +2-por-upgrade/+0-outros, zero event-fault +
+  JSON); report próprio (sans-ms; exit 1);
+  script `sim:strategy`. Zero prod; 0 testes
+  unitários (drill é a prova executável).
+- MOTIVE: voto drill 2026-09-11 + M034 (molde) +
+  TESTING §1B + M038/M040 (wiring vivo).
+- ALTERNATIVES: estender drills (rejeitado:
+  goldens M026/M034 intactos); 8.ª invariante
+  prompts (rejeitado: playtest cobre); suite
+  transversal (rejeitado: M042, padrão fecho).
+- ADVANTAGES: wiring provado sob dispatch real;
+  event-fault fail-loud apanharia bug M040.
+- DISADVANTAGES: drill fora tsc (rede eslint +
+  execução); 80 facts/jogo-típico (bounded).
+- RISKS: baixo — só testes.
