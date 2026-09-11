@@ -11,11 +11,13 @@ the engine is untouched (M021 sealed).
 - Pages: `index.html` (hub), `menu.html`, `match.html`, `city.html`.
 - `match.html` is a LIVE animated chronicle: 16 genuine keyframes
   (15 dispatches) rendered as an isometric Canvas battlefield —
-  extruded hex blocks, procedural forests/mountains/farms/water,
-  a keep that grows with the real city level, soldier squads that
-  glide between keyframes with HP bars + nameplates, real
-  per-keyframe fog/memory, streaming chronicle, transport controls
-  (play/pause/speed/scrub) and a clickable orders list.
+  extruded hex blocks with sun bevel, Kenney (CC0) sprite art
+  (pines, castles, farms, mines) with procedural fallbacks, layered
+  forests, bank foam, construction scaffolds driven by the genuine
+  city queue, walk-animated soldier squads with shields/kit, HP bars
+  + nameplates, gather sparkles / dust / celebration particles,
+  decorative wildlife + birds, real per-keyframe fog/memory,
+  streaming chronicle, transport controls and clickable orders.
   Motion illustrates; every stop is a true engine snapshot.
 
 What's real: map/state/events/fog/costs/stats. What's placeholder: art,

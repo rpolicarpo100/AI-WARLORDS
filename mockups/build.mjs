@@ -3,6 +3,17 @@
 // Run: node mockups/build.mjs (after generate-state.ts). Node-only, no deps.
 import { readFileSync, writeFileSync } from 'node:fs';
 
+// Kenney sprite pack (CC0 PNGs, base64), inlined into match.html.
+const sprDir = new URL('../assets/kenney/PNG/Objects/', import.meta.url);
+const SPRITES = ['treePine_large', 'treePine_small', 'treeRound_large', 'treeRound_small',
+  'rockGrey_large', 'rockGrey_medium1', 'rockGrey_small1', 'rockBrown_small',
+  'house', 'house_small', 'tower', 'mine', 'farm', 'farmland', 'campingTent',
+  'well', 'windmill_complete', 'fence', 'banner', 'box1', 'box2', 'pallet_full',
+  'logPile', 'log', 'crystals1', 'castle_small', 'castle_open', 'castle_large', 'church'];
+const sprBlob = JSON.stringify(Object.fromEntries(SPRITES.map((name) => [
+  name,
+  readFileSync(new URL(`./${name}.png`, sprDir)).toString('base64'),
+])));
 const state = readFileSync(new URL('./state.json', import.meta.url), 'utf8');
 // Escape closing tags so the JSON blob can never break out of <script>.
 const blob = state.replace(/<\//g, '<\\/');
@@ -32,6 +43,20 @@ for (const page of ['index.html', 'menu.html', 'match.html', 'city.html']) {
     next = html.slice(0, start + marker.length) + blob + ';' + html.slice(end);
   }
   if (page === 'match.html') {
+    const sprSlot = 'const SPRITESB64 = /*__SPRITES__*/null;';
+    if (next.includes(sprSlot)) {
+      next = next.replace(sprSlot, () => `const SPRITESB64 = ${sprBlob};`);
+    } else {
+      const marker = 'const SPRITESB64 = ';
+      const start = next.indexOf(marker);
+      const end = next.indexOf('};', start);
+      if (start === -1 || end === -1 || next.indexOf(marker, start + 1) !== -1) {
+        throw new Error(`${page}: sprites block not found exactly once`);
+      }
+      next = next.slice(0, start + marker.length) + sprBlob + next.slice(end + 1);
+    }
+  }
+  if (page === 'match.html') {
     const sfxSlot = 'const SFXB64 = /*__SFX__*/null;';
     if (next.includes(sfxSlot)) {
       next = next.replace(sfxSlot, () => `const SFXB64 = ${sfxBlob};`);
@@ -47,5 +72,5 @@ for (const page of ['index.html', 'menu.html', 'match.html', 'city.html']) {
     }
   }
   writeFileSync(url, next);
-  console.log(`${page}: state embedded (${blob.length} chars)` + (page === 'match.html' ? `, sfx embedded (${sfxBlob.length} chars)` : ''));
+  console.log(`${page}: state embedded (${blob.length} chars)` + (page === 'match.html' ? `, sfx embedded (${sfxBlob.length} chars), sprites embedded (${sprBlob.length} chars)` : ''));
 }
