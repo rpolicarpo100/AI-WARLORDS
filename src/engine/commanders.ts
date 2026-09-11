@@ -9,14 +9,30 @@
  * only import downward (M009 layering law, M014 forcing). Holder ids and
  * the uint32 ceiling mirror stockpiles.js / rng.js (L0↛L0: deliberately
  * not imported); the test cross-checks the mirrors (divergence fails loud).
+ * M031 embeds optional DNA (DnaTraits mirror — dna.ts canonical, L0↛L0).
  */
 
 export const COMMANDERS_SCHEMA_VERSION = 1;
+
+/** M031 mirror of DnaTraits (dna.ts canonical; L0↛L0: deliberately not imported). */
+export interface CommanderDna {
+  readonly aggression: number;
+  readonly defense: number;
+  readonly economy: number;
+  readonly exploration: number;
+  readonly risk: number;
+  readonly expansion: number;
+  readonly diplomacy: number;
+  readonly patience: number;
+  readonly greed: number;
+  readonly adaptability: number;
+}
 
 export interface CommanderRecord {
   readonly id: string;
   readonly owner: string;
   readonly active: boolean;
+  readonly dna?: CommanderDna;
 }
 
 export interface CommandersData {
@@ -46,6 +62,47 @@ function isWord(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= MAX_WORD;
 }
 
+/** Mirrors TRAIT_IDS (dna.ts). Leaf: deliberately not imported. */
+const MIRRORED_TRAIT_IDS: readonly string[] = [
+  'aggression',
+  'defense',
+  'economy',
+  'exploration',
+  'risk',
+  'expansion',
+  'diplomacy',
+  'patience',
+  'greed',
+  'adaptability',
+];
+
+/** Mirrors DNA_MIN / DNA_MAX (dna.ts). Leaf: deliberately not imported. */
+const MIRRORED_DNA_MIN = 0;
+const MIRRORED_DNA_MAX = 100;
+
+function isMirroredTraitValue(value: unknown): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= MIRRORED_DNA_MIN &&
+    value <= MIRRORED_DNA_MAX
+  );
+}
+
+/** Mirrors isDnaTraits (dna.ts): total DNA check, extras ignored (M015). */
+function isMirroredDna(value: unknown): value is CommanderDna {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const fields = value as Record<string, unknown>;
+  for (const trait of MIRRORED_TRAIT_IDS) {
+    if (!isMirroredTraitValue(fields[trait])) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export function isCommanderRecord(value: unknown): value is CommanderRecord {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     return false;
@@ -54,7 +111,8 @@ export function isCommanderRecord(value: unknown): value is CommanderRecord {
   return (
     isCommanderId(fields['id']) &&
     isHolderId(fields['owner']) &&
-    typeof fields['active'] === 'boolean'
+    typeof fields['active'] === 'boolean' &&
+    (fields['dna'] === undefined || isMirroredDna(fields['dna']))
   );
 }
 
@@ -100,7 +158,15 @@ export function commandersOf(
   }
   return data.commanders
     .filter((commander) => commander.owner === holder)
-    .map((commander) => ({ ...commander }));
+    .map((commander) => copyRecord(commander));
+}
+
+/** Fresh copy incl. nested DNA (M031: spread alone would alias dna). */
+function copyRecord(commander: CommanderRecord): CommanderRecord {
+  if (commander.dna === undefined) {
+    return { ...commander };
+  }
+  return { ...commander, dna: { ...commander.dna } };
 }
 
 /**
@@ -115,5 +181,5 @@ export function commanderById(
   if (found === undefined) {
     return undefined;
   }
-  return { ...found };
+  return copyRecord(found);
 }

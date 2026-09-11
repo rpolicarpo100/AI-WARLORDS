@@ -805,3 +805,50 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
   `exploration.ts` (discovered+spottedFacts) + `match.ts`
   (postStep+closure+ride) + testes + re-lock goldens (M030).
 - ESTADO: `ACCEPTED`.
+
+## D-025 — DNA data-first embutido no record (M031 pré-análise + voto)
+
+- DECISION: `dna.ts` NOVO (LEAF L0, zero imports — molde
+  commanders): `DnaTraits` {10 traços lowercase, ordem do
+  master, 0–100 int} + DNA_MIN/MAX + TRAIT_IDS +
+  isDnaTraitId + isDnaTraits (10 presentes + int-range;
+  extras ignorados — leniência M015; sem soma-fixa — sem
+  âncora); forward-placed p/ M032+ (precedente M014→M015;
+  zero importadores prod — só testes + mirror).
+  `CommanderRecord.dna?` (embed votado; guard-mirror
+  TOTAL em commanders.ts — L0↛L0 proíbe importar dna.ts;
+  battery cross-check 40+ em commanders.test.ts,
+  divergência falha loud — M016). Sem slot novo (dna
+  boleia commanders; shape cobre); views zero churn
+  (records integrais fluem; F-09 é top-level-keys);
+  commission sem dna (M029 owns, sem params); sem writer
+  (init-placed — M027; writer→FUTURO unsettled); sem
+  consumers (influência→M032+/M035+; #25 ≠SKILL noted).
+- MOTIVE: 3 votos explícitos do utilizador 2026-09-11
+  (data-first; extend record; 0–100) + #22 (10 params;
+  influencia-nunca-determina) + #21 (cada Commander
+  possui DNA) + #25 (PERSONALITY≠SKILL) + M027 (molde
+  data-first) + M016 (espelhos) + M015 (leniência) +
+  M028 ("M031+" é intervalo) + constraints.
+- ALTERNATIVES: secção standalone (rejeitada pelo user);
+  tudo-em-commanders.ts sem dna.ts (rejeitado: voto
+  menciona dna.ts; canónico forward-placed); floats 0–1
+  / 0–255 (rejeitados); soma-fixa (rejeitada: sem
+  âncora); exact-keys estrito (rejeitado: M015);
+  writer em M031 (rejeitado pelo user); `name` junto
+  (rejeitado: ainda-cut, sem dono); import
+  commanders→dna (rejeitado: L0↛L0).
+- ADVANTAGES: vocabulário canónico fechado; record
+  retro-compat (dna opcional — suite M027 intacta);
+  zero churn validadores/views/Match.
+- DISADVANTAGES: mirror duplica 10+guard (drift só
+  por teste); folha sem importadores prod até M032+;
+  sem writer (dna só via init).
+- RISKS: baixo — dados puros + guards; residual:
+  mirror-drift (mitiga: battery); influência por
+  definir (M032+).
+- IMPLEMENTATION: `dna.ts` + `dna.test.ts` +
+  `commanders.ts` (embed+mirror) + `commanders.test.ts`
+  (battery) + `views.test.ts` (1 pin) + phase1-gate
+  (2 pins) (M031).
+- ESTADO: `ACCEPTED`.

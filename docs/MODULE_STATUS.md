@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 30 (M001–M030)  |
-| `PLANNED`  | 135 (M031–M165) |
+| `VERIFIED` | 31 (M001–M031)  |
+| `PLANNED`  | 134 (M032–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -116,6 +116,11 @@ Checkpoints `VERIFIED`:
   NORMAL #33; 3 votos); 1281/1281 testes, 100 global,
   L-28 CLOSED.
   Registo em `docs/modules/M030.md`.
+- **M031 @ 2026-09-11** — AI DNA data-first (vocabulário
+  10 traços 0–100 + guard + embed record + mirror;
+  3 votos); 1330/1330 testes, 100 global, bloco
+  Personalidade aberto.
+  Registo em `docs/modules/M031.md`.
 
 ---
 
@@ -178,7 +183,8 @@ Checkpoints `VERIFIED`:
 | M028 | AI Foundation — Perception | `VERIFIED` |
 | M029 | AI Foundation — Commander State | `VERIFIED` |
 | M030 | AI Foundation — Discovery Engine | `VERIFIED` |
-| M031–M034 | Personalidade (DNA, Personalities, Doctrines, Testing)              | `PLANNED` |
+| M031 | Personalidade — AI DNA | `VERIFIED` |
+| M032–M034 | Personalidade (Personalities, Doctrines, Testing) | `PLANNED` |
 | M035–M042 | Strategic AI                                                        | `PLANNED` |
 | M043–M045 | Player → AI Command                                                 | `PLANNED` |
 | M046–M047 | AI Refutation + Override                                            | `PLANNED` |
