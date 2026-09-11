@@ -111,3 +111,4 @@
 | 2026-09-11 | M044      | Queue transitions live (amend orders?+cap, issue/cancel owner-only, bundle +3481); semântica por kind→M045 |
 | 2026-09-11 | M045      | Order execution live (pop-head + live verbs, factos compostos, drill 1200/0); bloco M043–M045 FECHADO |
 | 2026-09-11 | M046      | Refutation data live (reasons fechadas, ref auto-validável, espelho, bundle +427); bloco M046–M050 ABERTO; mecânica→M047 |
+| 2026-09-11 | M047      | Override live (head+fresh, facto overridden, bundle +2250); raise+scoring→M048+ |

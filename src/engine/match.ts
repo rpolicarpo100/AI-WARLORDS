@@ -86,6 +86,12 @@ import {
   orderExecutionHandlers,
   type OrderSubProducer,
 } from './order-execution.js';
+import {
+  OVERRIDE_TRANSITION,
+  orderOverriddenProducer,
+  orderOverrideHandlers,
+  overrideParamsRule,
+} from './order-override.js';
 import type { TerrainId } from './map.js';
 import { DEFAULT_TERRAIN_CONFIG, isTerrainConfig, modifiersFor } from './terrain.js';
 import {
@@ -268,7 +274,7 @@ export class Match {
     const economy = economyHandlers(economyConfig, buildingsConfig);
     const city = cityHandlers(buildingsConfig);
     const commanders = commanderHandlers();
-    const orders = orderHandlers();
+    const orders = new Map([...orderHandlers(), ...orderOverrideHandlers()]);
     // M022: passable = finite move cost (Infinity/NaN block, fail-closed).
     const passable = (terrain: string): boolean =>
       Number.isFinite(modifiersFor(terrainConfig, terrain as TerrainId).move);
@@ -320,6 +326,7 @@ export class Match {
       [ISSUE_TRANSITION, issueParamsRule],
       [CANCEL_TRANSITION, commanderIdParamsRule],
       [EXECUTE_TRANSITION, commanderIdParamsRule],
+      [OVERRIDE_TRANSITION, overrideParamsRule],
     ]);
     // M045: execute runs heads through the live verb maps (treasury
     // precedent — the L2 executor cannot import them, so Match injects).
@@ -410,6 +417,7 @@ export class Match {
     producers.set(ISSUE_TRANSITION, [orderIssuedProducer]);
     producers.set(CANCEL_TRANSITION, [orderCanceledProducer]);
     producers.set(EXECUTE_TRANSITION, [createOrderExecutedProducer(orderSubProducers)]);
+    producers.set(OVERRIDE_TRANSITION, [orderOverriddenProducer]);
     // M030: sightings need before/after visibility, computed here (L4 may
     // import fog; the L2 producer cannot — L2↛L2). Either map absent (or
     // the maps differing, impossible live) yields silence, never a fault.

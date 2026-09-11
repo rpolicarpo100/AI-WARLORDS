@@ -1333,3 +1333,36 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
   M047/M048.
 - CUTS: transições/eventos/readers (M047+);
   avaliação de reasons (M047/M048); queue.
+
+## D-041 — Order override M047 (voto override-head)
+
+- DECISION: NOVO `order-override.ts` (L2):
+  `order.override` {id,kind,params?}
+  (owner-only; rule PRÓPRIA — L2↛L2 barra
+  reusar issueParamsRule, mold CancelOrderParams):
+  refutation? (ausente→applied:false) → head?
+  (orderIndex 0 + fila não-vazia) → fresh?
+  (queue[0].kind==ref.kind, senão stale) →
+  kind orderable + envelope L0 → SUBSTITUI
+  queue[0] (spread+delete limpa refutation) +
+  summary `overrode`. Facto estrutural único
+  `order.overridden` {player,commander,kind
+  (novo),over (antigo),reason} (diff
+  before/after; override é o único clearer —
+  exacto; by audit-only). Match: handler+rule+
+  producer. Pins census+LAYERS 2. Refutações
+  init-placed (precedente M027; raise→M048+).
+- MOTIVE: voto override-head + M044 (mecânica
+  fila, factos diff) + M046 (ref auto-validável).
+- ALTERNATIVES: tail-override (rejeitado: voto
+  diz head; editar planos≠override);
+  caller==by (rejeitado: by audit-only; holder
+  detém fila); reusar issue rule (rejeitado:
+  L2↛L2 + mensagens); raise junto (rejeitado:
+  voto; init-placed precede).
+- ADVANTAGES: substituição atómica + limpeza;
+  stale fail-closed; facto auditável.
+- DISADVANTAGES: só head; sem raise (M048+).
+- RISKS: baixo — mecânica L2 sobre dados M046.
+- CUTS: refutation.raise/withdraw (M048+);
+  tail-override; scoring (M048).

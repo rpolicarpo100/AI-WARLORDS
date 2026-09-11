@@ -391,6 +391,18 @@ function copyOrder(order: CommanderOrder): CommanderOrder {
 }
 
 /**
+ * Fresh copy with the challenge key GONE (override consumes, M047).
+ * Explicit undefined is forbidden in state (freezeState rejects it),
+ * so the key deletes off a mutable-typed spread (fresh object, never
+ * shared — same purity as copyRecord).
+ */
+export function clearRefutation(record: CommanderRecord): CommanderRecord {
+  const next: { -readonly [K in keyof CommanderRecord]: CommanderRecord[K] } = { ...record };
+  delete next.refutation;
+  return next;
+}
+
+/**
  * Record lookup as a FRESH copy — or undefined when absent (fail-soft).
  * Ids are unique per the guard, so the first match is the only match.
  */

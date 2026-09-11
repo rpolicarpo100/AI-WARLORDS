@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 46 (M001–M046)  |
-| `PLANNED`  | 119 (M047–M165) |
+| `VERIFIED` | 47 (M001–M047)  |
+| `PLANNED`  | 118 (M048–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -193,6 +193,11 @@ Checkpoints `VERIFIED`:
   Registo em `docs/modules/M046.md`.
   Bloco Refutation → Counterfactual M046–M050
   ABERTO.
+- **M047 @ 2026-09-11** — AI Override
+  (substituição votada: head+fresh, facto
+  overridden, clearRefutation); 1568/1568
+  testes, 100 global.
+  Registo em `docs/modules/M047.md`.
 
 ---
 
@@ -271,7 +276,7 @@ Checkpoints `VERIFIED`:
 | M044 | Player → AI Command — Queue Transitions | `VERIFIED` |
 | M045 | Player → AI Command — Order Execution | `VERIFIED` |
 | M046 | AI Refutation Data | `VERIFIED` |
-| M047 | AI Override | `PLANNED` |
+| M047 | AI Override — Order Override | `VERIFIED` |
 | M048      | Confidence Engine                                                   | `PLANNED` |
 | M049–M050 | Counterfactual AI                                                   | `PLANNED` |
 | M051–M054 | Memory                                                              | `PLANNED` |

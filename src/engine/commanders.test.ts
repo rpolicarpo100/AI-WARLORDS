@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { MAX_ID_LENGTH, type PlayerId } from './authority.js';
 import { MAX_HOLDER_ID_CHARS as STOCKPILE_HOLDER_CAP } from './stockpiles.js';
 import {
+  clearRefutation,
   commanderById,
   COMMANDERS_SCHEMA_VERSION,
   commandersOf,
@@ -838,5 +839,22 @@ describe('refutation mirror cross-check (M046)', () => {
     expect(copy?.refutation).toEqual(good);
     expect(copy?.refutation).not.toBe(data.commanders[0]?.refutation);
     expect(commanderById(data, 'c0')?.refutation).toEqual(good);
+  });
+});
+
+describe('clearRefutation (M047)', () => {
+  it('drops the challenge key off a fresh copy (never the input)', () => {
+    const record = {
+      id: 'c0',
+      owner: 'p1',
+      active: true,
+      refutation: { orderIndex: 0, kind: 'unit.move', reason: 'blocked', by: 'c1' },
+    } as const;
+    const cleared = clearRefutation(record);
+    expect('refutation' in cleared).toBe(false);
+    expect(cleared).toEqual({ id: 'c0', owner: 'p1', active: true });
+    expect('refutation' in record).toBe(true);
+    const plain = clearRefutation({ id: 'c0', owner: 'p1', active: true });
+    expect(plain).toEqual({ id: 'c0', owner: 'p1', active: true });
   });
 });
