@@ -43,6 +43,7 @@ import {
   cityHandlers,
   completeConstructions,
   completionProducer,
+  createEconomyRule,
   DEFAULT_BUILDINGS_CONFIG,
   DEFAULT_ECONOMY_CONFIG,
   economyHandlers,
@@ -231,7 +232,7 @@ export class Match {
     }
     const world = worldHandlers();
     const match = matchHandlers();
-    const economy = economyHandlers(economyConfig);
+    const economy = economyHandlers(economyConfig, buildingsConfig);
     const city = cityHandlers(buildingsConfig);
     const extra = init.extraHandlers ?? new Map<string, RngHandler<WorldState>>();
     const merged = new Map<string, RngHandler<WorldState>>([
@@ -244,7 +245,13 @@ export class Match {
     if (merged.size !== world.size + match.size + economy.size + city.size + extra.size) {
       throw new Error('Match: duplicate handler names.');
     }
-    const validator = createWorldValidator();
+    const baseValidator = createWorldValidator();
+    // M020: the economy post-rule closes over the match's validated
+    // buildings config (composition 5 + 1 — the declared rewrite).
+    const validator = {
+      ...baseValidator,
+      post: [...baseValidator.post, createEconomyRule(buildingsConfig)],
+    };
     const noParamHandlers = new Set([...world.keys(), ...match.keys(), UPGRADE_TRANSITION]);
     const paramRules = new Map<string, PreRule>([
       [GATHER_TRANSITION, gatherParamsRule],

@@ -19,6 +19,7 @@ import {
   completionProducer,
   costOf,
   createBuildHandler,
+  createEconomyRule,
   createGatherHandler,
   createUpgradeHandler,
   credit,
@@ -37,7 +38,7 @@ import {
 } from './economy.js';
 import { isMapData, type MapData } from './map.js';
 import { Match, STANDARD_RULESET } from './match.js';
-import type { StockpilesData } from './stockpiles.js';
+import { stockpileOf, type StockpilesData } from './stockpiles.js';
 import { createWorldValidator, type RngHandler } from './validation.js';
 import { createWorldState, isWorldState, type WorldState } from './world-state.js';
 import { perceive } from './views.js';
@@ -394,7 +395,10 @@ describe('perception carry (integration)', () => {
 });
 
 describe('no validation rule (M020 owns)', () => {
-  it('composition stays at 5 post-invariants (no snuck-in rule)', () => {
+  it('composition stays at 5 base + 1 wired (M020 declared rewrite)', () => {
+    // D-013: the base validator is still 5 (no snuck-in rule); Match
+    // appends exactly one economy rule (createEconomyRule) — wiring proven
+    // behaviorally by the M020 FAULT suites below, names by direct goldens.
     expect(createWorldValidator().post).toHaveLength(5);
   });
 });
@@ -530,15 +534,18 @@ describe('createGatherHandler (unit: direct)', () => {
     });
   });
 
-  it('overflow stays loud (uint32 ceiling is bug-scale)', () => {
+  it('ceiling rejects now (M020: caps subsume gather-overflow)', () => {
     const full: StockpilesData = {
       schemaVersion: 1,
       stockpiles: { p1: { food: 0, wood: 0, stone: 0, gold: 4294967295 } },
     };
     const handler = createGatherHandler(yield3());
-    expect(() => handler({ state: mapful(full), caller: P1, params: { col: 0, row: 0 } })).toThrow(
-      /overflow/,
-    );
+    // D-013: at-cap gather rejects (all-or-nothing); the op-layer overflow
+    // throw survives — see 'overflows loud, never saturates' (credit).
+    expect(handler({ state: mapful(full), caller: P1, params: { col: 0, row: 0 } })).toEqual({
+      applied: false,
+      reason: 'gather: storage full.',
+    });
   });
 });
 
@@ -1748,5 +1755,357 @@ describe('perception carry: city (integration)', () => {
     };
     const known = perceive(createWorldState({ players: [P1, P2], cities: crowded }), P1);
     expect(known.city).toEqual({ level: 2, queue: [] });
+  });
+});
+
+describe('createEconomyRule (unit: direct)', () => {
+  function held(food: number, wood: number, stone: number, gold: number): StockpilesData {
+    return { schemaVersion: 1, stockpiles: { p1: { food, wood, stone, gold } } };
+  }
+
+  function world(
+    stockpiles?: StockpilesData,
+    buildings?: BuildingsData,
+    map?: MapData,
+  ): WorldState {
+    return createWorldState({
+      players: [P1, P2],
+      ...(stockpiles === undefined ? {} : { stockpiles }),
+      ...(buildings === undefined ? {} : { buildings }),
+      ...(map === undefined ? {} : { map }),
+    });
+  }
+
+  function depleted(map: MapData, col: number, row: number, taken: number): MapData {
+    return {
+      ...map,
+      cells: map.cells.map((cell) =>
+        cell.col === col && cell.row === row && cell.resource !== undefined
+          ? {
+              ...cell,
+              resource: { type: cell.resource.type, amount: cell.resource.amount - taken },
+            }
+          : cell,
+      ),
+    };
+  }
+
+  function inflated(map: MapData, col: number, row: number, added: number): MapData {
+    return {
+      ...map,
+      cells: map.cells.map((cell) =>
+        cell.col === col && cell.row === row && cell.resource !== undefined
+          ? {
+              ...cell,
+              resource: { type: cell.resource.type, amount: cell.resource.amount + added },
+            }
+          : cell,
+      ),
+    };
+  }
+
+  it('rejects an invalid config', () => {
+    expect(() => createEconomyRule({} as BuildingsConfig)).toThrow(/invalid buildings config/);
+  });
+
+  it('absent economy passes (absence-preserving)', () => {
+    expect(createEconomyRule(customBuildings())(world(), world())).toBeNull();
+  });
+
+  it('under-cap piles pass (no buildings → base cap 100)', () => {
+    const rule = createEconomyRule(customBuildings());
+    const piles = world(held(10, 20, 30, 40));
+    expect(rule(piles, piles)).toBeNull();
+  });
+
+  it('over-cap golden: holder.type held exceeds cap base', () => {
+    const rule = createEconomyRule(customBuildings());
+    expect(rule(world(), world(held(0, 0, 0, 120)))).toEqual({
+      rule: 'economy-cap',
+      detail: 'p1.gold 120 exceeds cap 100',
+    });
+  });
+
+  it('storage raises the cap (housed: 1 storage → 150)', () => {
+    const rule = createEconomyRule(customBuildings());
+    const stored = world(held(0, 0, 0, 120), housed());
+    expect(rule(stored, stored)).toBeNull();
+    expect(rule(world(), world(held(0, 0, 0, 151), housed()))).toEqual({
+      rule: 'economy-cap',
+      detail: 'p1.gold 151 exceeds cap 150',
+    });
+  });
+
+  it('first violation: holders sorted, RESOURCE_TYPES within', () => {
+    const rule = createEconomyRule(customBuildings());
+    const after = world({
+      schemaVersion: 1,
+      stockpiles: {
+        p2: { food: 0, wood: 0, stone: 0, gold: 500 },
+        p1: { food: 101, wood: 102, stone: 0, gold: 0 },
+      },
+    });
+    expect(rule(world(), after)).toEqual({
+      rule: 'economy-cap',
+      detail: 'p1.food 101 exceeds cap 100',
+    });
+  });
+
+  it('gather-shaped moves conserve (node −taken, pile +taken)', () => {
+    const rule = createEconomyRule(customBuildings());
+    const before = world(undefined, undefined, nodeMap());
+    const after = world(held(0, 0, 0, 3), undefined, depleted(nodeMap(), 0, 0, 3));
+    expect(rule(before, after)).toBeNull();
+  });
+
+  it('spend-shaped decreases pass (build destroys value)', () => {
+    const rule = createEconomyRule(customBuildings());
+    expect(rule(world(held(50, 50, 50, 50)), world(held(50, 48, 49, 50)))).toBeNull();
+  });
+
+  it('pile-only increase golden (no map)', () => {
+    const rule = createEconomyRule(customBuildings());
+    expect(rule(world(held(0, 0, 0, 3)), world(held(0, 0, 0, 4)))).toEqual({
+      rule: 'economy-conservation',
+      detail: 'gold 3 -> 4',
+    });
+  });
+
+  it('node-only increase golden (wood 4 -> 5)', () => {
+    const rule = createEconomyRule(customBuildings());
+    expect(
+      rule(
+        world(undefined, undefined, nodeMap()),
+        world(undefined, undefined, inflated(nodeMap(), 1, 1, 1)),
+      ),
+    ).toEqual({
+      rule: 'economy-conservation',
+      detail: 'wood 4 -> 5',
+    });
+  });
+
+  it('per-type order: wood reports before gold', () => {
+    const rule = createEconomyRule(customBuildings());
+    const before = world(undefined, undefined, nodeMap());
+    const after = world(held(0, 0, 0, 1), undefined, inflated(nodeMap(), 1, 1, 1));
+    expect(rule(before, after)).toEqual({
+      rule: 'economy-conservation',
+      detail: 'wood 4 -> 5',
+    });
+  });
+
+  it('caps report before conservation (after-coherence first)', () => {
+    const rule = createEconomyRule(customBuildings());
+    expect(rule(world(), world(held(0, 0, 0, 120)))).toEqual({
+      rule: 'economy-cap',
+      detail: 'p1.gold 120 exceeds cap 100',
+    });
+  });
+});
+
+describe('gather storage caps (unit: direct)', () => {
+  function rich(gold: number): WorldState {
+    return createWorldState({
+      players: [P1, P2],
+      map: nodeMap(),
+      stockpiles: {
+        schemaVersion: 1,
+        stockpiles: { p1: { food: 0, wood: 0, stone: 0, gold } },
+      },
+    });
+  }
+
+  it('rejects an invalid buildings config (economy first)', () => {
+    expect(() => createGatherHandler({} as EconomyConfig, customBuildings())).toThrow(
+      /invalid economy config/,
+    );
+    expect(() => createGatherHandler(yield3(), {} as BuildingsConfig)).toThrow(
+      /invalid buildings config/,
+    );
+  });
+
+  it('full pile refuses the take (room 0)', () => {
+    const handler = createGatherHandler(yield3(), customBuildings());
+    expect(handler({ state: rich(100), caller: P1, params: { col: 0, row: 0 } })).toEqual({
+      applied: false,
+      reason: 'gather: storage full.',
+    });
+  });
+
+  it('over-cap-held pile refuses every take (fail-closed)', () => {
+    const handler = createGatherHandler(yield3(), customBuildings());
+    expect(handler({ state: rich(120), caller: P1, params: { col: 0, row: 0 } })).toEqual({
+      applied: false,
+      reason: 'gather: storage full.',
+    });
+  });
+
+  it('exact room applies (97 + 3 → 100)', () => {
+    const handler = createGatherHandler(yield3(), customBuildings());
+    const result = handler({ state: rich(97), caller: P1, params: { col: 0, row: 0 } });
+    if (result.applied !== true) {
+      throw new Error('TEST BUG: exact-room gather declined');
+    }
+    expect(result.summary).toBe('gathered 3 gold at 0,0');
+    expect(stockpileOf(result.state.stockpiles, P1).gold).toBe(100);
+  });
+
+  it('single-arg default stays uncapped (zero churn)', () => {
+    const handler = createGatherHandler(yield3());
+    const result = handler({ state: rich(100), caller: P1, params: { col: 0, row: 0 } });
+    if (result.applied !== true) {
+      throw new Error('TEST BUG: default-uncap gather declined');
+    }
+    expect(stockpileOf(result.state.stockpiles, P1).gold).toBe(103);
+  });
+});
+
+describe('economy validation E2E (real Match)', () => {
+  function cappedMatch(funds?: StockpilesData): Match {
+    return new Match({
+      seed: 7,
+      ruleset: STANDARD_RULESET,
+      players: [P1, P2],
+      initialState: createWorldState({
+        players: [P1, P2],
+        map: nodeMap(),
+        ...(funds === undefined ? {} : { stockpiles: funds }),
+      }),
+      economyConfig: yield3(),
+      buildingsConfig: customBuildings(),
+    });
+  }
+
+  function dig(match: Match, rid: string, col: number, row: number) {
+    return match.dispatch(
+      match.join(P1),
+      raw({ requestId: rid, playerId: 'p1', type: GATHER_TRANSITION, payload: { col, row } }),
+    );
+  }
+
+  function funds(gold: number): StockpilesData {
+    return { schemaVersion: 1, stockpiles: { p1: { food: 0, wood: 0, stone: 0, gold } } };
+  }
+
+  it('gather rejects at cap via dispatch (untouched, revision 0)', () => {
+    const match = cappedMatch(funds(100));
+    const before = match.getSnapshot();
+    expect(dig(match, 'r1', 0, 0)).toEqual({ status: 'rejected', reason: 'gather: storage full.' });
+    expect(match.getSnapshot()).toEqual(before);
+    expect(match.getRevision()).toBe(0);
+  });
+
+  it('gather applies under cap (97 + 3 → 100, revision 1)', () => {
+    const match = cappedMatch(funds(97));
+    expect(dig(match, 'r1', 0, 0)).toEqual({
+      status: 'applied',
+      revision: 1,
+      summary: 'gathered 3 gold at 0,0',
+    });
+    expect(stockpileOf(match.getSnapshot().stockpiles, P1).gold).toBe(100);
+  });
+
+  it('over-cap writer FAULTs (post backstop; names pinned by direct goldens)', () => {
+    // TEST MOCK: over-crediting writer (proves the wired rule FAULTs).
+    const writers = new Map<string, RngHandler<WorldState>>([
+      [
+        'test.overfill',
+        (ctx) => {
+          const base = ctx.state.stockpiles ?? { schemaVersion: 1, stockpiles: {} };
+          return {
+            applied: true,
+            state: { ...ctx.state, stockpiles: credit(base, ctx.caller, 'gold', 200) },
+            summary: 'overfill',
+          };
+        },
+      ],
+    ]);
+    const match = new Match({
+      seed: 7,
+      ruleset: STANDARD_RULESET,
+      players: [P1, P2],
+      initialState: createWorldState({ players: [P1, P2], map: nodeMap() }),
+      economyConfig: yield3(),
+      buildingsConfig: customBuildings(),
+      extraHandlers: writers,
+    });
+    const session = match.join(P1);
+    const before = match.getSnapshot();
+    expect(
+      match.dispatch(
+        session,
+        raw({ requestId: 'r1', playerId: 'p1', type: 'test.overfill', payload: {} }),
+      ),
+    ).toEqual({ status: 'error', code: 'HANDLER_FAULT' });
+    expect(match.getSnapshot()).toEqual(before);
+    expect(match.getRevision()).toBe(0);
+  });
+
+  it('conjured pile under cap FAULTs (conservation, not caps)', () => {
+    // TEST MOCK: conjuring writer (+3 gold, no node touched, under cap 100).
+    const writers = new Map<string, RngHandler<WorldState>>([
+      [
+        'test.conjure',
+        (ctx) => {
+          const base = ctx.state.stockpiles ?? { schemaVersion: 1, stockpiles: {} };
+          return {
+            applied: true,
+            state: { ...ctx.state, stockpiles: credit(base, ctx.caller, 'gold', 3) },
+            summary: 'conjure',
+          };
+        },
+      ],
+    ]);
+    const match = new Match({
+      seed: 7,
+      ruleset: STANDARD_RULESET,
+      players: [P1, P2],
+      initialState: createWorldState({ players: [P1, P2], map: nodeMap() }),
+      economyConfig: yield3(),
+      buildingsConfig: customBuildings(),
+      extraHandlers: writers,
+    });
+    const session = match.join(P1);
+    const before = match.getSnapshot();
+    expect(
+      match.dispatch(
+        session,
+        raw({ requestId: 'r1', playerId: 'p1', type: 'test.conjure', payload: {} }),
+      ),
+    ).toEqual({ status: 'error', code: 'HANDLER_FAULT' });
+    expect(match.getSnapshot()).toEqual(before);
+    expect(match.getRevision()).toBe(0);
+  });
+
+  it('noop from an over-cap lenient init FAULTs (invalid states unblessed)', () => {
+    const match = cappedMatch(funds(120));
+    const session = match.join(P1);
+    const before = match.getSnapshot();
+    expect(
+      match.dispatch(
+        session,
+        raw({ requestId: 'r1', playerId: 'p1', type: 'world.noop', payload: {} }),
+      ),
+    ).toEqual({ status: 'error', code: 'HANDLER_FAULT' });
+    expect(match.getSnapshot()).toEqual(before);
+    expect(match.getRevision()).toBe(0);
+  });
+
+  it('happy path stays green (gather + noop + advance, revision 3)', () => {
+    const match = cappedMatch(funds(97));
+    const session = match.join(P1);
+    expect(dig(match, 'r1', 0, 0)).toMatchObject({ status: 'applied' });
+    expect(
+      match.dispatch(
+        session,
+        raw({ requestId: 'r2', playerId: 'p1', type: 'world.noop', payload: {} }),
+      ),
+    ).toMatchObject({ status: 'applied' });
+    expect(
+      match.dispatch(
+        session,
+        raw({ requestId: 'r3', playerId: 'p1', type: 'match.advance', payload: {} }),
+      ),
+    ).toEqual({ status: 'applied', revision: 3, summary: 'tick=1' });
   });
 });

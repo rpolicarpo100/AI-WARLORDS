@@ -210,9 +210,16 @@ export function gatherParamsRule(
   return null;
 }
 
-export function createGatherHandler(config: EconomyConfig): TransitionHandler<WorldState> {
+export function createGatherHandler(
+  config: EconomyConfig,
+  buildings?: BuildingsConfig,
+): TransitionHandler<WorldState> {
   if (!isEconomyConfig(config)) {
     throw new Error('createGatherHandler: invalid economy config.');
+  }
+  const stores = buildings ?? DEFAULT_BUILDINGS_CONFIG;
+  if (!isBuildingsConfig(stores)) {
+    throw new Error('createGatherHandler: invalid buildings config.');
   }
   return (ctx) => {
     // The pre-rule validated { col, row } uints on the dispatch path;
@@ -237,6 +244,14 @@ export function createGatherHandler(config: EconomyConfig): TransitionHandler<Wo
     if (taken === 0) {
       return { applied: false, reason: 'gather: yield is zero.' };
     }
+    // M020: storage caps close the D-011 gap (all-or-nothing; over-cap
+    // piles refuse every take — the post-rule backstops the rest).
+    const room =
+      capOf(ctx.state.buildings, ctx.caller, stores) -
+      stockpileOf(ctx.state.stockpiles, ctx.caller)[node.type];
+    if (taken > room) {
+      return { applied: false, reason: 'gather: storage full.' };
+    }
     const cells = map.cells.map((cell) =>
       cell === target
         ? { ...cell, resource: { type: node.type, amount: node.amount - taken } }
@@ -255,8 +270,11 @@ export function createGatherHandler(config: EconomyConfig): TransitionHandler<Wo
   };
 }
 
-export function economyHandlers(config: EconomyConfig): Map<string, TransitionHandler<WorldState>> {
-  return new Map([[GATHER_TRANSITION, createGatherHandler(config)]]);
+export function economyHandlers(
+  config: EconomyConfig,
+  buildings?: BuildingsConfig,
+): Map<string, TransitionHandler<WorldState>> {
+  return new Map([[GATHER_TRANSITION, createGatherHandler(config, buildings)]]);
 }
 
 /** Structural EventProducer (assignability proven at the match.ts seam). */
@@ -687,4 +705,72 @@ export function completionProducer(input: {
     }
   }
   return facts;
+}
+
+/**
+ * M020 — Economy Validation: the 6th post-rule (caps + conservation).
+ *
+ * Structural post-rule (no validation import — L2→L2 edges are forbidden
+ * even for types; assignability is proven where match.ts appends this to
+ * `post`). Assume-shape: the shape gate runs first (rosterRule precedent),
+ * so sections are read directly. Caps first (after-coherence), then
+ * conservation (flow-coherence); first violation wins (deterministic).
+ */
+export function createEconomyRule(
+  buildings: BuildingsConfig,
+): (
+  before: WorldState,
+  after: WorldState,
+) => { readonly rule: string; readonly detail: string } | null {
+  if (!isBuildingsConfig(buildings)) {
+    throw new Error('createEconomyRule: invalid buildings config.');
+  }
+  return (before, after) => {
+    const piles = after.stockpiles;
+    if (piles !== undefined) {
+      for (const holder of Object.keys(piles.stockpiles).sort()) {
+        const cap = capOf(after.buildings, holder as PlayerId, buildings);
+        const pile = stockpileOf(piles, holder);
+        for (const id of RESOURCE_TYPES) {
+          const type = id as ResourceType;
+          if (pile[type] > cap) {
+            return {
+              rule: 'economy-cap',
+              detail: `${holder}.${type} ${pile[type]} exceeds cap ${cap}`,
+            };
+          }
+        }
+      }
+    }
+    for (const id of RESOURCE_TYPES) {
+      const type = id as ResourceType;
+      const was = economyTotal(before, type);
+      const now = economyTotal(after, type);
+      if (now > was) {
+        return { rule: 'economy-conservation', detail: `${type} ${was} -> ${now}` };
+      }
+    }
+    return null;
+  };
+}
+
+/** Total units of a type across stockpiles + map nodes (exact; size-capped). */
+function economyTotal(state: WorldState, type: ResourceType): number {
+  let total = 0;
+  const piles = state.stockpiles;
+  if (piles !== undefined) {
+    for (const holder of Object.keys(piles.stockpiles)) {
+      total += stockpileOf(piles, holder)[type];
+    }
+  }
+  const map = state.map;
+  if (map !== undefined) {
+    for (const cell of map.cells) {
+      const node = cell.resource;
+      if (node !== undefined && node.type === type) {
+        total += node.amount;
+      }
+    }
+  }
+  return total;
 }

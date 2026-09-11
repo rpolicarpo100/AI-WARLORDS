@@ -261,12 +261,12 @@ buildings?` + percepção own-only. L-31 DECIDIDA: caps DERIVADOS
 - DECISION: `city.ts` L0 (CityLevel 1|2|3 + QueueItem + CitiesData
   holder-map + guards + `cityOf` fail-soft) + economy L2
   (`completeConstructions` + build/upgrade handlers + `buildParamsRule`
-  + 2 produtores) + seam `buildingsConfig?` + advance emendado
-  (tick+conclusão, preserva-ausência) + `WorldState.cities?` + `city`
-  own-only. L-30 FECHADA sem auto-grants (init stockpiles SÃO grants;
-  gather bootstrap). Upgrade FREE →3 (custos/efeitos ungrounded).
-  Sem found (materializa-no-uso + init); sem capture (→combate);
-  sem cap de queue (state-cap auto-limita); sem regra (M020, 5).
+  - 2 produtores) + seam `buildingsConfig?` + advance emendado
+    (tick+conclusão, preserva-ausência) + `WorldState.cities?` + `city`
+    own-only. L-30 FECHADA sem auto-grants (init stockpiles SÃO grants;
+    gather bootstrap). Upgrade FREE →3 (custos/efeitos ungrounded).
+    Sem found (materializa-no-uso + init); sem capture (→combate);
+    sem cap de queue (state-cap auto-limita); sem regra (M020, 5).
 - MOTIVE: #16 (uma cidade, 1→2→3, modular) + #20 (BUILD_STARTED/
   COMPLETED) + #83 (BUILD TIME) + #99 (1 CITY) + L-30 + M018
   (consumers D-006 aterram). Lazy-cities (precedente stockpileOf);
@@ -291,5 +291,46 @@ buildings?` + percepção own-only. L-31 DECIDIDA: caps DERIVADOS
   tempo (mitigado: ident E2E sem-cidade, selo, goldens conclusão
   c/ ordem, []-proofs nas suites existentes).
 - IMPLEMENTATION: `city.ts` L0 (novo) + `economy.ts` L2 + `match.ts`
-  + world-state/views (M019).
+  - world-state/views (M019).
+- ESTADO: `ACCEPTED`.
+
+## D-013 — Validação económica: caps + conservação; gather rejeita cheio (M020 pré-análise)
+
+- DECISION: `createEconomyRule(buildings)` em `economy.ts` L2 (tipos
+  ESTRUTURAIS — L2↛L2; assignability no seam `match.ts`, precedente
+  gatherParamsRule): pós-regra única `economy-cap` (após: cada
+  amount ≤ `capOf(after.buildings, holder)`; holders ordenados,
+  ordem RESOURCE_TYPES) + `economy-conservation` (totais por tipo
+  piles+nós não-crescentes; detalhe `tipo before -> after`,
+  precedente tickRule). Assume-shape (postShape-first, precedente
+  rosterRule). `createWorldValidator` segue base-5; Match anexa a
+  6.ª (pin economy.test reescrito 5+1 — o rewrite declarado D-010).
+  `createGatherHandler(economy, buildings=DEFAULT)` (default
+  uncap-neutro: zero churn): `taken > room` → applied:false
+  `gather: storage full.` (tudo-ou-nada; over-cap-lençol rejeita).
+  FAULT fecha o resto (writer custom/bug → HANDLER_FAULT; noop
+  desde over-cap FAULTa — estados inválidos não abençoados).
+- MOTIVE: D-011 (L-31 enforcement→M020; gap gather-sem-caps
+  declarado) + D-010 (M020 audita conservação) + mestre #47
+  (Validar resources) + #48 (resource manipulation) + R-20
+  (resource exploits). Cap-check no HANDLER (D-010: camada única
+  p/ lógica, Pre=wire-shape). CapOf overflow→FAULT (escala-de-bug).
+- ALTERNATIVES: clamp parcial (rejeitado: takes variáveis
+  complicam facto taken; atomicidade precede payCost); pré-regra
+  p/ caps (rejeitado: D-010 manda lógica p/ handler); regra em
+  validation.ts (rejeitado: duplicaria capOf L2 — dois sources);
+  bounds de queue `remaining ≤ buildTime` (rejeitado: incompatível
+  — teste M019 init-placed remaining 5 > time 2 — + ungrounded);
+  counts monótonos (rejeitado: capture/destruição futuros);
+  validação em createWorldState (rejeitado: data-lenient M016).
+- ADVANTAGES: fecha o gap declarado M018; conservação prova
+  gather-move/build-spend puros; uncap-default preserva status
+  quo; sem ficheiro novo (census/LAYERS intactos).
+- DISADVANTAGES: over-cap inicial só FAULTa no 1.º dispatch
+  (lenient-by-design); detalhe do FAULT invisível no dispatch
+  (código só — goldens directos cobrem nomes).
+- RISKS: baixo-médio — 1.ª pós-regra com config + 1.º reject
+  económico novo (mitigado: bateria 932 intacta prev.; goldens
+  directos+dispatch; writers TEST MOCK provam FAULT).
+- IMPLEMENTATION: `economy.ts` L2 + `match.ts` (M020).
 - ESTADO: `ACCEPTED`.

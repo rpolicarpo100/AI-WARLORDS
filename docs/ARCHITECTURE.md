@@ -17,7 +17,8 @@
 > Gathering: `EXISTS` (M017 — VERIFIED; primeiro produtor)
 > Buildings: `EXISTS` (M018 — VERIFIED; dados+config+custos)
 > City system: `EXISTS` (M019 — VERIFIED; lazy-cities+queue+conclusão)
-> Domínio do jogo (economia, militar, AI): `NONE` (M020+; mapa+terreno+recursos+fog+explored+perception+stockpiles+gather+buildings+city EXISTS)
+> Economy validation: `EXISTS` (M020 — VERIFIED; caps+conservação)
+> Domínio do jogo (militar, AI): `NONE` (M021+; economia EXISTS: stockpiles+gather+buildings+city+validation)
 > Arquitectura-alvo: `PLANNED` (transcrita do documento-mestre)
 > Data: 2026-09-11
 
@@ -82,6 +83,7 @@ motor de recursos — stockpiles + config + ops exactas (M016);
 gathering — primeiro produtor, depleção nó→stockpile (M017);
 edifícios — 6 tipos, counts+config+custos+caps (M018);
 cidade — lazy-cities, queue+conclusão no advance (M019);
+validação económica — caps+conservação, gather rejeita cheio (M020);
 chain nunca substitui o engine (M101); dinheiro só após gate Fase 28.
 
 ## 3. Mapa de fases → camadas (PLANNED)
@@ -91,7 +93,7 @@ chain nunca substitui o engine (M101); dinheiro só após gate Fase 28.
 | 0       | Foundation                  | M001–M002 (VERIFIED)             |
 | 1       | Game Engine                 | M003–M009 (VERIFIED)             |
 | 2       | World                       | M010–M015 (VERIFIED)             |
-| 3–4     | Economy + Military          | M016–M019 (VERIFIED) → M020–M026 |
+| 3–4     | Economy + Military          | M016–M020 (VERIFIED) → M021–M026 |
 | 5–8     | AI Foundation → Commands    | M027–M045                        |
 | 9–16    | Refutation → AI Arena       | M046–M068                        |
 | 17–20   | Multiplayer → Observability | M069–M093                        |
@@ -129,12 +131,13 @@ chain nunca substitui o engine (M101); dinheiro só após gate Fase 28.
 - [x] Gathering (M017: handler+producer+depleção — VERIFIED)
 - [x] Edifícios (M018: dados+config+custos+caps — VERIFIED)
 - [x] Sistema de cidade (M019: lazy-cities+queue+facts — VERIFIED)
+- [x] Validação económica (M020: caps+conservação — VERIFIED)
 
-## 5. Repo layout (actual, M019)
+## 5. Repo layout (actual, M020)
 
 ```text
 ai-warlords/
-  package.json / package-lock.json  scripts + deps pinned (intocados M003–M019)
+  package.json / package-lock.json  scripts + deps pinned (intocados M003–M020)
   tsconfig.json / tsconfig.build.json
   vitest.config.ts / eslint.config.js / .prettierrc.json
   src/
@@ -157,15 +160,15 @@ ai-warlords/
       explored.ts       memória explored + guard (VERIFIED, load-bearing)
       exploration.ts    acumulação + tri-state (VERIFIED, load-bearing)
       stockpiles.ts     armazéns + guard (VERIFIED, load-bearing)
-      economy.ts        config + ops + gather + buildings + city (VERIFIED, load-bearing)
+      economy.ts        config + ops + gather + buildings + city + validation (VERIFIED, load-bearing)
       buildings.ts      dados + guard (VERIFIED, load-bearing)
       city.ts           lazy-cities + queue + guard (VERIFIED, load-bearing)
       phase1-gate.test.ts  selo transversal M009 (14 testes, prova)
-      *.test.ts         904 testes colocados
+      *.test.ts         927 testes colocados
     *.test.ts           28 testes M002 (regressão)
   dist/              build (gitignored)
   docs/              audit, stack, riscos, status, tools, testes, decisões, processo
-  docs/modules/      registos por módulo (M002.md … M019.md)
+  docs/modules/      registos por módulo (M002.md … M020.md)
 ```
 
 AVISOS: `src/dev-server.ts` (M002) e `src/engine/harness.ts` (M003) são
@@ -199,3 +202,4 @@ stockpiles, economy.
 | 2026-09-11 | M017      | Gather EXISTS; depleção+facto; map-preserved cede; 737 testes  |
 | 2026-09-11 | M018      | Edifícios EXISTS; counts+config+custos+caps; 817 testes        |
 | 2026-09-11 | M019      | Cidade EXISTS; queue+conclusão+factos; upgrade→3; 904 testes   |
+| 2026-09-11 | M020      | Validação EXISTS; caps+conservação; gather-caps; 927 testes    |
