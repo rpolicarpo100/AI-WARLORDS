@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 25 (M001–M025)  |
-| `PLANNED`  | 140 (M026–M165) |
+| `VERIFIED` | 26 (M001–M026)  |
+| `PLANNED`  | 139 (M027–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -92,6 +92,11 @@ Checkpoints `VERIFIED`:
   paga+gera atómico; `unit.trained` NORMAL; treasury injectada);
   1123/1123 testes, 100×4, custo #83 consumido.
   Registo em `docs/modules/M025.md`.
+- **M026 @ 2026-09-11** — testes militares (drills attack/train
+  no sim + invariantes; journey do arco + determinismo);
+  1125/1125 testes, 100×4, zero produção.
+  Fase 4 CLOSED (M021–M026 VERIFIED).
+  Registo em `docs/modules/M026.md`.
 
 ---
 
@@ -144,7 +149,7 @@ Checkpoints `VERIFIED`:
 | M023   | Combat            | `VERIFIED` |
 | M024   | Damage Resolution | `VERIFIED` |
 | M025   | Army Management   | `VERIFIED` |
-| M026   | Military Tests    | `PLANNED`  |
+| M026   | Military Tests    | `VERIFIED` |
 
 ## Fases 5–16 — AI (Foundation → Arena)
 

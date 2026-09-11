@@ -542,3 +542,42 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
   botão na página (visual futuro, fora do módulo).
 - IMPLEMENTATION: `warfare.ts` L2 + `match.ts` (M025).
 - ESTADO: `ACCEPTED`.
+
+## D-019 — Testes militares: drills no sim + suite transversal, zero mecânica (M026 pré-análise)
+
+- DECISION: M026 fecha a Fase 4 (gémeo de M020) como módulo
+  PURO DE TESTES: (A) `sim/playtest.ts` ganha candidatos
+  `unit.attack` (foe adjacente via neighbours bot-side, oráculo
+  = engine) + `unit.train` (3 tipos × célula aleatória) +
+  `DRILL_UNITS` (maxHp 5/12/8 == cenário vale.tmj; custos/dano =
+  reuse dos números test-proven customUnits, fixture de drill
+  etiquetada — tuning real é #92) + invariantes militares
+  (hp≤maxHp, ids únicos+sufixo<nextId, nextId monótono) +
+  evidência (applied por-tipo, kills/dano/treinos — medição,
+  sem thresholds); (B) `src/engine/military.test.ts` novo
+  (precedente phase1-gate/harness): journey train→attack→slain→
+  train (continuidade nextId) + determinismo de batalha (twin
+  Matches, snapshot+eventos idênticos). Sem mudanças em
+  produção (nenhuma mecânica ancorada pendente); sem thresholds
+  inventados; outputs sim regenerados e commitados como prova.
+- MOTIVE: lacunas OBSERVÁVEIS — sim nunca despacha attack/train
+  (grep); nenhuma journey compõe 3+ transições unit.* (máx
+  actual = 2, montanha M024); config neutra (dmg 0) impede kills
+  no sim; cenário Tiled já ancora maxHp 5/12/8; comentário
+  DEFAULT ("tuning belongs to #92/playtesting"); M020 (molde de
+  fecho de fase); TESTING.md §1 (B. Integration transversal).
+- ALTERNATIVES: nova pós-regra militar (rejeitado: sem âncora —
+  conservação de unidades não faz sentido; seria invenção);
+  drills com config default (rejeitado: dmg 0, zero kills —
+  drills nominais); números novos de tuning (rejeitado: #92
+  owns); journey em warfare.test.ts (preterido: suite
+  transversal própria, precedente harness).
+- ADVANTAGES: arco militar provado como TODO (composição +
+  escala + determinismo); sim vira gate militar real (exit 1
+  em violações); 100×4 preservado por construção (zero prod).
+- DISADVANTAGES: outputs sim mudam (re-medição honesta);
+  DRILL_UNITS duplica números de teste (etiquetado, #92 owns).
+- RISKS: baixo — só testes; residual: bots maus estrategas
+  (irrelevante — oráculo é o engine, invariantes é que contam).
+- IMPLEMENTATION: `sim/playtest.ts` + `src/engine/military.test.ts` (M026).
+- ESTADO: `ACCEPTED`.
