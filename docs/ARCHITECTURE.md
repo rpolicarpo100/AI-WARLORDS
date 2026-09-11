@@ -1,4 +1,4 @@
-# AI WARLORDS — ARCHITECTURE (M008)
+# AI WARLORDS — ARCHITECTURE (M009)
 
 > Authority kernel: `EXISTS` (M003 — VERIFIED)
 > World state + views: `EXISTS` (M004 — VERIFIED)
@@ -6,9 +6,10 @@
 > Action validation: `EXISTS` (M006 — VERIFIED)
 > Event system: `EXISTS` (M007 — VERIFIED)
 > Victory conditions: `EXISTS` (M008 — VERIFIED)
-> Domínio do jogo (mapa, economia, militar, AI): `NONE` (M009+)
+> Core engine test suite: `EXISTS` (M009 — VERIFIED)
+> Domínio do jogo (mapa, economia, militar, AI): `NONE` (M010+)
 > Arquitectura-alvo: `PLANNED` (transcrita do documento-mestre)
-> Data: 2026-09-10
+> Data: 2026-09-11
 
 ---
 
@@ -32,7 +33,8 @@ pluga handlers no kernel via `Match(extraHandlers)` — validados no registo e
 embrulhados (pré-regras, RNG por dispatch, pós-invariantes) — estende
 WorldState via bumps versionados, observa via `Match(extraProducers)` e
 decide via `Match(extraConditions)`. Seed explícita e activa; roster == mundo;
-eventos reconstruíveis; fim-de-jogo terminal.
+eventos reconstruíveis; fim-de-jogo terminal; Fase 1 selada por suite
+transversal (`phase1-gate.test.ts`, 14 testes: gémeos + selo + tripwires).
 
 ## 2. Arquitectura-alvo (PLANNED — fonte: documento-mestre §12)
 
@@ -52,27 +54,28 @@ determinismo end-to-end provado — timeline+hash+goldens (M005);
 output de handlers re-guardado — shape/roster/tick/size (M006);
 factos de domínio emitidos — observação nunca parte execução (M007);
 veredictos terminais lazy — nunca inventados, fail-stop (M008);
+fase selada transversalmente — gémeos+selo+DAG+higiene (M009);
 chain nunca substitui o engine (M101); dinheiro só após gate Fase 28.
 
 ## 3. Mapa de fases → camadas (PLANNED)
 
-| Fase(s) | Camada                      | Módulos                     |
-| ------- | --------------------------- | --------------------------- |
-| 0       | Foundation                  | M001–M002 (VERIFIED)        |
-| 1       | Game Engine                 | M003–M008 (VERIFIED) → M009 |
-| 2       | World                       | M010–M015                   |
-| 3–4     | Economy + Military          | M016–M026                   |
-| 5–8     | AI Foundation → Commands    | M027–M045                   |
-| 9–16    | Refutation → AI Arena       | M046–M068                   |
-| 17–20   | Multiplayer → Observability | M069–M093                   |
-| 21–22   | Economic sim → Free mode    | M094–M097                   |
-| 23–28   | Solana → Rewards            | M098–M124 (+gates)          |
-| 29–36   | Advanced                    | M125–M165                   |
+| Fase(s) | Camada                      | Módulos              |
+| ------- | --------------------------- | -------------------- |
+| 0       | Foundation                  | M001–M002 (VERIFIED) |
+| 1       | Game Engine                 | M003–M009 (VERIFIED) |
+| 2       | World                       | M010–M015            |
+| 3–4     | Economy + Military          | M016–M026            |
+| 5–8     | AI Foundation → Commands    | M027–M045            |
+| 9–16    | Refutation → AI Arena       | M046–M068            |
+| 17–20   | Multiplayer → Observability | M069–M093            |
+| 21–22   | Economic sim → Free mode    | M094–M097            |
+| 23–28   | Solana → Rewards            | M098–M124 (+gates)   |
+| 29–36   | Advanced                    | M125–M165            |
 
 ## 4. Decisões pendentes (`UNKNOWN` até ao módulo próprio)
 
 - [ ] Protocolo cliente↔servidor (M003/M069; não assumir WS/REST)
-- [ ] Motor de persistência (M008 in-memory; M062 bounds log/timeline/events — L-09)
+- [ ] Motor de persistência (M009 in-memory; M062 bounds log/timeline/events — L-09)
 - [ ] Monorepo vs single-package (single até justificação — M002)
 - [ ] Formato de mapa autoritativo (M010 gate; shortlist Tiled/LDtk em TOOLS.md)
 - [ ] Match lifecycle (M071) tem de preservar dispatch SERIAL (constraint M003)
@@ -85,12 +88,13 @@ chain nunca substitui o engine (M101); dinheiro só após gate Fase 28.
 - [x] Validador de acções (M006: pré+pós+streams — VERIFIED)
 - [x] Sistema de eventos (M007: factos+surrogates — VERIFIED)
 - [x] Condições de vitória (M008: lazy+time-draw — VERIFIED)
+- [x] Suite transversal do motor (M009: selo+tripwires — VERIFIED)
 
-## 5. Repo layout (actual, M008)
+## 5. Repo layout (actual, M009)
 
 ```text
 ai-warlords/
-  package.json / package-lock.json  scripts + deps pinned (intocados M003–M008)
+  package.json / package-lock.json  scripts + deps pinned (intocados M003–M009)
   tsconfig.json / tsconfig.build.json
   vitest.config.ts / eslint.config.js / .prettierrc.json
   src/
@@ -106,11 +110,12 @@ ai-warlords/
       validation.ts     validador de acções (VERIFIED, load-bearing)
       events.ts         sistema de eventos (VERIFIED, load-bearing)
       victory.ts        condições de vitória (VERIFIED, load-bearing)
-      *.test.ts         285 testes colocados
+      phase1-gate.test.ts  selo transversal M009 (14 testes, prova)
+      *.test.ts         299 testes colocados
     *.test.ts           28 testes M002 (regressão)
   dist/              build (gitignored)
   docs/              audit, stack, riscos, status, tools, política de testes
-  docs/modules/      registos por módulo (M002.md … M008.md)
+  docs/modules/      registos por módulo (M002.md … M009.md)
 ```
 
 AVISOS: `src/dev-server.ts` (M002) e `src/engine/harness.ts` (M003) são
@@ -131,3 +136,4 @@ events, victory.
 | 2026-09-10 | M006   | Validador EXISTS; pós-invariantes; streams; registo detido  |
 | 2026-09-10 | M007   | Eventos EXISTS; geneses+factos+surrogates; restrição prova  |
 | 2026-09-10 | M008   | Veredictos EXISTS; lazy+time-draw; terminalidade; fail-stop |
+| 2026-09-11 | M009   | Suite transversal EXISTS; selo+scans+escala; Fase 1 selada  |

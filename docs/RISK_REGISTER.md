@@ -1,6 +1,6 @@
-# AI WARLORDS — RISK REGISTER (M008)
+# AI WARLORDS — RISK REGISTER (M009)
 
-> Data: 2026-09-10 · Actualizado por: M008
+> Data: 2026-09-11 · Actualizado por: M009
 > Convenção: `ACTIVE` = presente agora · `FUTURE` = fases vindouras ·
 > `MITIGATED` = tratado com residual declarado · `CLOSED` = encerrado
 
@@ -11,16 +11,16 @@
 | ID   | Risco                                | Fase    | Sev. | Estado | Mitigação                                              |
 | ---- | ------------------------------------ | ------- | ---- | ------ | ------------------------------------------------------ |
 | R-01 | Scope creep / exaustão (165 módulos) | Todas   | Alta | FUTURE | gates rígidos; 1 módulo de cada vez (§35); checkpoints |
-| R-02 | Complexidade prematura               | 0–1     | Alta | FUTURE | §19; M002–M008 minimalistas provam o padrão            |
+| R-02 | Complexidade prematura               | 0–1     | Alta | FUTURE | §19; M002–M009 minimalistas provam o padrão            |
 | R-03 | Assumir providers sem verificar      | 5+, 23+ | Alta | FUTURE | §1 (`UNKNOWN` até prova); TOOLS.md c/ fontes+UNKNOWNs  |
-| R-04 | Simulação apresentada como real      | Todas   | Alta | FUTURE | §11; M008: veredictos nunca inventados; fail-stop      |
+| R-04 | Simulação apresentada como real      | Todas   | Alta | FUTURE | §11; M009: selo transversal; zero simulação            |
 | R-05 | Testes desactivados para obter PASS  | Todas   | Alta | FUTURE | §16; thresholds enforced; exclusão só com compensação  |
 
 ## 2. Riscos arquitecturais
 
 | ID   | Risco                              | Fase   | Sev.       | Estado    | Mitigação                                                                                          |
 | ---- | ---------------------------------- | ------ | ---------- | --------- | -------------------------------------------------------------------------------------------------- |
-| R-10 | Determinismo inalcançável na stack | 0–1    | Alta       | MITIGATED | M005: E2E provado (timeline+hash+goldens). RESIDUAL: suite M009; cross-machine/async até M069+     |
+| R-10 | Determinismo inalcançável na stack | 0–1    | Alta       | MITIGATED | M005+M009: E2E + selo transversal. RESIDUAL: cross-machine/async até M069+                         |
 | R-11 | Autoridade do cliente por acidente | 1, 19  | Alta       | MITIGATED | M003–M006. RESIDUAL: outputs re-guardados M006; transporte até M069+; rever mutações/módulo        |
 | R-12 | AI com info ilícita (fog leakage)  | 2, 5   | Média–Alta | FUTURE    | M004: mecanismo de redacção VERIFIED sobre placeholder rotulado; fog REAL em M015; inferência M028 |
 | R-13 | LLM como SPOF                      | 5+     | Alta       | FUTURE    | §20 fallback determinístico; testes de falha                                                       |
@@ -57,8 +57,8 @@
 
 | ID   | Risco                                        | Sev.  | Estado    | Nota                                                                          |
 | ---- | -------------------------------------------- | ----- | --------- | ----------------------------------------------------------------------------- |
-| R-50 | Stack errada → reescrita em M005–M009        | Média | MITIGATED | TS/Node; residual: prova M009 (M005–M008 passaram)                            |
-| R-51 | Docker ausente no sandbox                    | Baixa | ACTIVE    | M008 não precisou; revisitar se preciso                                       |
+| R-50 | Stack errada → reescrita em M005–M009        | Média | CLOSED    | TS/Node provado pela Fase 1 (M009 fecha o âmbito M005–M009)                   |
+| R-51 | Docker ausente no sandbox                    | Baixa | ACTIVE    | M009 não precisou; revisitar se preciso                                       |
 | R-52 | TypeScript 6 = major recente                 | Baixa | ACTIVE    | pinned; gates verdes                                                          |
 | R-53 | Stores `seen`/sessions/timeline/events unb.  | Baixa | FUTURE    | in-process; M062: bound/persist log+timeline+events (L-09); M071/M085 resto   |
 | R-54 | Estado canónico unbounded (handlers futuros) | Baixa | MITIGATED | cap 1MB/escrita (M006; L-08 CLOSED). RESIDUAL: valor provisório (L-12 → M088) |
@@ -74,3 +74,4 @@
 | 2026-09-10 | M006   | R-54 MITIGATED (cap, L-08 CLOSED, residual L-12 → M088); L-10 CLOSED; R-11/R-20 notas |
 | 2026-09-10 | M007   | R-53 += events (L-09 estendido → M062); L-15/L-16 criados (delivery/payloads futuros) |
 | 2026-09-10 | M008   | L-17/L-18 criados (score/eliminação futuros); R-20 nota (verdict-integrity)           |
+| 2026-09-11 | M009   | R-50 CLOSED (Fase 1 prova stack); R-10 residual M009 cumprido; L-19 criado (scan)     |

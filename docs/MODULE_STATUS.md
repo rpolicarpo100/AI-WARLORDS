@@ -1,6 +1,6 @@
-# AI WARLORDS — MODULE STATUS (M008)
+# AI WARLORDS — MODULE STATUS (M009)
 
-> Data: 2026-09-10 · Actualizado por: M008 (Victory Conditions)
+> Data: 2026-09-11 · Actualizado por: M009 (Core Engine Test Suite)
 > Estados oficiais: `PLANNED · IN_ANALYSIS · IN_DEVELOPMENT · IMPLEMENTED · TESTING · FAILED · BLOCKED · VERIFIED · DEPRECATED`
 
 ---
@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 8 (M001–M008)   |
-| `PLANNED`  | 157 (M009–M165) |
+| `VERIFIED` | 9 (M001–M009)   |
+| `PLANNED`  | 156 (M010–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -35,6 +35,9 @@ Checkpoints `VERIFIED`:
 - **M008 @ 2026-09-10** — condições de vitória (veredicto lazy + time-draw +
   terminalidade); 313/313 testes, 100×4, fail-stop provado.
   Registo em `docs/modules/M008.md`.
+- **M009 @ 2026-09-11** — suite transversal do motor (gémeos + selo + scans +
+  escala); 327/327 testes, 100×4, zero código de produção.
+  Registo em `docs/modules/M009.md`. **Fase 1 completa.**
 
 ---
 
@@ -55,7 +58,7 @@ Checkpoints `VERIFIED`:
 | M006   | Action Validation      | `VERIFIED` |
 | M007   | Event System           | `VERIFIED` |
 | M008   | Victory Conditions     | `VERIFIED` |
-| M009   | Core Engine Test Suite | `PLANNED`  |
+| M009   | Core Engine Test Suite | `VERIFIED` |
 
 ## Fase 2 — World
 
@@ -91,20 +94,20 @@ Checkpoints `VERIFIED`:
 
 ## Fases 5–16 — AI (Foundation → Arena)
 
-| Módulo(s) | Âmbito                                                             | Estado    |
-| --------- | ------------------------------------------------------------------ | --------- |
-| M027–M030 | AI Foundation (Commander Core, Perception, State, Decision Engine) | `PLANNED` |
-| M031–M034 | Personalidade (DNA, Personalities, Doctrines, Testing)             | `PLANNED` |
-| M035–M042 | Strategic AI                                                       | `PLANNED` |
-| M043–M045 | Player → AI Command                                                | `PLANNED` |
-| M046–M047 | AI Refutation + Override                                           | `PLANNED` |
-| M048      | Confidence Engine                                                  | `PLANNED` |
-| M049–M050 | Counterfactual AI                                                  | `PLANNED` |
-| M051–M054 | Memory                                                             | `PLANNED` |
-| M055–M058 | Player ↔ Commander                                                 | `PLANNED` |
-| M059–M061 | AI Evolution                                                       | `PLANNED` |
-| M062–M064 | Replay                                                             | `PLANNED` |
-| M065–M068 | AI Arena                                                           | `PLANNED` |
+| Módulo(s) | Âmbito                                                              | Estado    |
+| --------- | ------------------------------------------------------------------- | --------- |
+| M027–M030 | AI Foundation (Commander Core, Perception, State, Discovery Engine) | `PLANNED` |
+| M031–M034 | Personalidade (DNA, Personalities, Doctrines, Testing)              | `PLANNED` |
+| M035–M042 | Strategic AI                                                        | `PLANNED` |
+| M043–M045 | Player → AI Command                                                 | `PLANNED` |
+| M046–M047 | AI Refutation + Override                                            | `PLANNED` |
+| M048      | Confidence Engine                                                   | `PLANNED` |
+| M049–M050 | Counterfactual AI                                                   | `PLANNED` |
+| M051–M054 | Memory                                                              | `PLANNED` |
+| M055–M058 | Player ↔ Commander                                                  | `PLANNED` |
+| M059–M061 | AI Evolution                                                        | `PLANNED` |
+| M062–M064 | Replay                                                              | `PLANNED` |
+| M065–M068 | AI Arena                                                            | `PLANNED` |
 
 ## Fases 17–20 — Multiplayer, Competitive, Security, Observability
 
@@ -146,10 +149,10 @@ Checkpoints `VERIFIED`:
 ## Ordem recomendada (estrita, sem saltos)
 
 ```text
-M001 → M002 → M003 → M004 → M005 → M006 → M007 → M008 (VERIFIED) → M009 → … → M165
+M001 → M002 → M003 → M004 → M005 → M006 → M007 → M008 → M009 (VERIFIED) → M010 → … → M165
 ```
 
-Próximo permitido: **M009 — Core Engine Test Suite**, apenas após autorização
+Próximo permitido: **M010 — Map System**, apenas após autorização
 explícita. Saltos, paralelização ou batch = violação do §35 (recusar).
 
 ---
