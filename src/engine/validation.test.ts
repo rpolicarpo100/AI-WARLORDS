@@ -78,7 +78,8 @@ const garbageState = { not: 'a state' } as unknown as WorldState;
 
 function corruptCases(): Array<[string, RngHandler<WorldState>, RegExp, WorldState, boolean]> {
   const tick1 = { ...stdState(), tick: 1 };
-  const big = 'x'.repeat(1500000);
+  // M015: secrets are gone — bigness floods the roster (100k ids ≈ 1.6MB).
+  const flood = Array.from({ length: 100000 }, (_, n) => ({ id: `p${n}` as PlayerId }));
   return [
     [
       'shape',
@@ -125,9 +126,11 @@ function corruptCases(): Array<[string, RngHandler<WorldState>, RegExp, WorldSta
     ],
     [
       'size',
+      // Every field is watched now, so roster-preserved co-fires with
+      // state-size here; the size regex below still matches (substring).
       (ctx) => ({
         applied: true,
-        state: { ...ctx.state, secrets: { [P1]: [big] } } as unknown as WorldState,
+        state: { ...ctx.state, players: flood } as unknown as WorldState,
         summary: 'evil',
       }),
       new RegExp(`\\[state-size\\] \\d+ bytes \\(max ${MAX_STATE_BYTES}\\)`),

@@ -12,7 +12,8 @@
 > Resources: `EXISTS` (M012 — VERIFIED)
 > Fog of War: `EXISTS` (M013 — VERIFIED)
 > Exploration memory: `EXISTS` (M014 — VERIFIED)
-> Domínio do jogo (economia, militar, AI): `NONE` (M015+; mapa+terreno+recursos+fog+explored EXISTS)
+> Perception system: `EXISTS` (M015 — VERIFIED)
+> Domínio do jogo (economia, militar, AI): `NONE` (M016+; mapa+terreno+recursos+fog+explored+perception EXISTS)
 > Arquitectura-alvo: `PLANNED` (transcrita do documento-mestre)
 > Data: 2026-09-11
 
@@ -46,7 +47,7 @@ Seed explícita e activa; roster == mundo; eventos reconstruíveis;
 fim-de-jogo terminal; geografia hex validada (loader Tiled estrito);
 semântica de terreno configurável (regras, fora do estado);
 nós de recursos como geografia (coerência dupla, sob map-preserved);
-AI/CLIENT map-blind por construção até percepção/enforcement (M015).
+AI/CLIENT com mapa filtrado por conhecimento (M015; cegueira total até M014).
 
 ## 2. Arquitectura-alvo (PLANNED — fonte: documento-mestre #6)
 
@@ -72,22 +73,23 @@ terreno jogável — valores configuráveis, fail-stop, balanceable (M011);
 recursos como geografia — coerência dupla, amounts uint32 (M012);
 nevoeiro computado — visibilidade determinística por viewer sobre hex (M013);
 memória explored — acumulação monótona por viewer, tri-state (M014);
+percepção por viewer — saber compatível com fog, secrets morto (M015);
 chain nunca substitui o engine (M101); dinheiro só após gate Fase 28.
 
 ## 3. Mapa de fases → camadas (PLANNED)
 
-| Fase(s) | Camada                      | Módulos                     |
-| ------- | --------------------------- | --------------------------- |
-| 0       | Foundation                  | M001–M002 (VERIFIED)        |
-| 1       | Game Engine                 | M003–M009 (VERIFIED)        |
-| 2       | World                       | M010–M014 (VERIFIED) → M015 |
-| 3–4     | Economy + Military          | M016–M026                   |
-| 5–8     | AI Foundation → Commands    | M027–M045                   |
-| 9–16    | Refutation → AI Arena       | M046–M068                   |
-| 17–20   | Multiplayer → Observability | M069–M093                   |
-| 21–22   | Economic sim → Free mode    | M094–M097                   |
-| 23–28   | Solana → Rewards            | M098–M124 (+gates)          |
-| 29–36   | Advanced                    | M125–M165                   |
+| Fase(s) | Camada                      | Módulos              |
+| ------- | --------------------------- | -------------------- |
+| 0       | Foundation                  | M001–M002 (VERIFIED) |
+| 1       | Game Engine                 | M003–M009 (VERIFIED) |
+| 2       | World                       | M010–M015 (VERIFIED) |
+| 3–4     | Economy + Military          | M016–M026            |
+| 5–8     | AI Foundation → Commands    | M027–M045            |
+| 9–16    | Refutation → AI Arena       | M046–M068            |
+| 17–20   | Multiplayer → Observability | M069–M093            |
+| 21–22   | Economic sim → Free mode    | M094–M097            |
+| 23–28   | Solana → Rewards            | M098–M124 (+gates)   |
+| 29–36   | Advanced                    | M125–M165            |
 
 ## 4. Decisões pendentes (`UNKNOWN` até ao módulo próprio)
 
@@ -114,12 +116,13 @@ chain nunca substitui o engine (M101); dinheiro só após gate Fase 28.
 - [x] Semântica de terreno (M011: config+consultas — VERIFIED)
 - [x] Recursos-nós (M012: coerência+loader+consultas — VERIFIED)
 - [x] Memória explored (M014: leaf+mark+monotonic — VERIFIED)
+- [x] Percepção por viewer (M015: perceive+membership — VERIFIED)
 
-## 5. Repo layout (actual, M014)
+## 5. Repo layout (actual, M015)
 
 ```text
 ai-warlords/
-  package.json / package-lock.json  scripts + deps pinned (intocados M003–M014)
+  package.json / package-lock.json  scripts + deps pinned (intocados M003–M015)
   tsconfig.json / tsconfig.build.json
   vitest.config.ts / eslint.config.js / .prettierrc.json
   src/
@@ -128,7 +131,7 @@ ai-warlords/
       authority.ts      kernel de autoridade (VERIFIED, load-bearing)
       harness.ts        domínio harness (prova; substituível, sem contrato)
       world-state.ts    WorldState v1 + guard (VERIFIED, load-bearing)
-      views.ts          WORLD/AI/CLIENT (VERIFIED, load-bearing)
+      views.ts          WORLD/AI/CLIENT + percepção (VERIFIED, load-bearing)
       match.ts          match determinístico (VERIFIED, load-bearing)
       rng.ts            RNG + streams por dispatch (VERIFIED, load-bearing)
       hash.ts           serialização estável + sha256 (VERIFIED, load-bearing)
@@ -142,16 +145,16 @@ ai-warlords/
       explored.ts       memória explored + guard (VERIFIED, load-bearing)
       exploration.ts    acumulação + tri-state (VERIFIED, load-bearing)
       phase1-gate.test.ts  selo transversal M009 (14 testes, prova)
-      *.test.ts         621 testes colocados
+      *.test.ts         623 testes colocados
     *.test.ts           28 testes M002 (regressão)
   dist/              build (gitignored)
   docs/              audit, stack, riscos, status, tools, testes, decisões, processo
-  docs/modules/      registos por módulo (M002.md … M014.md)
+  docs/modules/      registos por módulo (M002.md … M015.md)
 ```
 
 AVISOS: `src/dev-server.ts` (M002) e `src/engine/harness.ts` (M003) são
-provas sem contrato. `WorldState.secrets` é placeholder de mecanismo M004
-(morre até M015). Streams RNG wired mas sem consumidor de domínio.
+provas sem contrato. `WorldState.secrets` morreu em M015 (campo removido;
+percepção substitui a redacção). Streams RNG wired mas sem consumidor de domínio.
 Load-bearing: authority, world-state, views, match, rng, hash, validation,
 events, victory, map, terrain, resources, fog, explored, exploration.
 
@@ -174,3 +177,4 @@ events, victory, map, terrain, resources, fog, explored, exploration.
 | 2026-09-11 | FIX-AUDIT | Auditoria M001–M012: citações #mestre, pendentes #18/L-24/L-25 |
 | 2026-09-11 | M013      | Fog EXISTS; visibilidade pura; zero emendas prod               |
 | 2026-09-11 | M014      | Explored EXISTS; leaf+mark+monotonic; 621 testes engine        |
+| 2026-09-11 | M015      | Percepção EXISTS; secrets morto; selo re-locked; 623 testes    |

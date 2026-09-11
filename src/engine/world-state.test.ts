@@ -21,7 +21,6 @@ function rawState(patch: Record<string, unknown>): unknown {
     schemaVersion: 1,
     tick: 0,
     players: [{ id: 'p1' }],
-    secrets: {},
     ...patch,
   };
 }
@@ -33,10 +32,13 @@ describe('isWorldState (unit: single-path schema guard)', () => {
         rawState({
           tick: 7,
           players: [{ id: 'p1' }, { id: 'p2' }],
-          secrets: { p1: ['a', 'b'], p2: [] },
         }),
       ),
     ).toBe(true);
+  });
+
+  it('ignores the legacy secrets key (M015 migration leniency)', () => {
+    expect(isWorldState(rawState({ secrets: { p1: ['x'] } }))).toBe(true);
   });
 
   it.each([
@@ -54,33 +56,25 @@ describe('isWorldState (unit: single-path schema guard)', () => {
     ['null player', rawState({ players: [null] })],
     ['bad player id', rawState({ players: [{ id: '' }] })],
     ['duplicate players', rawState({ players: [{ id: 'p1' }, { id: 'p1' }] })],
-    ['numeric secrets', rawState({ secrets: 42 })],
-    ['null secrets', rawState({ secrets: null })],
-    ['array secrets', rawState({ secrets: [] })],
-    ['bad secret owner', rawState({ secrets: { ['x'.repeat(65)]: [] } })],
-    ['non-array secret list', rawState({ secrets: { p1: 'x' } })],
-    ['non-string secret', rawState({ secrets: { p1: [42] } })],
   ] as Array<[string, unknown]>)('rejects %s', (_title, value) => {
     expect(isWorldState(value)).toBe(false);
   });
 });
 
 describe('createWorldState (unit: validated constructor)', () => {
-  it('applies defaults for tick and secrets', () => {
+  it('applies the default tick', () => {
     expect(createWorldState({ players: [P1] })).toEqual({
       schemaVersion: 1,
       tick: 0,
       players: [{ id: 'p1' }],
-      secrets: {},
     });
   });
 
-  it('echoes explicit tick and secrets', () => {
-    expect(createWorldState({ players: [P1], tick: 9, secrets: { p1: ['s'] } })).toEqual({
+  it('echoes an explicit tick', () => {
+    expect(createWorldState({ players: [P1], tick: 9 })).toEqual({
       schemaVersion: 1,
       tick: 9,
       players: [{ id: 'p1' }],
-      secrets: { p1: ['s'] },
     });
   });
 
@@ -105,7 +99,6 @@ describe('WorldState inside AuthorityKernel (integration)', () => {
       players: [P1, P2],
       initialState: createWorldState({
         players: [P1, P2],
-        secrets: { p1: ['p1-plan-alpha'], p2: ['p2-plan-omega'] },
       }),
       handlers: worldHandlers(),
     });

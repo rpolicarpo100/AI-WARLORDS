@@ -14,13 +14,6 @@ export interface WorldState {
   readonly tick: number;
   readonly players: readonly WorldPlayer[];
   /**
-   * Opaque per-player secret store — M004 MECHANISM PLACEHOLDER.
-   * Exists ONLY to prove WORLD/AI/CLIENT view separation with real
-   * redaction. Real hidden data (fog-hidden tiles, unseen units, …)
-   * arrives in M010/M015+; this store itself may be removed then.
-   */
-  readonly secrets: { readonly [playerId: string]: readonly string[] };
-  /**
    * World geography (M010, optional compatible extension — no version bump).
    * Absent in abstract/proof matches; present matches carry validated MapData.
    * WORLD views see it; AI/CLIENT views are map-blind by construction
@@ -38,7 +31,6 @@ export interface WorldState {
 
 export interface WorldStateInit {
   readonly players: readonly PlayerId[];
-  readonly secrets?: { readonly [playerId: string]: readonly string[] };
   readonly tick?: number;
   readonly map?: MapData;
   readonly explored?: ExploredData;
@@ -78,24 +70,6 @@ export function isWorldState(value: unknown): value is WorldState {
     }
     seenIds.add(id);
   }
-  const secrets = fields['secrets'];
-  if (typeof secrets !== 'object' || secrets === null || Array.isArray(secrets)) {
-    return false;
-  }
-  const entries = Object.entries(secrets as Record<string, unknown>);
-  for (const [id, list] of entries) {
-    if (!isPlayerId(id)) {
-      return false;
-    }
-    if (!Array.isArray(list)) {
-      return false;
-    }
-    for (const item of list) {
-      if (typeof item !== 'string') {
-        return false;
-      }
-    }
-  }
   const map = fields['map'];
   if (map !== undefined && !isMapData(map)) {
     return false;
@@ -122,7 +96,6 @@ export function createWorldState(init: WorldStateInit): WorldState {
     schemaVersion: WORLD_SCHEMA_VERSION,
     tick: init.tick ?? 0,
     players: init.players.map((id) => ({ id })),
-    secrets: init.secrets ?? {},
     ...(init.map === undefined ? {} : { map: init.map }),
     ...(init.explored === undefined ? {} : { explored: init.explored }),
   };

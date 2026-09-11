@@ -256,14 +256,18 @@ describe('node integrity + blindness (security)', () => {
     expect(() => wrapped({ state, caller: P1, params: {} })).toThrow(/map-preserved/);
   });
 
-  it('AI perception stays map-blind on a node-bearing map', () => {
+  it('AI perception exposes no node details on a node-bearing map', () => {
     const state = createWorldState({ players: [P1, P2], map: nodeMap() });
-    expect('map' in toAiPerception(state, P1).known).toBe(false);
+    const known = toAiPerception(state, P1, { p1: [0] }).known;
+    expect(Object.keys(known.map ?? {}).sort()).toEqual(['explored', 'height', 'visible', 'width']);
+    expect(JSON.stringify(known)).not.toContain('gold');
   });
 
-  it('CLIENT view stays map-blind on a node-bearing map', () => {
+  it('CLIENT view exposes no node details on a node-bearing map', () => {
     const state = createWorldState({ players: [P1, P2], map: nodeMap() });
-    expect('map' in toClientView(state, P1).state).toBe(false);
+    const view = toClientView(state, P1, { p1: [0] }).state;
+    expect(Object.keys(view.map ?? {}).sort()).toEqual(['explored', 'height', 'visible', 'width']);
+    expect(JSON.stringify(view)).not.toContain('gold');
   });
 
   it('started summary still carries only map identity', () => {

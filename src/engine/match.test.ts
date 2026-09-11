@@ -173,10 +173,8 @@ describe('advance + timeline (integration)', () => {
       schemaVersion: 1,
       tick: 1,
       players: [{ id: 'p1' }, { id: 'p2' }],
-      secrets: {},
     });
     expect(after.players).toBe(before.players);
-    expect(after.secrets).toBe(before.secrets);
     expect(match.getTick()).toBe(1);
     expect(match.getRevision()).toBe(1);
   });
@@ -230,7 +228,8 @@ describe('advance + timeline (integration)', () => {
         type: 'match.advance',
         applied: true,
         detail: 'tick=1',
-        stateHash: 'd1e14b81f64a21b53857edd823069f864a47618f10fe5ea01423a93f669887cb',
+        // M015 regen: secrets-field removal (shape + algorithm unchanged).
+        stateHash: 'e53bd4030868f488640f76df69b7a1b686e1b0835d272d4d5a257ac6c0884c18',
       },
     ]);
   });

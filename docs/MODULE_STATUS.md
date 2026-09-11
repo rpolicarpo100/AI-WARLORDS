@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 14 (M001–M014)  |
-| `PLANNED`  | 151 (M015–M165) |
+| `VERIFIED` | 15 (M001–M015)  |
+| `PLANNED`  | 150 (M016–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -53,6 +53,9 @@ Checkpoints `VERIFIED`:
 - **M014 @ 2026-09-11** — memória explored (leaf + mark + tri-state +
   monotonic); 649/649 testes, 100×4, emendas declaradas.
   Registo em `docs/modules/M014.md`.
+- **M015 @ 2026-09-11** — percepção (perceive + membership + mapa
+  filtrado; secrets removido); 651/651 testes, 100×4, selo re-locked.
+  Registo em `docs/modules/M015.md`. **Fase 2 completa.**
 
 ---
 
@@ -84,7 +87,7 @@ Checkpoints `VERIFIED`:
 | M012   | Resources         | `VERIFIED` |
 | M013   | Fog of War        | `VERIFIED` |
 | M014   | Exploration       | `VERIFIED` |
-| M015   | Perception System | `PLANNED`  |
+| M015   | Perception System | `VERIFIED` |
 
 ## Fase 3 — Economy
 
@@ -185,10 +188,10 @@ Alinhadas por número: 0, 1, 3, 4, 28. Divergentes:
 ## Ordem recomendada (estrita, sem saltos)
 
 ```text
-M001 → M002 → … → M012 → M013 → M014 (VERIFIED) → M015 → … → M165
+M001 → M002 → … → M013 → M014 → M015 (VERIFIED) → M016 → … → M165
 ```
 
-Próximo permitido: **M015 — Perception System**, apenas após autorização
+Próximo permitido: **M016 — Resource Engine**, apenas após autorização
 explícita. Saltos, paralelização ou batch = violação do §35 (recusar).
 
 ---

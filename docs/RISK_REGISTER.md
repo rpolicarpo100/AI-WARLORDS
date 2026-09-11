@@ -1,6 +1,6 @@
-# AI WARLORDS — RISK REGISTER (M014)
+# AI WARLORDS — RISK REGISTER (M015)
 
-> Data: 2026-09-11 · Actualizado por: M014
+> Data: 2026-09-11 · Actualizado por: M015
 > Convenção: `ACTIVE` = presente agora · `FUTURE` = fases vindouras ·
 > `MITIGATED` = tratado com residual declarado · `CLOSED` = encerrado
 
@@ -18,13 +18,13 @@
 
 ## 2. Riscos arquitecturais
 
-| ID   | Risco                              | Fase   | Sev.       | Estado    | Mitigação                                                                                                                                                                      |
-| ---- | ---------------------------------- | ------ | ---------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| R-10 | Determinismo inalcançável na stack | 0–1    | Alta       | MITIGATED | M005+M009: E2E + selo transversal. RESIDUAL: cross-machine/async até M069+                                                                                                     |
-| R-11 | Autoridade do cliente por acidente | 1, 19  | Alta       | MITIGATED | M003–M006. RESIDUAL: outputs re-guardados M006; transporte até M069+; rever mutações/módulo                                                                                    |
-| R-12 | AI com info ilícita (fog leakage)  | 2, 5–8 | Média–Alta | FUTURE    | M004+M010: redacção + AI/CLIENT map-blind (construção); fog REAL em M015; inferência M028; M013 computação VERIFIED (D-006); M014 memória VERIFIED, non-leak em vistas (D-007) |
-| R-13 | LLM como SPOF                      | 5+     | Alta       | FUTURE    | fallback determinístico (mestre #8); testes de falha                                                                                                                           |
-| R-14 | Acoplamento engine↔AI↔LLM          | 1, 5–7 | Média      | FUTURE    | fronteiras §22 (kinds M004); regression crescente §17                                                                                                                          |
+| ID   | Risco                              | Fase   | Sev.       | Estado    | Mitigação                                                                                                                                                                                                       |
+| ---- | ---------------------------------- | ------ | ---------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R-10 | Determinismo inalcançável na stack | 0–1    | Alta       | MITIGATED | M005+M009: E2E + selo transversal. RESIDUAL: cross-machine/async até M069+                                                                                                                                      |
+| R-11 | Autoridade do cliente por acidente | 1, 19  | Alta       | MITIGATED | M003–M006. RESIDUAL: outputs re-guardados M006; transporte até M069+; rever mutações/módulo                                                                                                                     |
+| R-12 | AI com info ilícita (fog leakage)  | 2, 5–8 | Média–Alta | FUTURE    | M004+M010: redacção + AI/CLIENT map-blind (construção); fog REAL em M015; inferência M028; M013 computação VERIFIED (D-006); M014 memória VERIFIED, non-leak em vistas (D-007); M015 fog REAL em vistas (D-008) |
+| R-13 | LLM como SPOF                      | 5+     | Alta       | FUTURE    | fallback determinístico (mestre #8); testes de falha                                                                                                                                                            |
+| R-14 | Acoplamento engine↔AI↔LLM          | 1, 5–7 | Média      | FUTURE    | fronteiras §22 (kinds M004); regression crescente §17                                                                                                                                                           |
 
 ## 3. Riscos de segurança
 
@@ -82,3 +82,4 @@
 | 2026-09-11 | FIX-AUDIT | R-55 criado (integridade de registos); L-24/L-25 (tick-clock, spawn-roster)            |
 | 2026-09-11 | M013      | R-12 nota (computação fog); L-26/L-27 (on-demand, viewer-membership)                   |
 | 2026-09-11 | M014      | R-12 nota (memória explored); L-28 (anti-forge residual → M021+)                       |
+| 2026-09-11 | M015      | R-12 nota (fog real); L-04/L-27 CLOSED; L-29 (→ M028); selo re-locked                  |

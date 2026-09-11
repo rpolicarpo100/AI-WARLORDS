@@ -104,3 +104,43 @@
 - RISKS: baixo — sem consumidores; M015 valida o desenho.
 - IMPLEMENTATION: `explored.ts` L0 + `exploration.ts` L2 (M014).
 - ESTADO: `ACCEPTED`.
+
+## D-008 — Percepção em views.ts; morte do campo secrets; selo cirúrgico (M015 pré-análise)
+
+- DECISION: percepção vive em `views.ts` (sem ficheiro novo — aresta
+  L2→L2 proibiria `views→perception`; census 16 inalterado, consistente).
+  `PerceivedState`: tick + roster (público) + viewer + visibleCells +
+  exploredCells (memória integral) + map? (dims + terrain esparso só do
+  visível + explored-exclusivo). `toAiPerception`/`toClientView` passam a
+  `(state, viewer, visibility = {})`; kinds preservados; `toWorldView`
+  intocado (estado integral server-only). CAMPO `secrets` REMOVIDO
+  (mecanismo+morte, não só mecanismo); sem bump de versão (pré-M062,
+  nada a migrar); selo M009 regenerado com DIFF CIRÚRGICO (só
+  `stateHash` pode mudar — timelineHash/eventsHash/veredicto/contagens
+  idênticos ou STOP; selo antigo preservado no registo M015 §6).
+- MOTIVE: mestre #10 (KNOWN≠REAL, compatível com fog) + M004 (secrets
+  morre até M015) + L-27/L-04 fecham no consumo. Membership loud
+  (viewer∉roster ⇒ throw — erro de programador server-side). D-006
+  dois-níveis: estrutural loud (visibilidade malformada), contexto soft
+  (OOB skipado, viewer ausente vê nada, mapless ignora visão).
+  Explored revela posição-sem-terreno (M014 guarda só índices; L-29 →
+  M028 inferência). Spawns OMITIDOS fail-closed (sem modelo de memória;
+  revisitar com gameplay de spawns). Roster público (sem fog de roster
+  até dono). Sem guard de PerceivedState (derivado server-side; wire M069).
+- ALTERNATIVES: campo secrets inerte (rejeitado: podridão canónica —
+  cada snapshot/hash/teste pagaria `secrets: {}` para sempre, sem dono
+  de remoção); `perception.ts` novo (rejeitado: views→perception é
+  L2→L2); terrain-memória agora (rejeitado: M014 não guarda terreno;
+  forjar seria invenção); spawns visíveis (rejeitado: memória
+  inconsistente — visível-sim/explored-não).
+- ADVANTAGES: morte honesta (docs exigem); primeiro refactor prodativo
+  saneado com prova de difusão-zero (selo); fecha L-27+L-04; lida com
+  map-blind (ARCH) selectivamente — visível integral, explored parcial,
+  resto zero-sinal.
+- DISADVANTAGES: blast 9 ficheiros (2 prod + selo + 6 testes); vector
+  do size-test migra secrets→roster-flood (map 64² insuficiente só).
+- RISKS: médio — selo regenerado (precedente perigoso; mitigado: diff
+  cirúrgico + selo antigo no registo + gémeos independentes do valor).
+  Sem produtores, sem inferência (M028), sem wire (M069).
+- IMPLEMENTATION: `views.ts` + `world-state.ts` + testes + selo (M015).
+- ESTADO: `ACCEPTED`.

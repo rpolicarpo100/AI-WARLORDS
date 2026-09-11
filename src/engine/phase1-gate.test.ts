@@ -230,9 +230,13 @@ describe('determinism equation: seed + state + actions = result (#80)', () => {
   });
 
   it('phase-1 seal: full-stack golden incl. events + verdict (generated-then-locked)', () => {
+    // M015 regen (secrets-field removal): ONLY the two state-derived hashes
+    // changed — entry-level proof (4 embedded stateHash atoms) + the
+    // superseded seal live in docs/modules/M015.md §6. All other fields
+    // below are byte-identical to the M009 lock (any drift fails loud).
     const SEAL: Fingerprint = {
-      stateHash: 'f249d0d5847c5e01ff5e4303e0cd9818e7c9763d989a64c975972c037da75ee1',
-      timelineHash: '9528bb43706a35aa8a78fffba222cd4694ea8d19b477406a3ed7406f28a28061',
+      stateHash: '2e1d8cc4a41fe59597bd9fc140ef044a5977a2c2586a0cde85eb9ef1f6dcda49',
+      timelineHash: 'bf3b98d38bf58e667b1b50d89473e263812a58a604dca4e0bb9527c934e530b5',
       eventsHash: '3cc8a91199a87118a8c8f339b3b9fdd028dd8c269a2f42d1e95312eb60fc8631',
       verdict: {
         status: 'finished',

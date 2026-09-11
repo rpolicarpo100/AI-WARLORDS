@@ -1,17 +1,47 @@
+/**
+ * M015 — Perception tests: membership enforcement, knowledge assembly
+ * (sight + memory), builder envelopes, F-09 key tripwire, no-leak scan.
+ */
 import { describe, expect, it } from 'vitest';
 import type { PlayerId } from './authority.js';
-import { createWorldState } from './world-state.js';
-import { toAiPerception, toClientView, toWorldView } from './views.js';
+import { computeVisibility } from './fog.js';
+import type { MapData, MapId, TerrainId } from './map.js';
+import { createWorldState, type WorldState } from './world-state.js';
+import { perceive, toAiPerception, toClientView, toWorldView } from './views.js';
 
 const P1 = 'p1' as PlayerId;
 const P2 = 'p2' as PlayerId;
-const P3 = 'p3' as PlayerId;
 
-function makeState() {
+function makeMap(rows: readonly (readonly TerrainId[])[]): MapData {
+  const first = rows[0];
+  if (first === undefined) {
+    throw new Error('test setup: empty map');
+  }
+  return {
+    schemaVersion: 1,
+    id: 't' as MapId,
+    width: first.length,
+    height: rows.length,
+    stagger: 'odd',
+    cells: rows.flatMap((cols, row) => cols.map((terrain, col) => ({ col, row, terrain }))),
+    spawns: [],
+  };
+}
+
+function mixedMap(): MapData {
+  return makeMap([
+    ['field', 'field', 'field'],
+    ['field', 'forest', 'field'],
+    ['field', 'field', 'mountain'],
+  ]);
+}
+
+function makeState(): WorldState {
   return createWorldState({
-    players: [P1, P2, P3],
+    players: [P1, P2],
     tick: 4,
-    secrets: { p1: ['p1-plan-alpha'], p2: ['p2-plan-omega'] },
+    map: mixedMap(),
+    explored: { schemaVersion: 1, viewers: { p1: [0, 4], p2: [8] } },
   });
 }
 
@@ -22,87 +52,140 @@ describe('toWorldView (server-only)', () => {
   });
 });
 
-describe('toClientView (redaction)', () => {
-  it('shows own secrets and nobody elses (p1)', () => {
-    const view = toClientView(makeState(), P1);
+describe('perceive (unit: membership + validation)', () => {
+  it('rejects unknown viewers loud (L-27 closes here, at consumption)', () => {
+    expect(() => perceive(makeState(), 'zx' as PlayerId)).toThrow(/unknown viewer/);
+  });
 
-    expect(view).toEqual({
-      kind: 'client-view',
-      forPlayer: 'p1',
-      state: {
-        schemaVersion: 1,
-        tick: 4,
-        players: [{ id: 'p1' }, { id: 'p2' }, { id: 'p3' }],
-        secrets: { p1: ['p1-plan-alpha'] },
-      },
+  it('rejects malformed visibility loud (structural)', () => {
+    const state = makeState();
+    expect(() => perceive(state, P1, 'x' as never)).toThrow(/invalid visibility/);
+    expect(() => perceive(state, P1, null as never)).toThrow(/invalid visibility/);
+    expect(() => perceive(state, P1, [] as never)).toThrow(/invalid visibility/);
+    expect(() => perceive(state, P1, { p1: 'x' } as never)).toThrow(/invalid visibility/);
+    expect(() => perceive(state, P1, { p1: [-1] })).toThrow(/invalid visibility/);
+  });
+
+  it('OOB visibility skipped soft (stale positions, D-006 context level)', () => {
+    expect(perceive(makeState(), P1, { p1: [4, 99] }).visibleCells).toEqual([4]);
+  });
+});
+
+describe('perceive (integration: knowledge assembly)', () => {
+  it('assembles sight + memory + sparse terrain (golden)', () => {
+    expect(perceive(makeState(), P1, { p1: [4, 8] })).toEqual({
+      tick: 4,
+      players: [{ id: 'p1' }, { id: 'p2' }],
+      viewer: 'p1',
+      visibleCells: [4, 8],
+      exploredCells: [0, 4],
+      map: { width: 3, height: 3, visible: { 4: 'forest', 8: 'mountain' }, explored: [0] },
     });
   });
 
-  it('shows own secrets and nobody elses (p2, mirror)', () => {
-    const view = toClientView(makeState(), P2);
-    expect(view.state.secrets).toEqual({ p2: ['p2-plan-omega'] });
+  it('viewer absent from visibility sees nothing but remembers', () => {
+    const known = perceive(makeState(), P1, { p2: [8] });
+    expect(known.visibleCells).toEqual([]);
+    expect(known.exploredCells).toEqual([0, 4]);
+    expect(known.map?.visible).toEqual({});
+    expect(known.map?.explored).toEqual([0, 4]);
   });
 
-  it('yields empty secrets for players without any (p3)', () => {
-    const view = toClientView(makeState(), P3);
-    expect(view.state.secrets).toEqual({});
+  it('default visibility = memory only', () => {
+    const known = perceive(makeState(), P2);
+    expect(known.visibleCells).toEqual([]);
+    expect(known.exploredCells).toEqual([8]);
+    expect(known.map?.explored).toEqual([8]);
   });
 
-  it('deep-freezes the whole view: wrapper, state, secrets and lists', () => {
-    const view = toClientView(makeState(), P1);
-
-    expect(Object.isFrozen(view)).toBe(true);
-    expect(Object.isFrozen(view.state)).toBe(true);
-    expect(Object.isFrozen(view.state.secrets)).toBe(true);
-    const list = view.state.secrets['p1'];
-    if (list === undefined) {
-      throw new Error('test setup: expected p1 secrets');
-    }
-    expect(Object.isFrozen(list)).toBe(true);
-    expect(() => {
-      (view as { kind: string }).kind = 'server';
-    }).toThrow(TypeError);
-    expect(() => {
-      (list as string[]).push('x');
-    }).toThrow(TypeError);
+  it('map without explored: sight without memory', () => {
+    const state = createWorldState({ players: [P1, P2], map: mixedMap() });
+    const known = perceive(state, P1, { p1: [0] });
+    expect(known.visibleCells).toEqual([0]);
+    expect(known.exploredCells).toEqual([]);
+    expect(known.map?.visible).toEqual({ 0: 'field' });
+    expect(known.map?.explored).toEqual([]);
   });
 
-  it('never mutates or aliases the source state', () => {
+  it('viewer with no memory entry sees sight-only (others remember)', () => {
+    const state = createWorldState({
+      players: [P1, P2],
+      map: mixedMap(),
+      explored: { schemaVersion: 1, viewers: { p1: [0] } },
+    });
+    const known = perceive(state, P2, { p2: [1] });
+    expect(known.visibleCells).toEqual([1]);
+    expect(known.exploredCells).toEqual([]);
+    expect(known.map?.explored).toEqual([]);
+  });
+
+  it('mapless: roster + tick only, visibility ignored', () => {
+    const state = createWorldState({ players: [P1, P2], tick: 4 });
+    const known = perceive(state, P1, { p1: [0] });
+    expect(known).toEqual({
+      tick: 4,
+      players: [{ id: 'p1' }, { id: 'p2' }],
+      viewer: 'p1',
+      visibleCells: [],
+      exploredCells: [],
+    });
+    expect('map' in known).toBe(false);
+  });
+
+  it('feeds computeVisibility output (no-L2-edge compatibility proof)', () => {
+    const seen = computeVisibility(mixedMap(), [{ viewer: P1, col: 1, row: 1, range: 0 }]);
+    const known = perceive(makeState(), P1, seen);
+    expect(known.visibleCells).toEqual([4]);
+    expect(known.map?.visible).toEqual({ 4: 'forest' });
+  });
+
+  it('frozen output, source untouched and unfrozen', () => {
     const state = makeState();
     const before = JSON.parse(JSON.stringify(state)) as unknown;
-
-    toClientView(state, P1);
-
+    const known = perceive(state, P1, { p1: [4] });
+    const map = known.map;
+    if (map === undefined) {
+      throw new Error('test setup: expected map');
+    }
+    expect(Object.isFrozen(known)).toBe(true);
+    expect(Object.isFrozen(known.players)).toBe(true);
+    expect(Object.isFrozen(known.visibleCells)).toBe(true);
+    expect(Object.isFrozen(known.exploredCells)).toBe(true);
+    expect(Object.isFrozen(map)).toBe(true);
+    expect(Object.isFrozen(map.visible)).toBe(true);
+    expect(Object.isFrozen(map.explored)).toBe(true);
+    expect(() => {
+      (known.visibleCells as number[]).push(0);
+    }).toThrow(TypeError);
     expect(state).toEqual(before);
     expect(Object.isFrozen(state)).toBe(false);
   });
 
-  it('leaks nothing: serialized view contains own secrets only (no-leak scan)', () => {
-    const serialized = JSON.stringify(toClientView(makeState(), P1));
-    expect(serialized).toContain('p1-plan-alpha');
-    expect(serialized).not.toContain('p2-plan-omega');
+  it('deterministic run×2', () => {
+    const run = () => perceive(makeState(), P1, { p1: [8, 4] });
+    expect(run()).toEqual(run());
   });
 });
 
-describe('toAiPerception (M004: known == player-visible)', () => {
-  it('wraps the redacted world as known, distinctly kinded', () => {
-    const view = toAiPerception(makeState(), P1);
-
-    expect(view.kind).toBe('ai-perception');
+describe('builders (envelopes)', () => {
+  it('client view wraps perceived state, distinctly kinded, frozen', () => {
+    const view = toClientView(makeState(), P1, { p1: [4] });
+    expect(view.kind).toBe('client-view');
     expect(view.forPlayer).toBe('p1');
-    expect(view.known).toEqual({
-      schemaVersion: 1,
-      tick: 4,
-      players: [{ id: 'p1' }, { id: 'p2' }, { id: 'p3' }],
-      secrets: { p1: ['p1-plan-alpha'] },
-    });
+    expect(view.state.viewer).toBe('p1');
+    expect(view.state.visibleCells).toEqual([4]);
+    expect(view.state.exploredCells).toEqual([0, 4]);
     expect(Object.isFrozen(view)).toBe(true);
+    expect(Object.isFrozen(view.state)).toBe(true);
   });
 
-  it('leaks nothing: serialized perception contains own secrets only', () => {
-    const serialized = JSON.stringify(toAiPerception(makeState(), P2));
-    expect(serialized).toContain('p2-plan-omega');
-    expect(serialized).not.toContain('p1-plan-alpha');
+  it('AI perception wraps knowledge as known', () => {
+    const view = toAiPerception(makeState(), P1, { p1: [4] });
+    expect(view.kind).toBe('ai-perception');
+    expect(view.forPlayer).toBe('p1');
+    expect(view.known.visibleCells).toEqual([4]);
+    expect(view.known.exploredCells).toEqual([0, 4]);
+    expect(Object.isFrozen(view)).toBe(true);
   });
 
   it('is nominally distinct from the client view (kind separation)', () => {
@@ -112,20 +195,24 @@ describe('toAiPerception (M004: known == player-visible)', () => {
   });
 });
 
-describe('redacted key-set tripwire (FIX-AUDIT F-09)', () => {
-  it('locks the exact redacted state keys (new WorldState fields must update redactFor)', () => {
+describe('F-09 key tripwire (updated M015: perception keys)', () => {
+  it('locks the exact perceived keys (new knowledge fields update perceive)', () => {
     const state = makeState();
-    expect(Object.keys(toClientView(state, P1).state).sort()).toEqual([
+    expect(Object.keys(perceive(state, P1, { p1: [4] })).sort()).toEqual([
+      'exploredCells',
+      'map',
       'players',
-      'schemaVersion',
-      'secrets',
       'tick',
+      'viewer',
+      'visibleCells',
     ]);
-    expect(Object.keys(toAiPerception(state, P1).known).sort()).toEqual([
+    const mapless = createWorldState({ players: [P1, P2] });
+    expect(Object.keys(perceive(mapless, P1)).sort()).toEqual([
+      'exploredCells',
       'players',
-      'schemaVersion',
-      'secrets',
       'tick',
+      'viewer',
+      'visibleCells',
     ]);
   });
 
@@ -133,5 +220,12 @@ describe('redacted key-set tripwire (FIX-AUDIT F-09)', () => {
     const state = makeState();
     expect(Object.keys(toClientView(state, P1)).sort()).toEqual(['forPlayer', 'kind', 'state']);
     expect(Object.keys(toAiPerception(state, P1)).sort()).toEqual(['forPlayer', 'kind', 'known']);
+  });
+
+  it('leaks nothing: hidden terrain and others memory stay out (no-leak scan)', () => {
+    const serialized = JSON.stringify(toAiPerception(makeState(), P1, { p1: [4] }));
+    expect(serialized).toContain('forest');
+    expect(serialized).not.toContain('mountain');
+    expect(toAiPerception(makeState(), P1, { p1: [4] }).known.map?.explored).toEqual([0]);
   });
 });

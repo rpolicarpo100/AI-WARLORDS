@@ -604,7 +604,7 @@ describe('WorldState map extension (integration)', () => {
   it('map key omitted when absent (pre-M010 bytes unchanged)', () => {
     const state = createWorldState({ players: [P1] });
     expect('map' in state).toBe(false);
-    expect(state).toEqual({ schemaVersion: 1, tick: 0, players: [{ id: P1 }], secrets: {} });
+    expect(state).toEqual({ schemaVersion: 1, tick: 0, players: [{ id: P1 }] });
   });
 });
 
@@ -671,20 +671,35 @@ describe('match.started map summary (integration)', () => {
   });
 });
 
-describe('view map-blindness (security)', () => {
+describe('view map-filtering (security)', () => {
   it('WORLD view carries the map (identity)', () => {
     const state = createWorldState({ players: [P1], map: validMap() });
     expect(toWorldView(state)).toBe(state);
     expect(toWorldView(state).map).toEqual(validMap());
   });
 
-  it('AI perception is map-blind by construction', () => {
+  it('AI perception carries a filtered map (M015: blindness lifted selectively)', () => {
     const state = createWorldState({ players: [P1], map: validMap() });
-    expect('map' in toAiPerception(state, P1).known).toBe(false);
+    const cell0 = state.map?.cells[0];
+    if (cell0 === undefined) {
+      throw new Error('test setup: expected cell 0');
+    }
+    const map = toAiPerception(state, P1, { p1: [0] }).known.map;
+    if (map === undefined) {
+      throw new Error('test setup: expected perceived map');
+    }
+    expect(Object.keys(map).sort()).toEqual(['explored', 'height', 'visible', 'width']);
+    expect(map.visible).toEqual({ 0: cell0.terrain });
+    expect(map.explored).toEqual([]);
   });
 
-  it('CLIENT view is map-blind by construction', () => {
+  it('CLIENT view carries the same filtered map', () => {
     const state = createWorldState({ players: [P1], map: validMap() });
-    expect('map' in toClientView(state, P1).state).toBe(false);
+    const map = toClientView(state, P1, { p1: [0] }).state.map;
+    if (map === undefined) {
+      throw new Error('test setup: expected perceived map');
+    }
+    expect(Object.keys(map).sort()).toEqual(['explored', 'height', 'visible', 'width']);
+    expect(map.visible).toEqual(toAiPerception(state, P1, { p1: [0] }).known.map?.visible);
   });
 });

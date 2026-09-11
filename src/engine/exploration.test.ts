@@ -216,7 +216,6 @@ describe('explored-monotonic (security)', () => {
           schemaVersion: before.schemaVersion,
           tick: before.tick,
           players: before.players,
-          secrets: before.secrets,
           ...(before.map === undefined ? {} : { map: before.map }),
         };
         return { applied: true, state: wiped, summary: 'wipe' };
@@ -301,8 +300,12 @@ describe('explored-monotonic (security)', () => {
   });
 });
 
-describe('views non-leak (security)', () => {
-  it('explored stays out of AI perception (whitelist inheritance)', () => {
-    expect('explored' in toAiPerception(baseWorld(), P1).known).toBe(false);
+describe('views perception (security)', () => {
+  it('perception carries knowledge (cells), never raw explored memory', () => {
+    const known = toAiPerception(baseWorld(), P1, { p1: [4] }).known;
+    expect('explored' in known).toBe(false);
+    expect('viewers' in known).toBe(false);
+    expect(known.visibleCells).toEqual([4]);
+    expect(known.exploredCells).toEqual([0, 4]);
   });
 });
