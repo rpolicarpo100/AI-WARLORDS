@@ -54,6 +54,9 @@ import {
   isEconomyConfig,
   UPGRADE_TRANSITION,
 } from './economy.js';
+import type { TerrainId } from './map.js';
+import { DEFAULT_TERRAIN_CONFIG, isTerrainConfig, modifiersFor } from './terrain.js';
+import { MOVE_TRANSITION, moveParamsRule, moveProducer, warfareHandlers } from './warfare.js';
 
 declare const matchBrand: unique symbol;
 declare const seedBrand: unique symbol;
@@ -148,6 +151,7 @@ export interface MatchInit {
   readonly extraConditions?: readonly VictoryCondition[];
   readonly economyConfig?: unknown;
   readonly buildingsConfig?: unknown;
+  readonly terrainConfig?: unknown;
 }
 
 export type MatchDispatchOutcome =
@@ -230,19 +234,31 @@ export class Match {
     if (!isBuildingsConfig(buildingsConfig)) {
       throw new Error('Match: invalid buildings config.');
     }
+    const terrainConfig = init.terrainConfig ?? DEFAULT_TERRAIN_CONFIG;
+    if (!isTerrainConfig(terrainConfig)) {
+      throw new Error('Match: invalid terrain config.');
+    }
     const world = worldHandlers();
     const match = matchHandlers();
     const economy = economyHandlers(economyConfig, buildingsConfig);
     const city = cityHandlers(buildingsConfig);
+    // M022: passable = finite move cost (Infinity/NaN block, fail-closed).
+    const passable = (terrain: string): boolean =>
+      Number.isFinite(modifiersFor(terrainConfig, terrain as TerrainId).move);
+    const warfare = warfareHandlers(passable);
     const extra = init.extraHandlers ?? new Map<string, RngHandler<WorldState>>();
     const merged = new Map<string, RngHandler<WorldState>>([
       ...world,
       ...match,
       ...economy,
       ...city,
+      ...warfare,
       ...extra,
     ]);
-    if (merged.size !== world.size + match.size + economy.size + city.size + extra.size) {
+    if (
+      merged.size !==
+      world.size + match.size + economy.size + city.size + warfare.size + extra.size
+    ) {
       throw new Error('Match: duplicate handler names.');
     }
     const baseValidator = createWorldValidator();
@@ -256,6 +272,7 @@ export class Match {
     const paramRules = new Map<string, PreRule>([
       [GATHER_TRANSITION, gatherParamsRule],
       [BUILD_TRANSITION, buildParamsRule],
+      [MOVE_TRANSITION, moveParamsRule],
     ]);
     let dispatchCount = 0;
     const nextSeq = (): number => {
@@ -281,6 +298,7 @@ export class Match {
     const producers = new Map<string, readonly EventProducer[]>(matchProducers());
     producers.set(GATHER_TRANSITION, [gatherProducer]);
     producers.set(BUILD_TRANSITION, [buildStartedProducer]);
+    producers.set(MOVE_TRANSITION, [moveProducer]);
     const extraProducers = init.extraProducers ?? new Map<string, readonly EventProducer[]>();
     // (M019) The completion producer rides the same append path as caller extras:
     // structurally after matchAdvanced, ahead of caller extras.

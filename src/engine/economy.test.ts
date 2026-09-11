@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { markUntrusted, type ClientRequest, type PlayerId, type Untrusted } from './authority.js';
 import type { BuildingsData } from './buildings.js';
 import type { CitiesData } from './city.js';
+import type { UnitsData } from './units.js';
 import {
   addBuilding,
   buildParamsRule,
@@ -100,6 +101,18 @@ function tinyMap(): MapData {
 }
 
 /** Neutral default, but gold yields 3 (multi-take + partial-take coverage). */
+/** Workers on both nodeMap nodes (M022 L-32: gather crews). */
+function crewed(): UnitsData {
+  return {
+    schemaVersion: 1,
+    nextId: 2,
+    units: [
+      { id: 'u0', owner: 'p1', type: 'worker', hp: 5, col: 0, row: 0 },
+      { id: 'u1', owner: 'p1', type: 'worker', hp: 5, col: 1, row: 1 },
+    ],
+  };
+}
+
 function yield3(): EconomyConfig {
   return { ...DEFAULT_ECONOMY_CONFIG, gold: { value: 5, gatherYield: 3 } };
 }
@@ -109,7 +122,7 @@ function gatherMatch(config?: EconomyConfig): Match {
     seed: 7,
     ruleset: STANDARD_RULESET,
     players: [P1, P2],
-    initialState: createWorldState({ players: [P1, P2], map: nodeMap() }),
+    initialState: createWorldState({ players: [P1, P2], map: nodeMap(), units: crewed() }),
     ...(config === undefined ? {} : { economyConfig: config }),
   });
 }
@@ -423,8 +436,8 @@ describe('gatherParamsRule (unit)', () => {
 describe('createGatherHandler (unit: direct)', () => {
   function mapful(stockpiles?: StockpilesData): WorldState {
     return stockpiles === undefined
-      ? createWorldState({ players: [P1, P2], map: nodeMap() })
-      : createWorldState({ players: [P1, P2], map: nodeMap(), stockpiles });
+      ? createWorldState({ players: [P1, P2], map: nodeMap(), units: crewed() })
+      : createWorldState({ players: [P1, P2], map: nodeMap(), stockpiles, units: crewed() });
   }
 
   it('rejects an invalid config', () => {
@@ -779,7 +792,7 @@ describe('map-preserved v2 (E2E forgery mutants)', () => {
 
 describe('gatherProducer (unit: direct)', () => {
   function coerced(): { before: WorldState; after: WorldState } {
-    const before = createWorldState({ players: [P1, P2], map: nodeMap() });
+    const before = createWorldState({ players: [P1, P2], map: nodeMap(), units: crewed() });
     const handler = createGatherHandler(yield3());
     const result = handler({ state: before, caller: P1, params: { col: 0, row: 0 } });
     if (result.applied !== true) {
@@ -1758,6 +1771,88 @@ describe('perception carry: city (integration)', () => {
   });
 });
 
+describe('gather worker gate (M022 L-32)', () => {
+  function bare(): WorldState {
+    return createWorldState({ players: [P1, P2], map: nodeMap() });
+  }
+
+  function staffed(extra: UnitsData): WorldState {
+    return createWorldState({ players: [P1, P2], map: nodeMap(), units: extra });
+  }
+
+  it('no units → applied:false', () => {
+    const handler = createGatherHandler(yield3());
+    expect(handler({ state: bare(), caller: P1, params: { col: 0, row: 0 } })).toEqual({
+      applied: false,
+      reason: 'gather: no worker here.',
+    });
+  });
+
+  it('worker on the wrong cell → applied:false', () => {
+    const handler = createGatherHandler(yield3());
+    const off: UnitsData = {
+      schemaVersion: 1,
+      nextId: 1,
+      units: [{ id: 'u0', owner: 'p1', type: 'worker', hp: 5, col: 1, row: 1 }],
+    };
+    expect(handler({ state: staffed(off), caller: P1, params: { col: 0, row: 0 } })).toEqual({
+      applied: false,
+      reason: 'gather: no worker here.',
+    });
+  });
+
+  it('warrior on the node is not a crew → applied:false', () => {
+    const handler = createGatherHandler(yield3());
+    const martial: UnitsData = {
+      schemaVersion: 1,
+      nextId: 1,
+      units: [{ id: 'u0', owner: 'p1', type: 'warrior', hp: 12, col: 0, row: 0 }],
+    };
+    expect(handler({ state: staffed(martial), caller: P1, params: { col: 0, row: 0 } })).toEqual({
+      applied: false,
+      reason: 'gather: no worker here.',
+    });
+  });
+
+  it('foe worker does not crew my gather → applied:false', () => {
+    const handler = createGatherHandler(yield3());
+    const foe: UnitsData = {
+      schemaVersion: 1,
+      nextId: 1,
+      units: [{ id: 'u0', owner: 'p2', type: 'worker', hp: 5, col: 0, row: 0 }],
+    };
+    expect(handler({ state: staffed(foe), caller: P1, params: { col: 0, row: 0 } })).toEqual({
+      applied: false,
+      reason: 'gather: no worker here.',
+    });
+  });
+
+  it('E2E: uncrewed dispatch rejects, state untouched, revision 0', () => {
+    const match = new Match({
+      seed: 7,
+      ruleset: STANDARD_RULESET,
+      players: [P1, P2],
+      initialState: createWorldState({ players: [P1, P2], map: nodeMap() }),
+      economyConfig: yield3(),
+    });
+    const session = match.join(P1);
+    const before = match.getSnapshot();
+    expect(
+      match.dispatch(
+        session,
+        raw({
+          requestId: 'r1',
+          playerId: 'p1',
+          type: GATHER_TRANSITION,
+          payload: { col: 0, row: 0 },
+        }),
+      ),
+    ).toEqual({ status: 'rejected', reason: 'gather: no worker here.' });
+    expect(match.getSnapshot()).toEqual(before);
+    expect(match.getRevision()).toBe(0);
+  });
+});
+
 describe('createEconomyRule (unit: direct)', () => {
   function held(food: number, wood: number, stone: number, gold: number): StockpilesData {
     return { schemaVersion: 1, stockpiles: { p1: { food, wood, stone, gold } } };
@@ -1908,6 +2003,7 @@ describe('gather storage caps (unit: direct)', () => {
     return createWorldState({
       players: [P1, P2],
       map: nodeMap(),
+      units: crewed(),
       stockpiles: {
         schemaVersion: 1,
         stockpiles: { p1: { food: 0, wood: 0, stone: 0, gold } },
@@ -1969,6 +2065,7 @@ describe('economy validation E2E (real Match)', () => {
       initialState: createWorldState({
         players: [P1, P2],
         map: nodeMap(),
+        units: crewed(),
         ...(funds === undefined ? {} : { stockpiles: funds }),
       }),
       economyConfig: yield3(),

@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 21 (M001–M021)  |
-| `PLANNED`  | 144 (M022–M165) |
+| `VERIFIED` | 22 (M001–M022)  |
+| `PLANNED`  | 143 (M023–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -77,6 +77,10 @@ Checkpoints `VERIFIED`:
   posicionadas + config #83 + spawn puro; sem transições);
   1035/1035 testes, 100×4, Fase 4 aberta.
   Registo em `docs/modules/M021.md`. L-32 REPOINT→M022.
+- **M022 @ 2026-09-11** — movimento (1-step+passabilidade;
+  `unit.moved` LOW; gather exige worker); 1065/1065 testes, 100×4,
+  loop worker completo.
+  Registo em `docs/modules/M022.md`. L-32 CLOSED.
 
 ---
 
@@ -125,7 +129,7 @@ Checkpoints `VERIFIED`:
 | Módulo | Nome              | Estado     |
 | ------ | ----------------- | ---------- |
 | M021   | Unit System       | `VERIFIED` |
-| M022   | Movement          | `PLANNED`  |
+| M022   | Movement          | `VERIFIED` |
 | M023   | Combat            | `PLANNED`  |
 | M024   | Damage Resolution | `PLANNED`  |
 | M025   | Army Management   | `PLANNED`  |
@@ -209,7 +213,7 @@ Alinhadas por número: 0, 1, 3, 4, 28. Divergentes:
 ## Ordem recomendada (estrita, sem saltos)
 
 ```text
-M001 → M002 → … → M018 → M019 → M021 (VERIFIED) → M022 → … → M165
+M001 → M002 → … → M019 → M020 → M021 → M022 (VERIFIED) → M023 → … → M165
 ```
 
 Próximo permitido: **M019 — City System**, apenas após autorização

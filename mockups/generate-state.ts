@@ -5,8 +5,17 @@
  * Run: npx tsx mockups/generate-state.ts
  */
 import { writeFileSync } from 'node:fs';
-import { markUntrusted, type ClientRequest, type PlayerId, type Untrusted } from '../src/engine/authority.js';
-import { DEFAULT_ECONOMY_CONFIG, type BuildingsConfig, type EconomyConfig } from '../src/engine/economy.js';
+import {
+  markUntrusted,
+  type ClientRequest,
+  type PlayerId,
+  type Untrusted,
+} from '../src/engine/authority.js';
+import {
+  DEFAULT_ECONOMY_CONFIG,
+  type BuildingsConfig,
+  type EconomyConfig,
+} from '../src/engine/economy.js';
 import { computeVisibility } from '../src/engine/fog.js';
 import { markExplored } from '../src/engine/exploration.js';
 import { Match, STANDARD_RULESET } from '../src/engine/match.js';
@@ -110,9 +119,11 @@ function scenarioUnitStats(): UnitsConfig {
 function scenarioUnits(): UnitsData {
   return {
     schemaVersion: 1,
-    nextId: 5,
+    nextId: 6,
     units: [
       { id: 'u0', owner: 'p1', type: 'worker', hp: 5, col: 2, row: 2 },
+      // M022 L-32: the scripted gather at (3,2) needs a worker on the node.
+      { id: 'u5', owner: 'p1', type: 'worker', hp: 5, col: 3, row: 2 },
       { id: 'u1', owner: 'p1', type: 'warrior', hp: 12, col: 3, row: 3 },
       { id: 'u2', owner: 'p1', type: 'archer', hp: 8, col: 1, row: 1 },
       { id: 'u3', owner: 'p2', type: 'worker', hp: 5, col: 6, row: 3 },
@@ -203,7 +214,9 @@ function main(): void {
     perception,
   };
   writeFileSync(new URL('./state.json', import.meta.url), JSON.stringify(out, null, 1));
-  console.log(`scenario ok: ${snapshots.length} snapshots, ${out.events.length} events, tick=${final.tick}`);
+  console.log(
+    `scenario ok: ${snapshots.length} snapshots, ${out.events.length} events, tick=${final.tick}`,
+  );
 }
 
 main();

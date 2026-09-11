@@ -1,6 +1,6 @@
-# AI WARLORDS — RISK REGISTER (M021)
+# AI WARLORDS — RISK REGISTER (M022)
 
-> Data: 2026-09-11 · Actualizado por: M021
+> Data: 2026-09-11 · Actualizado por: M022
 > Convenção: `ACTIVE` = presente agora · `FUTURE` = fases vindouras ·
 > `MITIGATED` = tratado com residual declarado · `CLOSED` = encerrado
 
@@ -89,3 +89,4 @@
 | 2026-09-11 | M019      | L-30 CLOSED (sem grants); advance emendado cercado; invariante→M020; fila/cap→FUTURE     |
 | 2026-09-11 | M020      | L-31 enforcement LANDED (caps+conservação live); Fase 3 CLOSED; L-32→M021/M022           |
 | 2026-09-11 | M021      | L-32 REPOINT→M022 (gate precisa movimento); Fase 4 aberta; criação→M025 presumível       |
+| 2026-09-11 | M022      | L-32 CLOSED (worker exact-cell); 1-step live; mockups rebuild; cri→M025 mantém           |

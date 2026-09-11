@@ -5,12 +5,14 @@
  * dispatches); no Match seam (D-006 config-without-consumers, M018
  * precedent). HP/creation are engine-owned (master #5).
  */
-import { freezeState, isPlayerId, type PlayerId } from './authority.js';
-import { isResourceType, type ResourceType } from './map.js';
+import { freezeState, isPlayerId, type PlayerId, type TransitionHandler } from './authority.js';
+import { isResourceType, neighborsOf, type ResourceType } from './map.js';
 import { MAX_UINT32 } from './rng.js';
+import type { WorldState } from './world-state.js';
 import {
   isUnitsData,
   isUnitType,
+  unitById,
   UNITS_SCHEMA_VERSION,
   UNIT_TYPES,
   type UnitsData,
@@ -151,4 +153,115 @@ export function spawnUnit(
     nextId: base.nextId + 1,
     units: [...base.units, { id, owner, type, hp: config[type].maxHp, col, row }],
   };
+}
+
+/** Transition name (single source — match.ts wires it, tests dispatch it). */
+export const MOVE_TRANSITION = 'unit.move';
+
+/** Validated move parameters: a unit id plus a destination cell. */
+export interface MoveParams {
+  readonly id: string;
+  readonly col: number;
+  readonly row: number;
+}
+
+/** Structural passability predicate (Match injects the terrain-config closure). */
+export type PassableTerrain = (terrain: string) => boolean;
+
+/** Wire-shape pre-rule (game rules live in the handler, not here). */
+export function moveParamsRule(
+  _caller: PlayerId,
+  params: unknown,
+): { readonly rule: string; readonly detail: string } | null {
+  if (typeof params !== 'object' || params === null || Array.isArray(params)) {
+    return { rule: 'move-params', detail: 'move takes { id, col, row }' };
+  }
+  const fields = params as Record<string, unknown>;
+  if (typeof fields['id'] !== 'string' || !isUint32(fields['col']) || !isUint32(fields['row'])) {
+    return { rule: 'move-params', detail: 'move takes { id string, col/row uint32 }' };
+  }
+  return null;
+}
+
+export function createMoveHandler(passable: PassableTerrain): TransitionHandler<WorldState> {
+  if (typeof passable !== 'function') {
+    throw new Error('createMoveHandler: invalid passable predicate.');
+  }
+  return (ctx) => {
+    // The pre-rule validated { id, col, row } shape on the dispatch path;
+    // this cast documents the seam (match.ts `validated` precedent).
+    const { id, col, row } = ctx.params as MoveParams;
+    const data = ctx.state.units;
+    if (data === undefined) {
+      return { applied: false, reason: 'move: no units.' };
+    }
+    const unit = unitById(data, id);
+    if (unit === undefined) {
+      return { applied: false, reason: 'move: unknown unit.' };
+    }
+    if (unit.owner !== ctx.caller) {
+      return { applied: false, reason: 'move: not your unit.' };
+    }
+    const map = ctx.state.map;
+    if (map === undefined) {
+      return { applied: false, reason: 'move: no map.' };
+    }
+    const target = map.cells.find((cell) => cell.col === col && cell.row === row);
+    if (target === undefined) {
+      return { applied: false, reason: 'move: out of bounds.' };
+    }
+    const adjacent = neighborsOf(map, unit.col, unit.row).some(
+      (cell) => cell.col === col && cell.row === row,
+    );
+    if (!adjacent) {
+      return { applied: false, reason: 'move: not adjacent.' };
+    }
+    if (!passable(target.terrain)) {
+      return { applied: false, reason: 'move: impassable.' };
+    }
+    return {
+      applied: true,
+      state: {
+        ...ctx.state,
+        units: {
+          schemaVersion: UNITS_SCHEMA_VERSION,
+          nextId: data.nextId,
+          units: data.units.map((entry) => (entry.id === id ? { ...entry, col, row } : entry)),
+        },
+      },
+      summary: `moved ${id} to ${col},${row}`,
+    };
+  };
+}
+
+export function warfareHandlers(
+  passable: PassableTerrain,
+): Map<string, TransitionHandler<WorldState>> {
+  return new Map([[MOVE_TRANSITION, createMoveHandler(passable)]]);
+}
+
+/** Structural EventProducer: unit.moved from validated params (LOW per #priorities). */
+export function moveProducer(input: {
+  readonly type: string;
+  readonly caller: PlayerId;
+  readonly params: unknown;
+  readonly before: WorldState;
+  readonly after: WorldState;
+}): ReadonlyArray<{
+  readonly type: string;
+  readonly priority: 'low';
+  readonly payload: unknown;
+}> {
+  const params = input.params;
+  if (typeof params !== 'object' || params === null || Array.isArray(params)) {
+    throw new Error('moveProducer: invalid params.');
+  }
+  const fields = params as Record<string, unknown>;
+  const { id, col, row } = fields;
+  if (typeof id !== 'string' || !isUint32(col) || !isUint32(row)) {
+    throw new Error('moveProducer: invalid params.');
+  }
+  return [
+    { type: 'unit.moved', priority: 'low', payload: { player: input.caller, unit: id, col, row } },
+  ];
 }

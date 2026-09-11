@@ -4,19 +4,32 @@
  * extension, own-only perception.
  */
 import { describe, expect, it } from 'vitest';
-import { type PlayerId } from './authority.js';
-import { createWorldState, isWorldState } from './world-state.js';
+import { markUntrusted, type ClientRequest, type PlayerId, type Untrusted } from './authority.js';
+import { isMapData, neighborsOf, type MapCell, type MapData } from './map.js';
+import { Match, STANDARD_RULESET } from './match.js';
+import { DEFAULT_TERRAIN_CONFIG, type TerrainConfig } from './terrain.js';
+import { createWorldState, isWorldState, type WorldState } from './world-state.js';
 import { perceive } from './views.js';
 import {
+  createMoveHandler,
   DEFAULT_UNITS_CONFIG,
   isUnitsConfig,
   maxHpOf,
+  MOVE_TRANSITION,
+  moveParamsRule,
+  moveProducer,
   spawnUnit,
   unitCostOf,
   unitDamageOf,
+  warfareHandlers,
+  type PassableTerrain,
   type UnitsConfig,
 } from './warfare.js';
-import { type UnitsData, type UnitType } from './units.js';
+import { unitById, type UnitsData, type UnitType } from './units.js';
+
+function raw(value: unknown): Untrusted<ClientRequest> {
+  return markUntrusted(value as ClientRequest);
+}
 
 const P1 = 'p1' as PlayerId;
 const P2 = 'p2' as PlayerId;
@@ -217,5 +230,366 @@ describe('perception carry: units (integration)', () => {
     };
     const known = perceive(createWorldState({ players: [P1, P2], units: crowded }), P1);
     expect(known.units).toEqual([]);
+  });
+});
+
+describe('moveParamsRule (unit)', () => {
+  it.each([[null], [[]], ['x']] as Array<[unknown]>)('rejects non-object %j', (value) => {
+    expect(moveParamsRule(P1, value)).toEqual({
+      rule: 'move-params',
+      detail: 'move takes { id, col, row }',
+    });
+  });
+
+  it('rejects mistyped fields, accepts the shape', () => {
+    const detail = { rule: 'move-params', detail: 'move takes { id string, col/row uint32 }' };
+    expect(moveParamsRule(P1, {})).toEqual(detail);
+    expect(moveParamsRule(P1, { id: 42, col: 0, row: 0 })).toEqual(detail);
+    expect(moveParamsRule(P1, { id: 'u0', col: 0, row: -1 })).toEqual(detail);
+    expect(moveParamsRule(P1, { id: 'u0', col: 1, row: 2 })).toBeNull();
+  });
+});
+
+describe('createMoveHandler (unit: direct)', () => {
+  function warMap(): MapData {
+    const cells: MapCell[] = [];
+    for (let row = 0; row < 3; row += 1) {
+      for (let col = 0; col < 3; col += 1) {
+        cells.push({ col, row, terrain: 'field' });
+      }
+    }
+    const map: MapData = {
+      schemaVersion: 1,
+      id: 'test-war' as MapData['id'],
+      width: 3,
+      height: 3,
+      stagger: 'odd',
+      cells,
+      spawns: [],
+    };
+    if (!isMapData(map)) {
+      throw new Error('TEST BUG: warMap invalid');
+    }
+    return map;
+  }
+
+  function squad(): UnitsData {
+    return {
+      schemaVersion: 1,
+      nextId: 2,
+      units: [
+        { id: 'u0', owner: 'p1', type: 'worker', hp: 5, col: 0, row: 0 },
+        { id: 'u1', owner: 'p2', type: 'warrior', hp: 12, col: 2, row: 2 },
+      ],
+    };
+  }
+
+  function warState(map?: MapData, units?: UnitsData): WorldState {
+    return createWorldState({
+      players: [P1, P2],
+      ...(map === undefined ? {} : { map }),
+      ...(units === undefined ? {} : { units }),
+    });
+  }
+
+  function neighborOf(map: MapData, col: number, row: number): { col: number; row: number } {
+    const first = neighborsOf(map, col, row)[0];
+    if (first === undefined) {
+      throw new Error('TEST BUG: isolated cell');
+    }
+    return { col: first.col, row: first.row };
+  }
+
+  it('rejects a non-function predicate', () => {
+    expect(() => createMoveHandler(42 as unknown as PassableTerrain)).toThrow(
+      /invalid passable predicate/,
+    );
+  });
+
+  it('no units → applied:false', () => {
+    const handler = createMoveHandler(() => true);
+    expect(
+      handler({ state: warState(warMap()), caller: P1, params: { id: 'u0', col: 1, row: 0 } }),
+    ).toEqual({
+      applied: false,
+      reason: 'move: no units.',
+    });
+  });
+
+  it('unknown unit → applied:false', () => {
+    const handler = createMoveHandler(() => true);
+    expect(
+      handler({
+        state: warState(warMap(), squad()),
+        caller: P1,
+        params: { id: 'u9', col: 1, row: 0 },
+      }),
+    ).toEqual({ applied: false, reason: 'move: unknown unit.' });
+  });
+
+  it('foe unit → applied:false', () => {
+    const handler = createMoveHandler(() => true);
+    expect(
+      handler({
+        state: warState(warMap(), squad()),
+        caller: P1,
+        params: { id: 'u1', col: 1, row: 2 },
+      }),
+    ).toEqual({ applied: false, reason: 'move: not your unit.' });
+  });
+
+  it('mapless → applied:false', () => {
+    const handler = createMoveHandler(() => true);
+    expect(
+      handler({
+        state: warState(undefined, squad()),
+        caller: P1,
+        params: { id: 'u0', col: 1, row: 0 },
+      }),
+    ).toEqual({ applied: false, reason: 'move: no map.' });
+  });
+
+  it('out of bounds → applied:false', () => {
+    const handler = createMoveHandler(() => true);
+    expect(
+      handler({
+        state: warState(warMap(), squad()),
+        caller: P1,
+        params: { id: 'u0', col: 9, row: 9 },
+      }),
+    ).toEqual({ applied: false, reason: 'move: out of bounds.' });
+  });
+
+  it('non-neighbor and same-cell → applied:false', () => {
+    const handler = createMoveHandler(() => true);
+    const state = warState(warMap(), squad());
+    expect(handler({ state, caller: P1, params: { id: 'u0', col: 2, row: 2 } })).toEqual({
+      applied: false,
+      reason: 'move: not adjacent.',
+    });
+    expect(handler({ state, caller: P1, params: { id: 'u0', col: 0, row: 0 } })).toEqual({
+      applied: false,
+      reason: 'move: not adjacent.',
+    });
+  });
+
+  it('blocked terrain → applied:false (predicate decides)', () => {
+    const handler = createMoveHandler(() => false);
+    const dest = neighborOf(warMap(), 0, 0);
+    expect(
+      handler({ state: warState(warMap(), squad()), caller: P1, params: { id: 'u0', ...dest } }),
+    ).toEqual({ applied: false, reason: 'move: impassable.' });
+  });
+
+  it('golden: moves, preserves nextId + others, exact summary', () => {
+    const seen: string[] = [];
+    const handler = createMoveHandler((terrain) => {
+      seen.push(terrain);
+      return true;
+    });
+    const dest = neighborOf(warMap(), 0, 0);
+    const result = handler({
+      state: warState(warMap(), squad()),
+      caller: P1,
+      params: { id: 'u0', ...dest },
+    });
+    if (result.applied !== true) {
+      throw new Error('TEST BUG: golden move declined');
+    }
+    expect(result.summary).toBe(`moved u0 to ${dest.col},${dest.row}`);
+    expect(seen).toEqual(['field']);
+    expect(result.state.units).toEqual({
+      schemaVersion: 1,
+      nextId: 2,
+      units: [
+        { id: 'u0', owner: 'p1', type: 'worker', hp: 5, col: dest.col, row: dest.row },
+        { id: 'u1', owner: 'p2', type: 'warrior', hp: 12, col: 2, row: 2 },
+      ],
+    });
+  });
+});
+
+describe('warfareHandlers (unit)', () => {
+  it('registers move; invalid predicate throws', () => {
+    expect([...warfareHandlers(() => true).keys()]).toEqual(['unit.move']);
+    expect(() => warfareHandlers(42 as unknown as PassableTerrain)).toThrow(
+      /invalid passable predicate/,
+    );
+  });
+});
+
+describe('moveProducer (unit: direct)', () => {
+  it('throws on invalid params', () => {
+    const state = createWorldState({ players: [P1, P2] });
+    expect(() =>
+      moveProducer({ type: MOVE_TRANSITION, caller: P1, params: 'x', before: state, after: state }),
+    ).toThrow(/invalid params/);
+    expect(() =>
+      moveProducer({
+        type: MOVE_TRANSITION,
+        caller: P1,
+        params: { id: 'u0', col: 1 },
+        before: state,
+        after: state,
+      }),
+    ).toThrow(/invalid params/);
+  });
+
+  it('golden: unit.moved LOW with player+unit+dest', () => {
+    const state = createWorldState({ players: [P1, P2] });
+    expect(
+      moveProducer({
+        type: MOVE_TRANSITION,
+        caller: P1,
+        params: { id: 'u0', col: 1, row: 0 },
+        before: state,
+        after: state,
+      }),
+    ).toEqual([
+      {
+        type: 'unit.moved',
+        priority: 'low',
+        payload: { player: 'p1', unit: 'u0', col: 1, row: 0 },
+      },
+    ]);
+  });
+});
+
+describe('move E2E (real Match)', () => {
+  function riverMap(): MapData {
+    const map: MapData = {
+      schemaVersion: 1,
+      id: 'test-river' as MapData['id'],
+      width: 2,
+      height: 1,
+      stagger: 'odd',
+      cells: [
+        { col: 0, row: 0, terrain: 'field' },
+        { col: 1, row: 0, terrain: 'river' },
+      ],
+      spawns: [],
+    };
+    if (!isMapData(map)) {
+      throw new Error('TEST BUG: riverMap invalid');
+    }
+    return map;
+  }
+
+  function moveMatch(terrain?: TerrainConfig): Match {
+    return new Match({
+      seed: 11,
+      ruleset: STANDARD_RULESET,
+      players: [P1, P2],
+      initialState: createWorldState({
+        players: [P1, P2],
+        map: riverMap(),
+        units: {
+          schemaVersion: 1,
+          nextId: 2,
+          units: [
+            { id: 'u0', owner: 'p1', type: 'worker', hp: 5, col: 0, row: 0 },
+            { id: 'u1', owner: 'p2', type: 'warrior', hp: 12, col: 0, row: 0 },
+          ],
+        },
+      }),
+      ...(terrain === undefined ? {} : { terrainConfig: terrain }),
+    });
+  }
+
+  function step(match: Match, rid: string, player: PlayerId, id: string, col: number, row: number) {
+    return match.dispatch(
+      match.join(player),
+      raw({ requestId: rid, playerId: player, type: MOVE_TRANSITION, payload: { id, col, row } }),
+    );
+  }
+
+  it('golden: applied + summary + unit.moved fact in sequence', () => {
+    const fordable = {
+      ...DEFAULT_TERRAIN_CONFIG,
+      river: { move: 1, defense: 0, stealth: 0, ranged: 0 },
+    };
+    const match = moveMatch(fordable);
+    expect(step(match, 'r1', P1, 'u0', 1, 0)).toEqual({
+      status: 'applied',
+      revision: 1,
+      summary: 'moved u0 to 1,0',
+    });
+    expect(unitById(match.getSnapshot().units, 'u0')).toEqual({
+      id: 'u0',
+      owner: 'p1',
+      type: 'worker',
+      hp: 5,
+      col: 1,
+      row: 0,
+    });
+    expect(match.getEvents().map((e) => e.type)).toEqual(['match.started', 'unit.moved']);
+    expect(match.getEvents()[1]).toEqual({
+      seq: 2,
+      tick: 0,
+      revision: 1,
+      type: 'unit.moved',
+      priority: 'low',
+      payload: { player: 'p1', unit: 'u0', col: 1, row: 0 },
+    });
+  });
+
+  it('default terrain blocks the river (Infinity → impassable, untouched)', () => {
+    const match = moveMatch();
+    const before = match.getSnapshot();
+    expect(step(match, 'r1', P1, 'u0', 1, 0)).toEqual({
+      status: 'rejected',
+      reason: 'move: impassable.',
+    });
+    expect(match.getSnapshot()).toEqual(before);
+    expect(match.getRevision()).toBe(0);
+  });
+
+  it('foe unit rejects (ownership), unknown rejects', () => {
+    const fordable = {
+      ...DEFAULT_TERRAIN_CONFIG,
+      river: { move: 1, defense: 0, stealth: 0, ranged: 0 },
+    };
+    const match = moveMatch(fordable);
+    expect(step(match, 'r1', P1, 'u1', 1, 0)).toEqual({
+      status: 'rejected',
+      reason: 'move: not your unit.',
+    });
+    expect(step(match, 'r2', P1, 'u9', 1, 0)).toEqual({
+      status: 'rejected',
+      reason: 'move: unknown unit.',
+    });
+    expect(match.getRevision()).toBe(0);
+  });
+
+  it('malformed params rejected (pre-rule), state untouched', () => {
+    const match = moveMatch();
+    const session = match.join(P1);
+    const before = match.getSnapshot();
+    const payloads: unknown[] = ['x', {}, { id: 'u0', col: 1 }];
+    payloads.forEach((payload, index) => {
+      expect(
+        match.dispatch(
+          session,
+          raw({ requestId: `r${index + 1}`, playerId: 'p1', type: MOVE_TRANSITION, payload }),
+        ),
+      ).toMatchObject({ status: 'rejected' });
+    });
+    expect(match.getSnapshot()).toEqual(before);
+    expect(match.getRevision()).toBe(0);
+  });
+
+  it('journey: two dispatches, two facts (1-step travel)', () => {
+    const fordable = {
+      ...DEFAULT_TERRAIN_CONFIG,
+      river: { move: 1, defense: 0, stealth: 0, ranged: 0 },
+    };
+    const match = moveMatch(fordable);
+    expect(step(match, 'r1', P1, 'u0', 1, 0)).toMatchObject({ status: 'applied' });
+    expect(step(match, 'r2', P1, 'u0', 0, 0)).toEqual({
+      status: 'applied',
+      revision: 2,
+      summary: 'moved u0 to 0,0',
+    });
+    expect(match.getEvents().filter((e) => e.type === 'unit.moved')).toHaveLength(2);
   });
 });

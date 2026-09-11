@@ -124,6 +124,12 @@ describe('constructor validation (failure)', () => {
     },
   );
 
+  it.each([[42], ['x'], [{}], [{ field: { move: 1, defense: 0, stealth: 0, ranged: 0 } }]] as Array<
+    [unknown]
+  >)('rejects terrainConfig %j', (terrainConfig) => {
+    expect(() => new Match(baseInit({ terrainConfig }))).toThrow(/invalid terrain config/);
+  });
+
   it('rejects garbage roster ids', () => {
     expect(() => makeMatch({ players: ['x'.repeat(65) as PlayerId] })).toThrow(/invalid player id/);
     expect(() => makeMatch({ players: [42 as unknown as PlayerId] })).toThrow(/invalid player id/);

@@ -35,6 +35,7 @@ import {
   type StockpileType,
 } from './stockpiles.js';
 import type { WorldState } from './world-state.js';
+import { unitsOf } from './units.js';
 
 export interface EconomyRates {
   readonly value: number;
@@ -239,6 +240,13 @@ export function createGatherHandler(
     }
     if (node.amount === 0) {
       return { applied: false, reason: 'gather: node depleted.' };
+    }
+    // M022: L-32 CLOSED — only a worker standing on the node gathers.
+    const crewed = unitsOf(ctx.state.units, ctx.caller).some(
+      (unit) => unit.type === 'worker' && unit.col === col && unit.row === row,
+    );
+    if (!crewed) {
+      return { applied: false, reason: 'gather: no worker here.' };
     }
     const taken = Math.min(config[node.type].gatherYield, node.amount);
     if (taken === 0) {

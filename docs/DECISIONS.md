@@ -375,3 +375,41 @@ damage}` #83 + strict-guard + DEFAULT neutro + `unitCostOf`/
 - IMPLEMENTATION: `units.ts` L0 (novo) + `warfare.ts` L2 (novo)
   - world-state/views (M021).
 - ESTADO: `ACCEPTED`.
+
+## D-015 — Movimento 1-step + passabilidade; gather exige worker (M022 pré-análise)
+
+- DECISION: `MOVE_TRANSITION` (`unit.move`) em `warfare.ts` L2:
+  `createMoveHandler(passable)` (predicado estrutural — Match L4
+  injecta closure sobre terrain config validada; L2↛L2 intacto) +
+  `moveParamsRule` ({id string, col/row uints}) + `moveProducer`
+  (`unit.moved`, priority LOW #priorities, `{player, unit, col,
+row}`) + `warfareHandlers(passable)`. Regras: sem units→
+  `move: no units.`; id→`unknown unit.`; dono→`not your unit.`;
+  sem mapa→`no map.`; destino→`out of bounds.`; não-adjacente
+  (neighborsOf; same-cell incluído)→`not adjacent.`; bloqueado→
+  `impassable.`. 1-step (sem speed stat #83; viagem = N dispatches).
+  Passável = move finito (Infinity/NaN bloqueiam, fail-closed).
+  Match: seam `terrainConfig?` (default neutro M011) + merge +
+  paramRule + producer. Gather: worker exact-cell (unitsOf L0 em
+  economy — L2→L0 ✓) senão `gather: no worker here.` (L-32 CLOSED).
+- MOTIVE: #47 (Validar movement) + #48 (impossible movement,
+  speed manipulation — 1-step torna multi-step impossível) +
+  #factos (UNIT_MOVED) + #priorities (LOW) + M011 (move/Infinity)
+  - L-32 + #15 (WORKER recolha). Hex-adjacência stagger-aware
+    (neighborsOf M010). Predicado > espelho (sem dup 9 ids).
+- ALTERNATIVES: multi-step/range (rejeitado: sem speed stat —
+  tuning inventado); multipliers como custo (rejeitado: sem
+  movement points — só finito/bloqueado); stacking-gate
+  (rejeitado: ungrounded); fog-gating (rejeitado: D-010);
+  config terrain em warfare (rejeitado: L2↛L2); gate adjacente
+  (rejeitado: exact-cell mais simples+estrito); worker qualquer
+  (rejeitado: trivialmente satisfeito — simulação fina).
+- ADVANTAGES: loop worker completo (anda→colhe); impossíveis
+  rejeitados loud; default M011 dá river-blocked free; zero
+  churn Match-config (seam opcional neutro).
+- DISADVANTAGES: fixtures gather ganham workers (churn contido
+  mapful/gatherMatch/cappedMatch); viagem longa = N dispatches.
+- RISKS: baixo-médio — 1.º movimento + emenda gather (mitigado:
+  E2E worker/no-worker ambos os lados; goldens move+facto).
+- IMPLEMENTATION: `warfare.ts` L2 + `economy.ts` (gate) + `match.ts` (M022).
+- ESTADO: `ACCEPTED`.
