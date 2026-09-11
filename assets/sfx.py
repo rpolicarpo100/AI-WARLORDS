@@ -85,6 +85,14 @@ def main():
         "whoosh",
         [v * math.sin(math.pi * i / int(RATE * 0.35)) for i, v in enumerate(noise(0.35, vol=0.9, lowpass=0.06, attack=1.0, decay=1.0))],
     )
+    wind = noise(3.0, vol=0.9, lowpass=0.05, attack=1.0, decay=1.0)
+    swell = [v * (0.45 + 0.35 * math.sin(2 * math.pi * i / len(wind) * 2 + 1)) for i, v in enumerate(wind)]
+    chirps = mix(
+        at(tone(2500, 0.1, vol=0.25, slide=0.35, decay=0.9), 0.6),
+        at(tone(2900, 0.09, vol=0.22, slide=-0.25, decay=0.9), 0.78),
+        at(tone(2700, 0.12, vol=0.24, slide=0.3, decay=0.9), 2.0),
+    )
+    save("wind", mix(swell, chirps))
     save(
         "fanfare",
         mix(
