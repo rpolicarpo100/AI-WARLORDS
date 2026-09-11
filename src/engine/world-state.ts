@@ -1,4 +1,5 @@
 import { isPlayerId, type PlayerId, type TransitionHandler } from './authority.js';
+import { isMapData, type MapData } from './map.js';
 
 export const WORLD_SCHEMA_VERSION = 1;
 
@@ -18,12 +19,20 @@ export interface WorldState {
    * arrives in M010/M015+; this store itself may be removed then.
    */
   readonly secrets: { readonly [playerId: string]: readonly string[] };
+  /**
+   * World geography (M010, optional compatible extension — no version bump).
+   * Absent in abstract/proof matches; present matches carry validated MapData.
+   * WORLD views see it; AI/CLIENT views are map-blind by construction
+   * (`redactFor` builds explicitly) until fog/perception arrive (M013/M015).
+   */
+  readonly map?: MapData;
 }
 
 export interface WorldStateInit {
   readonly players: readonly PlayerId[];
   readonly secrets?: { readonly [playerId: string]: readonly string[] };
   readonly tick?: number;
+  readonly map?: MapData;
 }
 
 /**
@@ -78,6 +87,10 @@ export function isWorldState(value: unknown): value is WorldState {
       }
     }
   }
+  const map = fields['map'];
+  if (map !== undefined && !isMapData(map)) {
+    return false;
+  }
   return true;
 }
 
@@ -87,6 +100,7 @@ export function createWorldState(init: WorldStateInit): WorldState {
     tick: init.tick ?? 0,
     players: init.players.map((id) => ({ id })),
     secrets: init.secrets ?? {},
+    ...(init.map === undefined ? {} : { map: init.map }),
   };
   if (!isWorldState(candidate)) {
     throw new Error('createWorldState: invalid initial world.');

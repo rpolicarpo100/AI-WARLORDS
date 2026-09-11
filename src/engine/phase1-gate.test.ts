@@ -426,6 +426,7 @@ describe('determinism hygiene (static security review)', () => {
       'events.ts',
       'harness.ts',
       'hash.ts',
+      'map.ts',
       'match.ts',
       'rng.ts',
       'validation.ts',
@@ -480,6 +481,7 @@ describe('architecture boundary (static review)', () => {
   const LAYERS: Record<string, number> = {
     authority: 0,
     hash: 0,
+    map: 0,
     rng: 0,
     'world-state': 1,
     harness: 2,

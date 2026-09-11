@@ -1,6 +1,6 @@
-# AI WARLORDS — MODULE STATUS (M009)
+# AI WARLORDS — MODULE STATUS (M010)
 
-> Data: 2026-09-11 · Actualizado por: M009 (Core Engine Test Suite)
+> Data: 2026-09-11 · Actualizado por: M010 (Map System)
 > Estados oficiais: `PLANNED · IN_ANALYSIS · IN_DEVELOPMENT · IMPLEMENTED · TESTING · FAILED · BLOCKED · VERIFIED · DEPRECATED`
 
 ---
@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 9 (M001–M009)   |
-| `PLANNED`  | 156 (M010–M165) |
+| `VERIFIED` | 10 (M001–M010)  |
+| `PLANNED`  | 155 (M011–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -38,6 +38,9 @@ Checkpoints `VERIFIED`:
 - **M009 @ 2026-09-11** — suite transversal do motor (gémeos + selo + scans +
   escala); 327/327 testes, 100×4, zero código de produção.
   Registo em `docs/modules/M009.md`. **Fase 1 completa.**
+- **M010 @ 2026-09-11** — sistema de mapas (hex + `MapData` + loader Tiled +
+  `map-preserved`); 459/459 testes, 100×4, v1 compatível.
+  Registo em `docs/modules/M010.md`.
 
 ---
 
@@ -62,14 +65,14 @@ Checkpoints `VERIFIED`:
 
 ## Fase 2 — World
 
-| Módulo | Nome              | Estado    |
-| ------ | ----------------- | --------- |
-| M010   | Map System        | `PLANNED` |
-| M011   | Terrain           | `PLANNED` |
-| M012   | Resources         | `PLANNED` |
-| M013   | Fog of War        | `PLANNED` |
-| M014   | Exploration       | `PLANNED` |
-| M015   | Perception System | `PLANNED` |
+| Módulo | Nome              | Estado     |
+| ------ | ----------------- | ---------- |
+| M010   | Map System        | `VERIFIED` |
+| M011   | Terrain           | `PLANNED`  |
+| M012   | Resources         | `PLANNED`  |
+| M013   | Fog of War        | `PLANNED`  |
+| M014   | Exploration       | `PLANNED`  |
+| M015   | Perception System | `PLANNED`  |
 
 ## Fase 3 — Economy
 
@@ -149,10 +152,10 @@ Checkpoints `VERIFIED`:
 ## Ordem recomendada (estrita, sem saltos)
 
 ```text
-M001 → M002 → M003 → M004 → M005 → M006 → M007 → M008 → M009 (VERIFIED) → M010 → … → M165
+M001 → M002 → … → M009 → M010 (VERIFIED) → M011 → … → M165
 ```
 
-Próximo permitido: **M010 — Map System**, apenas após autorização
+Próximo permitido: **M011 — Terrain**, apenas após autorização
 explícita. Saltos, paralelização ou batch = violação do §35 (recusar).
 
 ---

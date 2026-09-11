@@ -219,8 +219,17 @@ export class Match {
       initialState: init.initialState,
       handlers: validated,
     });
+    const initialMap = init.initialState.map;
     this.events.push(
-      matchStartedEvent(this.seed, this.players, this.ruleset, init.initialState.tick),
+      matchStartedEvent(
+        this.seed,
+        this.players,
+        this.ruleset,
+        init.initialState.tick,
+        initialMap === undefined
+          ? undefined
+          : { id: initialMap.id, version: initialMap.schemaVersion },
+      ),
     );
     const genesis = evaluateVictory(this.conditions, {
       state: init.initialState,

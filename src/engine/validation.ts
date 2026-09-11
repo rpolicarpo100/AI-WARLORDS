@@ -20,6 +20,7 @@ import { isWorldState, type WorldState } from './world-state.js';
  * of post (a malformed state cannot be meaningfully compared further).
  * Schema-version preservation is subsumed by the shape gate while the
  * engine is single-version (no dead rule kept for decoration).
+ * M010 adds map-preserved (fail-closed geography integrity, O(1)).
  */
 
 /** A single failed check: which rule + deterministic detail. */
@@ -93,8 +94,24 @@ function sizeRule(_before: WorldState, after: WorldState): Violation | null {
   return { rule: 'state-size', detail: `${bytes} bytes (max ${MAX_STATE_BYTES})` };
 }
 
+/**
+ * M010 geography integrity: no handler may replace the map object —
+ * fail-closed (there are no map transitions yet; forged terrain is the
+ * same threat class as R-20). Reference check is O(1): handlers that
+ * merely spread state keep the same reference and pass untouched.
+ */
+function mapRule(before: WorldState, after: WorldState): Violation | null {
+  if (before.map === after.map) {
+    return null;
+  }
+  return {
+    rule: 'map-preserved',
+    detail: 'map replaced without a map transition (none exist yet)',
+  };
+}
+
 export function createWorldValidator(): WorldValidator {
-  return { pre: [], postShape: shapeRule, post: [rosterRule, tickRule, sizeRule] };
+  return { pre: [], postShape: shapeRule, post: [rosterRule, tickRule, sizeRule, mapRule] };
 }
 
 /** Handler context extended with the dispatch's deterministic RNG stream. */

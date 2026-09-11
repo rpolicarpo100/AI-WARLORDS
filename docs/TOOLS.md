@@ -8,40 +8,45 @@
 
 ## 1. Decisão
 
-| Ferramenta     | Papel pedido                | Veredito                                              |
-| -------------- | --------------------------- | ----------------------------------------------------- |
-| Tiled          | melhor escolha geral        | ✅ CONFIRMADO — **SHORTLIST (recomendado p/ M010)**   |
-| LDtk           | desenvolvimento estruturado | ✅ CONFIRMADO c/ nuance — **SHORTLIST (alternativa)** |
-| Ogmo           | alternativa leve            | ✅ CONFIRMADO c/ aviso — **FALLBACK (stale)**         |
-| Dungeon Scrawl | dungeons rápidas            | ✅ CONFIRMADO — **REFERENCE-ONLY**                    |
-| Watabou        | geração automática          | ✅ CONFIRMADO c/ condição — **FUTURO-condicional**    |
-| Azgaar         | mundo completo              | ✅ CONFIRMADO — **FUTURO (M158)**                     |
-| Donjon         | procgen rápida              | ✅ CONFIRMADO — **IDEIAS-ONLY**                       |
+| Ferramenta     | Papel pedido                | Veredito                                           |
+| -------------- | --------------------------- | -------------------------------------------------- |
+| Tiled          | melhor escolha geral        | ✅ CONFIRMADO — **AUTORITATIVO (decisão M010)**    |
+| LDtk           | desenvolvimento estruturado | ✅ CONFIRMADO c/ nuance — **alternativa não-hex**  |
+| Ogmo           | alternativa leve            | ✅ CONFIRMADO c/ aviso — **FALLBACK (stale)**      |
+| Dungeon Scrawl | dungeons rápidas            | ✅ CONFIRMADO — **REFERENCE-ONLY**                 |
+| Watabou        | geração automática          | ✅ CONFIRMADO c/ condição — **FUTURO-condicional** |
+| Azgaar         | mundo completo              | ✅ CONFIRMADO — **FUTURO (M158)**                  |
+| Donjon         | procgen rápida              | ✅ CONFIRMADO — **IDEIAS-ONLY**                    |
 
-Gate: **M010 (Map System) escolhe o formato autoritativo + constrói o loader.**
-Até lá: ZERO ficheiros de mapa no repo (evita churn de formato).
+Gate M010 CUMPRIDO (2026-09-11): formato autoritativo = Tiled hexagonal JSON
+(strict subset — ver `docs/modules/M010.md` §2); loader `loadMapData` em
+`src/engine/map.ts`, ancorado nas docs oficiais Tiled 1.12.2. Ficheiros de
+mapa de CONTEÚDO chegam com M011+ (semântica primeiro; L-21).
 
 ## 2. Evidência por ferramenta
 
-### Tiled — SHORTLIST (recomendado)
+### Tiled — AUTORITATIVO (decisão M010)
 
 - Free e open source; export JSON (+TMX/Lua/etc.) [1](https://dinogame.gg/blog/how-to-use-tiled-level-design/) · [oficial](https://www.mapeditor.org/)
 - Mapas ortogonais + isométricos + **hexagonais**, infinitos, worlds, object
   layers, custom properties, scripting JS (formatos custom)
 - Activo: v1.12.2 (Mai 2026), 200+ sponsors
 - Precedente RTS com mapas Tiled (Rusted Warfare, sponsor oficial)
-- Porquê recomendado: único da lista com hex grids + JSON estruturado +
-  manutenção forte. Decide-se em M010 contra o grid escolhido.
+- Decisão M010 (2026-09-11): grid HEX (6-adjacência uniforme, sem ambiguidade
+  diagonal) ⇒ Tiled confirma-se como ferramenta autoritativa (único shortlist
+  com hex). Subset: orientation hexagonal, stagger y/odd|even, layers
+  `terrain` (densa) + `spawns` (opcional), 1 tileset embedded, gid-array;
+  semântica stagger/GIDs/tilesets verificada nas docs 1.12.2.
 - Licença exacta (SPDX) por confirmar — irrelevante p/ output (ficheiros são
   nossos); verificar só se algum dia embarcarmos código Tiled.
 
-### LDtk — SHORTLIST (alternativa)
+### LDtk — alternativa não-hex
 
 - "Fast. Free. Open source", JSON nativo + Super Simple Export, entidades com
   propriedades tipadas, worlds, cross-export TMX [4](https://www.reddit.com/r/gamedev/comments/jokim8/ldtk_level_designer_toolkit/) · [oficial](https://ldtk.io/)
 - Nuance: foco platformers/top-down square-grid; **sem isométrico**
   ("Sorry, no isometric 3D here!!" — página oficial); hex não oferecido
-- Se M010 escolher square-grid + entidades ricas: alternativa séria ao Tiled.
+- Mantém-se alternativa se algum futuro não-hex precisar (fora de âmbito).
 
 ### Ogmo Editor 3 (CE) — FALLBACK
 
@@ -83,3 +88,4 @@ desktop Watabou — não são precisas). Reavaliar se algum papel mudar.
 | Data       | Módulo    | Alteração                                                           |
 | ---------- | --------- | ------------------------------------------------------------------- |
 | 2026-09-10 | M004-turn | Criação: 7 ferramentas verificadas, shortlist Tiled/LDtk, gate M010 |
+| 2026-09-11 | M010      | Gate cumprido: Tiled AUTORITATIVO (hex strict-subset + loader)      |

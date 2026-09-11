@@ -60,6 +60,7 @@ export function matchStartedEvent(
   players: readonly PlayerId[],
   ruleset: { readonly id: string; readonly version: number },
   tick: number,
+  map?: { readonly id: string; readonly version: number },
 ): GameEvent {
   return freezeState({
     seq: 1,
@@ -67,7 +68,7 @@ export function matchStartedEvent(
     revision: 0,
     type: 'match.started',
     priority: 'normal',
-    payload: { seed, players, ruleset },
+    payload: map === undefined ? { seed, players, ruleset } : { seed, players, ruleset, map },
   });
 }
 
