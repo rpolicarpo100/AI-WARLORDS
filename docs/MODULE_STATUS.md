@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 39 (M001–M039)  |
-| `PLANNED`  | 126 (M040–M165) |
+| `VERIFIED` | 40 (M001–M040)  |
+| `PLANNED`  | 125 (M041–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -155,6 +155,10 @@ Checkpoints `VERIFIED`:
   votada L3 + query; 1.º consumer M037); 1410/1410
   testes, 100 global.
   Registo em `docs/modules/M039.md`.
+- **M040 @ 2026-09-11** — AI Assessment Events (1.º
+  canal IA→stream votado: snapshots em upgrade;
+  mockups regen +72/-0); 1415/1415 testes, 100.
+  Registo em `docs/modules/M040.md`.
 
 ---
 
@@ -226,7 +230,8 @@ Checkpoints `VERIFIED`:
 | M037 | Strategic AI — Commander Stance | `VERIFIED` |
 | M038 | Strategic AI — Match Wiring | `VERIFIED` |
 | M039 | Strategic AI — Army Posture | `VERIFIED` |
-| M040–M042 | Strategic AI                                                        | `PLANNED` |
+| M040 | Strategic AI — AI Events | `VERIFIED` |
+| M041–M042 | Strategic AI                                                        | `PLANNED` |
 | M043–M045 | Player → AI Command                                                 | `PLANNED` |
 | M046–M047 | AI Refutation + Override                                            | `PLANNED` |
 | M048      | Confidence Engine                                                   | `PLANNED` |

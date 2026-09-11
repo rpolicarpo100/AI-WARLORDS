@@ -13,6 +13,7 @@ import {
   type Untrusted,
 } from './authority.js';
 import { assessPlayer, type PlayerAssessment, type StatsOf } from './assessment.js';
+import { createAiAssessmentProducer } from './ai-events.js';
 import { commandersOf } from './commanders.js';
 import {
   matchFinishedEvent,
@@ -354,6 +355,7 @@ export class Match {
     producers.set(ATTACK_TRANSITION, [attackProducer]);
     producers.set(TRAIN_TRANSITION, [trainProducer]);
     producers.set(COMMISSION_TRANSITION, [commissionedProducer]);
+    producers.set(UPGRADE_TRANSITION, [createAiAssessmentProducer(this.unitsConfig)]);
     producers.set(ACTIVATE_TRANSITION, [stateFlipProducer]);
     producers.set(DEACTIVATE_TRANSITION, [stateFlipProducer]);
     // M030: sightings need before/after visibility, computed here (L4 may

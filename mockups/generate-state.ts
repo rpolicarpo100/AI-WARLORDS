@@ -107,6 +107,7 @@ function main(): void {
     }),
     economyConfig: scenarioEconomy(),
     buildingsConfig: scenarioBuildings(),
+    unitsConfig: scenarioUnitStats(),
     // Scenario fixture: the 16-keyframe chronicle spends 14 p1 prompts.
     promptsPerPlayer: 20,
   });

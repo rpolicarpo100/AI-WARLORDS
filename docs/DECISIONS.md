@@ -1116,3 +1116,41 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
 - DISADVANTAGES: 1.º L3 não-events; cast (mitiga:
   IDS votado).
 - RISKS: baixo — pura+query read-only.
+
+## D-034 — AI assessment events on upgrade (M040 voto)
+
+- DECISION: `src/engine/ai-events.ts` NOVO (L3 —
+  assessment/stance/warfare L2 + units/world-state
+  L0/L1, downward; tipos estruturais inline, molde
+  commander-state — events L3↛L3):
+  createAiAssessmentProducer(unitsConfig) (factory —
+  producers não recebem config): por holder em
+  after.players emite 'ai.assessment' priority low
+  (molde unit.moved; #33) {player, military,
+  economy, commanders: {count, active, avgEffective,
+  stances}}. statsOf `as UnitType` (seam validada —
+  outputs re-guardados M006). match.ts regista
+  factory em UPGRADE_TRANSITION (1.º domain
+  producer do upgrade; riders atrás, molde).
+  Mockups REGEN (M022 precedente): r13 upgrade
+  +2 factos; snapshots/outcomes idênticos.
+- MOTIVE: voto ai-events 2026-09-11 + #6 (EVENT
+  SYSTEM→REPLAY→ANALYTICS) + M007 (factos) + M030
+  (precedente producer L4-ish) + norma exposição
+  (posições/amounts já públicos — sem leak novo),
+  página tolerante (cópia genérica), raridade
+  upgrade (49/1200; drill 0).
+- ALTERNATIVES: stance-em-commission (rejeitado:
+  FACTO — mints bare → sempre balanced, ruído);
+  flips (rejeitado: 28/jogo drill, ruído);
+  advance (rejeitado: NÃO EXISTE transição);
+  noop (rejeitado: 16/jogo drill); build/move
+  (rejeitado: 380+/1200); assessment-sem-dano
+  (rejeitado: 2 verdades); M034-journey intacta
+  (upgrade não quebra chains commander.*).
+- ADVANTAGES: canal IA→stream aberto; bounded
+  (2×upgrade); goldens revistos (+2).
+- DISADVANTAGES: factory (molde+1); regen
+  mockups (revista); avg undefined→JSON drop.
+- RISKS: médio — 1.º evento IA; residual: página
+  copia factos (tolerante); tuning (#92).

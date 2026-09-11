@@ -104,3 +104,4 @@
 | 2026-09-11 | M037      | Stance live (votada margem-15, 1.º consumer M035, zero wiring); consumers→M038+; bloco segue |
 | 2026-09-11 | M038      | Wiring live (queries read-only, IA no bundle +4820); zero estado/eventos; bloco segue |
 | 2026-09-11 | M039      | Posture live (L3 votada + query, 1.º consumer M037); 3 módulos p/ fechar bloco |
+| 2026-09-11 | M040      | AI events live (snapshots em upgrade, mockups regen +72/-0, latência unitsConfig fechada) |
