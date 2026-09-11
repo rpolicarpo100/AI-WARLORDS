@@ -78,7 +78,6 @@
   .stone { background:linear-gradient(#2e333b,#1d2126); border:3px double var(--gold-dim);
     border-radius:8px; padding:8px; min-height:0; }
   .stone h4 { margin:0 0 6px; color:var(--gold); font-size:12px; letter-spacing:2px; }
-  #mini { width:100%; display:block; border:2px solid #101318; border-radius:4px; }
   .tabs { display:flex; gap:6px; margin-bottom:6px; }
   .tabs button { flex:1; background:#101318; color:var(--dim); border:2px solid #3a3f47;
     border-radius:6px; padding:5px; cursor:pointer; font-family:Georgia,serif; letter-spacing:1px; }
@@ -140,7 +139,6 @@
   <canvas id="mini" width="148" height="112" title="minimap — click to select"></canvas>
   <div id="floatlayer"></div>
   <div id="herald">📯 Herald: the chronicle plays itself, sire.</div>
-  <div id="herald">📯 Herald: the chronicle plays itself, sire.</div>
   <div id="cmdbar" hidden>
     <button class="tbtn" id="cmdGather" title="gather at the selected unit">⛏ Gather</button>
     <button class="tbtn" id="cmdHouse" title="build a house">🏠 House</button>
@@ -154,7 +152,7 @@
 </div>
 <div id="statusline"></div>
 <div class="dock">
-  <div class="stone"><h4 class="display">🗺 Minimap</h4><svg id="mini" viewBox="0 0 160 120"></svg>
+  <div class="stone"><h4 class="display">🗺 Minimap</h4>
     <div style="font-size:11px;color:var(--dim);margin-top:4px" id="pop"></div></div>
   <div class="stone">
     <div class="tabs">

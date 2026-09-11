@@ -94,6 +94,13 @@ const blocks = [...html.matchAll(/<script>(.*?)<\/script>/gs)].map((x) => x[1]);
 const iife = blocks[blocks.length - 1];
 const SCENARIO = JSON.parse(m[1].replace(/<\\\//g, '</'));
 console.log('snapshots:', SCENARIO.snapshots.length, 'events:', SCENARIO.events.length);
+// Regression guard: duplicate element IDs once hid the whole page behind a
+// dead SVG (its CSS turned it into a viewport-covering opaque layer).
+const markupOnly = html.replace(/<script>.*?<\/script>/gs, '');
+const ids = [...markupOnly.matchAll(/ id="([^"]+)"/g)].map((m) => m[1]);
+const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
+if (dupes.length > 0) throw new Error('duplicate IDs in markup: ' + [...new Set(dupes)].join(','));
+console.log('markup IDs unique:', ids.length);
 const heraldSeen = [];
 if (process.env.ATTACK_TEST) {
   // ATTACK_TEST=1: loads the REAL engine bundle (like a browser would — no TEST MOCK)
