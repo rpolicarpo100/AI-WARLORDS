@@ -1918,3 +1918,35 @@ recollection)` em stance.ts (MESMO
 - RISKS: baixo — straight-line code.
 - CUTS: export blob (M063); stepping UX
   (M064); matchId revive (morto).
+
+## D-057 — Export blob M063 (sem voto: D-056 + moldes)
+
+- DECISION: `exportReplayBlob(init,
+journal): string` + `importReplayBlob(
+json): {init, journal}` em match.ts
+  (zero ficheiros, zero pins):
+  JSON {version: 1, init, journal}.
+  Export STRIPS extras (test seams não
+  persistem — destructure, sem branches).
+  Import guard ESTRITO (blob-shape:
+  version, journal array, 4 strings por
+  entry, outcome shapes incl duplicate
+  recursivo + 6 error codes; init passa
+  THROUGH — Match detém game-validity,
+  sem duplicar lógica). Throws
+  'replay blob: ...' (createWorldState
+  mold). Payload sem constraint
+  (strings apanham garbage).
+- MOTIVE: D-056 declarou + persistência
+  é o passo natural + strict fecha blobs
+  manhoso.
+- ALTERNATIVES: validar init fundo
+  (rejeitado: duplica Match); cap size
+  (rejeitado: artefacto local, CUT);
+  versionar outcomes (rejeitado: verbatim).
+- ADVANTAGES: M064 stepping lê blobs;
+  blobs são auditáveis (JSON).
+- DISADVANTAGES: extras perdidos
+  (documentado).
+- RISKS: baixo — JSON + guards.
+- CUTS: size cap; stepping (M064).

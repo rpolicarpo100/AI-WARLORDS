@@ -13,7 +13,15 @@ import {
   type Untrusted,
 } from './authority.js';
 import { isMapData, neighborsOf, type MapCell, type MapData } from './map.js';
-import { Match, STANDARD_RULESET, type JournalEntry, type MatchInit } from './match.js';
+import {
+  Match,
+  STANDARD_RULESET,
+  exportReplayBlob,
+  importReplayBlob,
+  isReplayBlob,
+  type JournalEntry,
+  type MatchInit,
+} from './match.js';
 import { SET_TRANSITION } from './directive-state.js';
 import { EXECUTE_TRANSITION } from './order-execution.js';
 import { ISSUE_TRANSITION } from './order-state.js';
@@ -245,5 +253,182 @@ describe('Match.replay (deterministic redrive)', () => {
     const { match: twin, outcomes } = Match.replay(makeInit(), journal);
     expect(outcomes).toEqual(journal.map((entry) => entry.outcome));
     expect(twin.getSnapshot()).toEqual(match.getSnapshot());
+  });
+});
+
+describe('replay blob (M063 portable history)', () => {
+  it('round-trips a mixed script (export → import → replay identical)', () => {
+    const match = new Match(makeInit());
+    runScript(match, match.join(P1));
+    const blob = exportReplayBlob(makeInit(), match.getJournal());
+    expect(typeof blob).toBe('string');
+    expect(isReplayBlob(JSON.parse(blob))).toBe(true);
+    const { init, journal } = importReplayBlob(blob);
+    const { match: twin, outcomes } = Match.replay(init, journal);
+    expect(outcomes).toEqual(journal.map((entry) => entry.outcome));
+    expect(twin.getSnapshot()).toEqual(match.getSnapshot());
+    expect(twin.getEvents()).toEqual(match.getEvents());
+    expect(twin.getTimeline()).toEqual(match.getTimeline());
+    expect(twin.getRevision()).toBe(match.getRevision());
+  });
+
+  it('round-trips duplicate outcomes (same requestId twice)', () => {
+    const match = new Match(makeInit());
+    const session = match.join(P1);
+    expect(
+      dispatch(match, session, 'r-dup', MOVE_TRANSITION, { id: 'u0', col: 0, row: 1 }),
+    ).toMatchObject({ status: 'applied' });
+    expect(
+      dispatch(match, session, 'r-dup', MOVE_TRANSITION, { id: 'u0', col: 0, row: 1 }),
+    ).toMatchObject({ status: 'duplicate' });
+    const { init, journal } = importReplayBlob(exportReplayBlob(makeInit(), match.getJournal()));
+    const { match: twin, outcomes } = Match.replay(init, journal);
+    expect(outcomes).toEqual(journal.map((entry) => entry.outcome));
+    expect(twin.getSnapshot()).toEqual(match.getSnapshot());
+  });
+
+  it('strips test seams on export (extras never persist)', () => {
+    const match = new Match(makeInit());
+    const session = match.join(P1);
+    expect(
+      dispatch(match, session, 'r1', MOVE_TRANSITION, { id: 'u0', col: 0, row: 1 }),
+    ).toMatchObject({ status: 'applied' });
+    const seamed: MatchInit = {
+      ...makeInit(),
+      extraProducers: new Map([['unit.move', [() => []]]]),
+    };
+    const { init, journal } = importReplayBlob(exportReplayBlob(seamed, match.getJournal()));
+    expect('extraProducers' in init).toBe(false);
+    const { match: twin, outcomes } = Match.replay(init, journal);
+    expect(outcomes).toEqual(journal.map((entry) => entry.outcome));
+    expect(twin.getSnapshot()).toEqual(match.getSnapshot());
+  });
+
+  it('round-trips empty journals (vacuous blob)', () => {
+    const match = new Match(makeInit());
+    const { init, journal } = importReplayBlob(exportReplayBlob(makeInit(), match.getJournal()));
+    expect(journal).toEqual([]);
+    const { match: twin, outcomes } = Match.replay(init, journal);
+    expect(outcomes).toEqual([]);
+    expect(twin.getSnapshot()).toEqual(match.getSnapshot());
+  });
+
+  it('rejects malformed JSON and bad shapes (fail-closed battery)', () => {
+    expect(() => importReplayBlob('{nope')).toThrow('replay blob: not JSON.');
+    const match = new Match(makeInit());
+    runScript(match, match.join(P1));
+    const valid = JSON.parse(exportReplayBlob(makeInit(), match.getJournal()));
+    const mutate = (fn: (blob: Record<string, unknown>) => void): unknown => {
+      const copy = JSON.parse(JSON.stringify(valid));
+      fn(copy);
+      return copy;
+    };
+    const bad: readonly unknown[] = [
+      7,
+      'blob',
+      null,
+      [],
+      mutate((blob) => {
+        blob['version'] = 2;
+      }),
+      mutate((blob) => {
+        delete blob['version'];
+      }),
+      mutate((blob) => {
+        blob['init'] = 7;
+      }),
+      mutate((blob) => {
+        blob['init'] = null;
+      }),
+      mutate((blob) => {
+        blob['init'] = [];
+      }),
+      mutate((blob) => {
+        delete blob['journal'];
+      }),
+      mutate((blob) => {
+        blob['journal'] = {};
+      }),
+      mutate((blob) => {
+        (blob['journal'] as unknown[])[0] = 7;
+      }),
+      mutate((blob) => {
+        ((blob['journal'] as Record<string, unknown>[])[0] as Record<string, unknown>)[
+          'requestId'
+        ] = 7;
+      }),
+      mutate((blob) => {
+        ((blob['journal'] as Record<string, unknown>[])[0] as Record<string, unknown>)['playerId'] =
+          null;
+      }),
+      mutate((blob) => {
+        ((blob['journal'] as Record<string, unknown>[])[0] as Record<string, unknown>)[
+          'sessionPlayer'
+        ] = [];
+      }),
+      mutate((blob) => {
+        ((blob['journal'] as Record<string, unknown>[])[0] as Record<string, unknown>)['type'] = 7;
+      }),
+      mutate((blob) => {
+        const first = (blob['journal'] as Record<string, unknown>[])[0] as Record<string, unknown>;
+        delete first['outcome'];
+      }),
+      mutate((blob) => {
+        ((blob['journal'] as Record<string, unknown>[])[0] as Record<string, unknown>)['outcome'] =
+          {
+            status: 'applied',
+            revision: 'x',
+            summary: 's',
+          };
+      }),
+      mutate((blob) => {
+        ((blob['journal'] as Record<string, unknown>[])[0] as Record<string, unknown>)['outcome'] =
+          {
+            status: 'rejected',
+          };
+      }),
+      mutate((blob) => {
+        ((blob['journal'] as Record<string, unknown>[])[0] as Record<string, unknown>)['outcome'] =
+          {
+            status: 'duplicate',
+            original: 7,
+          };
+      }),
+      mutate((blob) => {
+        ((blob['journal'] as Record<string, unknown>[])[0] as Record<string, unknown>)['outcome'] =
+          {
+            status: 'duplicate',
+            original: { status: 'bogus' },
+          };
+      }),
+      mutate((blob) => {
+        ((blob['journal'] as Record<string, unknown>[])[0] as Record<string, unknown>)['outcome'] =
+          {
+            status: 'error',
+            code: 7,
+          };
+      }),
+      mutate((blob) => {
+        ((blob['journal'] as Record<string, unknown>[])[0] as Record<string, unknown>)['outcome'] =
+          {
+            status: 'error',
+            code: 'NOPE',
+          };
+      }),
+      mutate((blob) => {
+        ((blob['journal'] as Record<string, unknown>[])[0] as Record<string, unknown>)['outcome'] =
+          {
+            status: 'bogus',
+          };
+      }),
+      mutate((blob) => {
+        ((blob['journal'] as Record<string, unknown>[])[0] as Record<string, unknown>)['outcome'] =
+          7;
+      }),
+    ];
+    for (const blob of bad) {
+      expect(isReplayBlob(blob)).toBe(false);
+      expect(() => importReplayBlob(JSON.stringify(blob))).toThrow('replay blob: bad shape.');
+    }
   });
 });

@@ -1171,3 +1171,124 @@ export class Match {
     }
   }
 }
+
+/** M063 — replay blob version (bumped only by breaking shape changes). */
+export const REPLAY_BLOB_VERSION = 1;
+
+/** M063 mirror of DispatchErrorCode (authority.ts canonical; deliberately not imported). */
+const BLOB_ERROR_CODES: readonly string[] = [
+  'INVALID_SESSION',
+  'SPOOFED_SENDER',
+  'MALFORMED_REQUEST',
+  'PAYLOAD_TOO_LARGE',
+  'UNKNOWN_TRANSITION',
+  'HANDLER_FAULT',
+];
+
+function isRecordedOutcomeShape(value: unknown): boolean {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const fields = value as Record<string, unknown>;
+  if (fields['status'] === 'applied') {
+    return typeof fields['revision'] === 'number' && typeof fields['summary'] === 'string';
+  }
+  if (fields['status'] === 'rejected') {
+    return typeof fields['reason'] === 'string';
+  }
+  return false;
+}
+
+function isOutcomeShape(value: unknown): boolean {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const fields = value as Record<string, unknown>;
+  if (fields['status'] === 'applied' || fields['status'] === 'rejected') {
+    return isRecordedOutcomeShape(value);
+  }
+  if (fields['status'] === 'duplicate') {
+    return isRecordedOutcomeShape(fields['original']);
+  }
+  if (fields['status'] === 'error') {
+    const code = fields['code'];
+    return typeof code === 'string' && BLOB_ERROR_CODES.includes(code);
+  }
+  return false;
+}
+
+function isJournalEntryShape(value: unknown): value is JournalEntry {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const fields = value as Record<string, unknown>;
+  return (
+    typeof fields['requestId'] === 'string' &&
+    typeof fields['playerId'] === 'string' &&
+    typeof fields['sessionPlayer'] === 'string' &&
+    typeof fields['type'] === 'string' &&
+    isOutcomeShape(fields['outcome'])
+  );
+}
+
+/** M063 — strict blob-shape check (game-validity stays with Match). */
+export function isReplayBlob(value: unknown): value is {
+  readonly version: number;
+  readonly init: MatchInit;
+  readonly journal: readonly JournalEntry[];
+} {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const fields = value as Record<string, unknown>;
+  if (fields['version'] !== REPLAY_BLOB_VERSION) {
+    return false;
+  }
+  const init = fields['init'];
+  if (typeof init !== 'object' || init === null || Array.isArray(init)) {
+    return false;
+  }
+  const journal = fields['journal'];
+  if (!Array.isArray(journal)) {
+    return false;
+  }
+  return journal.every(isJournalEntryShape);
+}
+
+/**
+ * M063 — serialize a match history to a portable blob (init + journal;
+ * test seams stripped — extraHandlers/extraProducers/extraConditions
+ * never persist).
+ */
+export function exportReplayBlob(init: MatchInit, journal: readonly JournalEntry[]): string {
+  const {
+    extraHandlers: _strippedHandlers,
+    extraProducers: _strippedProducers,
+    extraConditions: _strippedConditions,
+    ...kept
+  } = init;
+  void _strippedHandlers;
+  void _strippedProducers;
+  void _strippedConditions;
+  return JSON.stringify({ version: REPLAY_BLOB_VERSION, init: kept, journal });
+}
+
+/**
+ * M063 — parse a blob back (throws on malformed JSON or bad shape;
+ * init passes through — Match re-validates game-validity on replay).
+ */
+export function importReplayBlob(json: string): {
+  readonly init: MatchInit;
+  readonly journal: readonly JournalEntry[];
+} {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(json);
+  } catch {
+    throw new Error('replay blob: not JSON.');
+  }
+  if (!isReplayBlob(parsed)) {
+    throw new Error('replay blob: bad shape.');
+  }
+  return { init: parsed.init, journal: parsed.journal };
+}
