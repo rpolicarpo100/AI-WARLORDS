@@ -16,6 +16,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   DEFAULT_RATE_LIMIT,
   MAX_BODY_BYTES,
+  MAX_STREAMS_PER_MATCH,
   PRESENCE_TIMEOUT_MS,
   createTransport,
   type RateLimit,
@@ -924,6 +925,43 @@ describe('audit hardness pins (M084)', () => {
     const forged = await post('/match', deep);
     expect(forged.code).toBe(200);
     expect(typeof (forged.json as { matchId: string }).matchId).toBe('string');
+  });
+});
+
+describe('watcher cap (flood fence)', () => {
+  it('pins the shipped watcher cap', () => {
+    expect(MAX_STREAMS_PER_MATCH).toBe(32);
+  });
+
+  it('503s the 33rd watcher and frees slots on close', async () => {
+    await withClock(async () => {
+      const { matchId } = await sessionFor('p1');
+      const crowd: { close: () => void }[] = [];
+      for (let i = 0; i < MAX_STREAMS_PER_MATCH; i += 1) {
+        const stream = openSse(`/match/${matchId}/events?from=0`);
+        expect(await stream.code).toBe(200);
+        crowd.push(stream);
+      }
+      const extra = openSse(`/match/${matchId}/events?from=0`);
+      expect(await extra.code).toBe(503);
+      await extra.ended;
+      crowd[0]?.close();
+      let seated = false;
+      for (let i = 0; i < 200 && !seated; i += 1) {
+        const attempt = openSse(`/match/${matchId}/events?from=0`);
+        if ((await attempt.code) === 200) {
+          seated = true;
+          attempt.close();
+        } else {
+          await attempt.ended;
+          await sleep(10);
+        }
+      }
+      expect(seated).toBe(true);
+      for (const stream of crowd) {
+        stream.close();
+      }
+    });
   });
 });
 

@@ -94,6 +94,9 @@ export const DEFAULT_RATE_LIMIT: RateLimit = { windowMs: 60_000, max: 300 };
 /** Largest JSON body accepted (game payloads run under 1KB — v1). */
 export const MAX_BODY_BYTES = 64_000;
 
+/** Watchers per match past this get 503 (connection-flood fence — v1). */
+export const MAX_STREAMS_PER_MATCH = 32;
+
 /** Idle strictly past this, a session dies (the boundary stays online). */
 export const PRESENCE_TIMEOUT_MS = 30_000;
 
@@ -520,6 +523,10 @@ export function createTransport(
       const cursor = from === null ? 0 : Number(from);
       if (!Number.isInteger(cursor) || cursor < 0) {
         send(res, 400, { error: 'bad from' });
+        return;
+      }
+      if (entry.streams.size >= MAX_STREAMS_PER_MATCH) {
+        send(res, 503, { error: 'too many watchers' });
         return;
       }
       res.writeHead(200, {

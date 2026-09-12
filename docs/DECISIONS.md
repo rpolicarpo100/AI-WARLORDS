@@ -2535,3 +2535,29 @@ rev R (seed S)` últimas 6,
 - DISADVANTAGES: nenhum.
 - RISKS: baixo.
 - CUTS: fuzz contínuo.
+
+## D-080 — Watcher cap M085 (sem voto: sequência apontada)
+
+- DECISION: byte-cap REJEITADO
+  (writableLength intestável:
+  kernel drena localhost;
+  wiring sem prova). Zombie
+  reavaliado: M081 limita
+  dispatches (300/min → buffer
+  ≤~150KB/min → OOM em ~57h;
+  FIN/timeout limpa o resto).
+  Defesa real: MAX_STREAMS_
+  PER_MATCH=32 (503 além;
+  slot liberta no close).
+- MOTIVE: RISK M084; DoS
+  conexão-flood por match.
+- ALTERNATIVES: byte-cap
+  (rejeitado: wiring sem
+  prova); event-lag (morto:
+  cursor avança no write).
+- ADVANTAGES: determinístico,
+  rápido, 1 branch.
+- DISADVANTAGES: nenhum.
+- RISKS: baixo.
+- CUTS: byte-cap (M-futuro
+  se OOM real).
