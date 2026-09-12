@@ -466,10 +466,10 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
   próprio dispatch (só o alvo — sem âncora para sweep); `nextId`
   intacto. Produtor emendado (seam M023): alvo ausente no after →
   `[unit.attacked (damage = was.hp, diff genuíno), unit.slain NORMAL
-  {player, unit, target}]` (cunhagem + NORMAL aprovadas pelo
+{player, unit, target}]` (cunhagem + NORMAL aprovadas pelo
   utilizador 2026-09-11, analogia `unit.moved/moved`, `attacked`).
   Summary: `attacked T for NET (hp A→B)[, slain]`. `unit/target
-  down.` mantêm-se (0hp inicial/crafted continua rejeitado).
+down.` mantêm-se (0hp inicial/crafted continua rejeitado).
   `warfareHandlers(passable, unitsConfig, defenseOf)` (append,
   precedente M023).
 - MOTIVE: D-014 (`dano`→M024; cura sem fonte — audit §7) + D-016
@@ -511,7 +511,7 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
   `no map.` / `out of bounds.` (precedente M022) / `cannot afford.`
   (precedente build); paga via treasury e faz spawnUnit (full-hp,
   id `u${nextId}`); summary `trained T ID at C,R`. `UnitTreasury =
-  {canAfford, pay}` injectada pelo Match (closures economy —
+{canAfford, pay}` injectada pelo Match (closures economy —
   L2↛L2 impede warfare importar payCost; precedente M022).
   NORMAL = precedente build.started (produção). Cunhagem
   `unit.train/trained` aprovada pelo utilizador 2026-09-11
@@ -674,8 +674,8 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
 - MOTIVE: 4 votos explícitos do utilizador 2026-09-11
   (cada-dispatch; remover; jogador-bloqueia; X=10≈15min;
   owner-only; sem unlimited; header) + M015 (remoção total
-  + selo cirúrgico) + M020 (pin rewrite + conservação) +
-  M022 (injecção) + M016/M021/M027 (molde L0).
+  - selo cirúrgico) + M020 (pin rewrite + conservação) +
+    M022 (injecção) + M016/M021/M027 (molde L0).
 - ALTERNATIVES: ticks convivem (rejeitado pelo user);
   relógio global filas (preterido — user votou owner-only);
   unlimited já (rejeitado — M09X); completion por-handler
@@ -739,7 +739,7 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
 - RISKS: baixo — transições novas, leitores zero; residual:
   `active` sem leitor até ordens/IA (M043+/M035+).
 - IMPLEMENTATION: `commander-state.ts` + `commander-state.test.ts`
-  + `match.ts` (wiring) + `phase1-gate.test.ts` (2 pins) (M029).
+  - `match.ts` (wiring) + `phase1-gate.test.ts` (2 pins) (M029).
 - ESTADO: `ACCEPTED`.
 
 ## D-024 — Discovery Engine: pipeline canónico visibilidade→explored→factos (M030 pré-análise + voto)
@@ -1316,9 +1316,9 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
   census+LAYERS 0. Zero transições/eventos/
   readers até M047+.
 - MOTIVE: voto refute-data + M043 (data-first)
-  + M044 (espelho) — fundação do bloco
-  M046–M050 (refute→override→confidence→
-  counterfactual).
+  - M044 (espelho) — fundação do bloco
+    M046–M050 (refute→override→confidence→
+    counterfactual).
 - ALTERNATIVES: transição order.refute já
   (rejeitado: voto; behavior sem vocabulário);
   fila de refutações (rejeitado: M047 decide/
@@ -1371,7 +1371,7 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
 
 - DECISION: NOVO `confidence.ts` (L2,
   read-only): `confidenceOfOrder(record,
-  index, state, rules)` avalia os 5 reasons
+index, state, rules)` avalia os 5 reasons
   M046 contra estado live + score = max(0,
   100−20×failed). Evaluators: blocked (move→
   célula impassível, mold M022), out-of-range
@@ -1412,7 +1412,7 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
 
 - DECISION: NOVO `counterfactual.ts` (L3,
   read-only): `whatIfConfidence(record, index,
-  state, hypothetical, deps)` — target? (fail-
+state, hypothetical, deps)` — target? (fail-
   soft) → hypothetical orderable? (isOrderKind,
   senão 'not orderable') → rule+handler? (senão
   'unknown kind') → rule passa? (senão detail)
@@ -1448,3 +1448,34 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
   dispatch pinnada por teste.
 - CUTS: scripts multi-order (M050); advance
   (M050); ranking (M050).
+
+## D-044 — Counterfactual scripts+ranking M050 (voto rank-scripts)
+
+- DECISION: ESTENDE `counterfactual.ts` (L3,
+  sem churn camadas): núcleo interno
+  simulateScript (fork único, steps em
+  sequência, failedAt; sem guards) +
+  `whatIfScript` (guards + núcleo) +
+  `whatIfConfidence` DELEGA (1 step; testes
+  M049 intactos guardam) + `rankCandidates`
+  (cada candidato via núcleo; ordena score
+  desc, estáveis empates; unapplied afundam;
+  recommended = índice do melhor, undefined
+  se nenhum). Sem advance (provado
+  irrelevante p/ scores M049). Match:
+  `whatIfScript` + `rankCandidates` + refactor
+  privado counterfactualDeps(snapshot)
+  (whatIf reusa). Sem pins novos (ficheiro
+  existe).
+- MOTIVE: voto rank-scripts + M049 (núcleo
+  pronto) + M048 (scores) — fecho do bloco.
+- ALTERNATIVES: ficheiro novo L4 (rejeitado:
+  churn camadas); duplicar lógica (rejeitado:
+  delegação + testes M049); advance no sim
+  (rejeitado: irrelevante p/ scores).
+- ADVANTAGES: scripts honestos; ranking
+  determinístico; zero duplicação.
+- DISADVANTAGES: refactor M049 (guardado).
+- RISKS: baixo — delegação pinnada.
+- CUTS: advance (futuro, se scores lerem
+  cities); pesos tuning; raise (M051+).

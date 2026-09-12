@@ -10,7 +10,9 @@ import type { CommanderRecord } from './commanders.js';
 import type { ConfidenceRules } from './confidence.js';
 import { isMapData, type MapCell, type MapData } from './map.js';
 import {
+  rankCandidates,
   whatIfConfidence,
+  whatIfScript,
   type CounterfactualDeps,
   type HypotheticalOrder,
 } from './counterfactual.js';
@@ -318,5 +320,282 @@ describe('whatIfConfidence simulation (fork honesty)', () => {
     );
     expect(seen).toHaveLength(1);
     expect(seen[0]?.units?.units.find((unit) => unit.id === 'u0')?.col).toBe(2);
+  });
+});
+
+describe('whatIfScript (M050: sequences, first failure wins)', () => {
+  /** Honest mini-move stub: u0 lands on (col,row). */
+  function miniMove(): TransitionHandler<WorldState> {
+    return (ctx) => {
+      const params = ctx.params as { col: number; row: number };
+      return {
+        applied: true,
+        state: {
+          ...ctx.state,
+          units:
+            ctx.state.units === undefined
+              ? undefined
+              : {
+                  ...ctx.state.units,
+                  units: ctx.state.units.units.map((unit) =>
+                    unit.id === 'u0' ? { ...unit, col: params.col, row: params.row } : unit,
+                  ),
+                },
+        },
+        summary: 'stubbed mini-move',
+      };
+    };
+  }
+
+  it('applies steps in sequence and scores the final outcome', () => {
+    const { state, record } = scenario();
+    const deps = depsWith({ handlers: new Map([['unit.move', miniMove()]]) });
+    // u0 walks (0,0) -> (1,0) -> (2,0); the target still marches (0,1).
+    expect(
+      whatIfScript(
+        record,
+        0,
+        state,
+        [
+          { kind: 'unit.move', params: { id: 'u0', col: 1, row: 0 } },
+          { kind: 'unit.move', params: { id: 'u0', col: 2, row: 0 } },
+        ],
+        deps,
+      ),
+    ).toEqual({
+      applied: true,
+      outcome: {
+        orderIndex: 0,
+        kind: 'unit.move',
+        score: 80,
+        failed: ['out-of-range'],
+      },
+    });
+  });
+
+  it('scores vacuous scripts on the untouched state', () => {
+    const { state, record } = scenario();
+    expect(whatIfScript(record, 0, state, [], depsWith({}))).toEqual({
+      applied: true,
+      outcome: { orderIndex: 0, kind: 'unit.move', score: 100, failed: [] },
+    });
+  });
+
+  it('pins rule violations mid-script with their step index', () => {
+    const { state, record } = scenario();
+    const shape: PreRule = (_caller, params) =>
+      (params as { bad?: boolean }).bad === true
+        ? { rule: 'move-params', detail: 'stub: bad leg.' }
+        : null;
+    const deps = depsWith({
+      handlers: new Map([['unit.move', miniMove()]]),
+      rules: new Map([['unit.move', shape]]),
+    });
+    expect(
+      whatIfScript(
+        record,
+        0,
+        state,
+        [
+          { kind: 'unit.move', params: { id: 'u0', col: 1, row: 0 } },
+          { kind: 'unit.move', params: { id: 'u0', bad: true } },
+        ],
+        deps,
+      ),
+    ).toEqual({ applied: false, reason: 'stub: bad leg.', failedAt: 1 });
+  });
+
+  it('pins handler rejections mid-script with their step index', () => {
+    const { state, record } = scenario();
+    const wall: TransitionHandler<WorldState> = (ctx) => {
+      const params = ctx.params as { col: number; row: number };
+      if (params.col === 2) {
+        return { applied: false, reason: 'stub: wall at col 2.' };
+      }
+      return miniMove()(ctx);
+    };
+    const deps = depsWith({ handlers: new Map([['unit.move', wall]]) });
+    expect(
+      whatIfScript(
+        record,
+        0,
+        state,
+        [
+          { kind: 'unit.move', params: { id: 'u0', col: 1, row: 0 } },
+          { kind: 'unit.move', params: { id: 'u0', col: 2, row: 0 } },
+        ],
+        deps,
+      ),
+    ).toEqual({ applied: false, reason: 'stub: wall at col 2.', failedAt: 1 });
+  });
+
+  it('pins non-orderable steps mid-script', () => {
+    const { state, record } = scenario();
+    const deps = depsWith({ handlers: new Map([['unit.move', miniMove()]]) });
+    expect(
+      whatIfScript(
+        record,
+        0,
+        state,
+        [
+          { kind: 'unit.move', params: { id: 'u0', col: 1, row: 0 } },
+          { kind: 'city.upgrade', params: {} },
+        ],
+        deps,
+      ),
+    ).toEqual({ applied: false, reason: 'counterfactual: not orderable.', failedAt: 1 });
+  });
+
+  it('fails soft on missing records and targets', () => {
+    const { state, record } = scenario();
+    const script = [{ kind: 'unit.move', params: { id: 'u0', col: 1, row: 0 } }];
+    expect(whatIfScript(undefined, 0, state, script, depsWith({}))).toBeUndefined();
+    expect(whatIfScript(record, 9, state, script, depsWith({}))).toBeUndefined();
+  });
+
+  it('still scores when the sim wipes commanders (record rides separate)', () => {
+    const { state, record } = scenario();
+    const wipe: TransitionHandler<WorldState> = (ctx) => ({
+      applied: true,
+      state: { ...ctx.state, commanders: undefined },
+      summary: 'stubbed wipe',
+    });
+    const deps = depsWith({ handlers: new Map([['unit.move', wipe]]) });
+    const verdict = whatIfScript(
+      record,
+      0,
+      state,
+      [{ kind: 'unit.move', params: { id: 'u0', col: 1, row: 0 } }],
+      deps,
+    );
+    expect(verdict).toMatchObject({ applied: true });
+    expect(verdict?.applied === true ? verdict.outcome.failed : undefined).toEqual([]);
+  });
+});
+
+describe('rankCandidates (M050: best hypothetical wins)', () => {
+  function miniMove(): TransitionHandler<WorldState> {
+    return (ctx) => {
+      const params = ctx.params as { col: number; row: number };
+      return {
+        applied: true,
+        state: {
+          ...ctx.state,
+          units:
+            ctx.state.units === undefined
+              ? undefined
+              : {
+                  ...ctx.state.units,
+                  units: ctx.state.units.units.map((unit) =>
+                    unit.id === 'u0' ? { ...unit, col: params.col, row: params.row } : unit,
+                  ),
+                },
+        },
+        summary: 'stubbed mini-move',
+      };
+    };
+  }
+
+  function rankedDeps(): CounterfactualDeps {
+    const hold: TransitionHandler<WorldState> = (ctx) => ({
+      applied: true,
+      state: ctx.state,
+      summary: 'stubbed hold',
+    });
+    const pass: PreRule = () => null;
+    return {
+      handlers: new Map([
+        ['unit.move', miniMove()],
+        ['economy.gather', hold],
+      ]),
+      rules: new Map([
+        ['unit.move', pass],
+        ['economy.gather', pass],
+      ]),
+      confidenceFor: () => CONFIDENCE,
+    };
+  }
+
+  it('ranks best-first with input indexes and recommends the top', () => {
+    const { state, record } = scenario();
+    const ranking = rankCandidates(
+      record,
+      0,
+      state,
+      [
+        { kind: 'unit.move', params: { id: 'u0', col: 2, row: 2 } },
+        { kind: 'unit.move', params: { id: 'u0', col: 0, row: 1 } },
+        { kind: 'economy.gather', params: { col: 0, row: 0 } },
+      ],
+      rankedDeps(),
+    );
+    // Gather holds u0 (target adjacent: 100); far march strands u0
+    // (80); the (0,1) march lands ON the target (60).
+    expect(ranking?.ranking.map((entry) => [entry.index, entry.score])).toEqual([
+      [2, 100],
+      [0, 80],
+      [1, 60],
+    ]);
+    expect(ranking?.recommended).toBe(2);
+  });
+
+  it('keeps input order on ties (stable, recommends the first)', () => {
+    const { state, record } = scenario();
+    const leg = { kind: 'unit.move', params: { id: 'u0', col: 2, row: 2 } };
+    const ranking = rankCandidates(record, 0, state, [leg, { ...leg }], rankedDeps());
+    expect(ranking?.ranking.map((entry) => entry.index)).toEqual([0, 1]);
+    expect(ranking?.recommended).toBe(0);
+  });
+
+  it('sinks unapplied candidates with their reasons', () => {
+    const { state, record } = scenario();
+    const ranking = rankCandidates(
+      record,
+      0,
+      state,
+      [
+        { kind: 'city.upgrade', params: {} },
+        { kind: 'unit.move', params: { id: 'u0', col: 2, row: 2 } },
+      ],
+      rankedDeps(),
+    );
+    expect(ranking?.ranking.map((entry) => [entry.index, entry.applied])).toEqual([
+      [1, true],
+      [0, false],
+    ]);
+    expect(ranking?.ranking[1]).toMatchObject({
+      reason: 'counterfactual: not orderable.',
+    });
+    expect(ranking?.recommended).toBe(1);
+  });
+
+  it('recommends nothing when every candidate fails', () => {
+    const { state, record } = scenario();
+    const ranking = rankCandidates(
+      record,
+      0,
+      state,
+      [
+        { kind: 'city.upgrade', params: {} },
+        { kind: 'commander.commission', params: {} },
+      ],
+      rankedDeps(),
+    );
+    expect(ranking?.ranking.map((entry) => entry.index)).toEqual([0, 1]);
+    expect(ranking?.recommended).toBeUndefined();
+  });
+
+  it('fails soft on missing records, targets, and empty slates', () => {
+    const { state, record } = scenario();
+    const slate = [{ kind: 'unit.move', params: { id: 'u0', col: 1, row: 0 } }];
+    expect(rankCandidates(undefined, 0, state, slate, rankedDeps())).toBeUndefined();
+    expect(rankCandidates(record, 9, state, slate, rankedDeps())).toBeUndefined();
+    expect(
+      rankCandidates({ ...record, orders: undefined }, 0, state, slate, rankedDeps()),
+    ).toBeUndefined();
+    expect(rankCandidates(record, 0, state, [], rankedDeps())).toEqual({
+      ranking: [],
+      recommended: undefined,
+    });
   });
 });

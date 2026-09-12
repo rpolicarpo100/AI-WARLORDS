@@ -66,51 +66,52 @@
 
 ## 7. Alterações
 
-| Data       | Módulo    | Alteração                                                                                |
-| ---------- | --------- | ---------------------------------------------------------------------------------------- |
-| 2026-09-10 | M002      | R-50 MITIGATED (residual declarado); R-51 sem impacto; R-52 criado                       |
-| 2026-09-10 | M003      | R-11 MITIGATED (residual declarado); R-53 criado (L-07 → M071/M085)                      |
-| 2026-09-10 | M004      | R-12 nota (mecanismo VERIFIED, fog real M015); R-54 criado (L-08 → M006)                 |
-| 2026-09-10 | M005      | R-10 MITIGATED (E2E provado, residual M009/M069+); R-53 += timeline (L-09 → M062)        |
-| 2026-09-10 | M006      | R-54 MITIGATED (cap, L-08 CLOSED, residual L-12 → M088); L-10 CLOSED; R-11/R-20 notas    |
-| 2026-09-10 | M007      | R-53 += events (L-09 estendido → M062); L-15/L-16 criados (delivery/payloads futuros)    |
-| 2026-09-10 | M008      | L-17/L-18 criados (score/eliminação futuros); R-20 nota (verdict-integrity)              |
-| 2026-09-11 | M009      | R-50 CLOSED (Fase 1 prova stack); R-10 residual M009 cumprido; L-19 criado (scan)        |
-| 2026-09-11 | M010      | R-12/R-20 notas (blindness/map-preserved); L-20/L-21 criados (stagger/conteúdo)          |
-| 2026-09-11 | M011      | L-22 criado (high-ground⟺mountain, sem elevation); R-02/R-51 notas                       |
-| 2026-09-11 | M012      | R-20 nota (nós sob map-preserved); L-23 (amounts por tile); REPARO: dup §2–§4 removida   |
-| 2026-09-11 | FIX-AUDIT | R-55 criado (integridade de registos); L-24/L-25 (tick-clock, spawn-roster)              |
-| 2026-09-11 | M013      | R-12 nota (computação fog); L-26/L-27 (on-demand, viewer-membership)                     |
-| 2026-09-11 | M014      | R-12 nota (memória explored); L-28 (anti-forge residual → M021+)                         |
-| 2026-09-11 | M015      | R-12 nota (fog real); L-04/L-27 CLOSED; L-29 (→ M028); selo re-locked                    |
-| 2026-09-11 | M016      | L-30/L-31 (grants→M019, caps→M018); sem invariante (M020 owns)                           |
-| 2026-09-11 | M017      | R-20 nota (map-preserved cede depleção); L-23 CLOSED; L-32 (gather sem worker→M021/M022) |
-| 2026-09-11 | M018      | L-31 CLOSED (caps derivados, default uncap); enforcement→M020; BUILD_*→M019              |
-| 2026-09-11 | M019      | L-30 CLOSED (sem grants); advance emendado cercado; invariante→M020; fila/cap→FUTURE     |
-| 2026-09-11 | M020      | L-31 enforcement LANDED (caps+conservação live); Fase 3 CLOSED; L-32→M021/M022           |
-| 2026-09-11 | M021      | L-32 REPOINT→M022 (gate precisa movimento); Fase 4 aberta; criação→M025 presumível       |
-| 2026-09-11 | M022      | L-32 CLOSED (worker exact-cell); 1-step live; mockups rebuild; cri→M025 mantém           |
-| 2026-09-11 | M023      | Combate live (dano+chão 0); 0hp não age; remoção→M024; produtor assume alvo              |
-| 2026-09-11 | M028      | L-29 CLOSED (terrain-memory live, OOB soft); intel inimiga mantém fail-closed             |
-| 2026-09-11 | PROMPTS   | Ticks mortos (budget live, exaustão=draw); tuning X=10→#92; sem unlimited (M09X)         |
-| 2026-09-11 | M029      | Lifecycle live (commission+flips+eventos owner-only); `active` sem leitor→M043+/M035+; roster sem cap |
-| 2026-09-11 | M030      | L-28 CLOSED (visão stateful; writer canónico só-genuíno); tuning visão 2→#92; sem lost-contact |
-| 2026-09-11 | M031      | DNA live (vocabulário+guard+mirror, zero consumers); writer→FUTURO; mirror-drift coberto por battery |
-| 2026-09-11 | M032      | Personalities live (fixo-5+presets votados, zero behavior); tuning matriz→#92; extensão futura declarada |
-| 2026-09-11 | M033      | Doctrines live (fixo-6+deltas votados, zero behavior/composer); tuning matriz→#92; composição só-registada |
-| 2026-09-11 | M034      | Harness live (drill 0 violations + suite transversal, zero prod); bloco M031–M034 CLOSED; composição→M035+ |
-| 2026-09-11 | M035      | Composer live (total+puro, 84-combo ∀-válido, zero wiring); consumers→M036+; bloco Strategic AI aberto |
-| 2026-09-11 | M036      | Assessment live (pura L2, médias exactas, zero pesos/wiring); consumers→M037+; bloco segue |
-| 2026-09-11 | M037      | Stance live (votada margem-15, 1.º consumer M035, zero wiring); consumers→M038+; bloco segue |
-| 2026-09-11 | M038      | Wiring live (queries read-only, IA no bundle +4820); zero estado/eventos; bloco segue |
-| 2026-09-11 | M039      | Posture live (L3 votada + query, 1.º consumer M037); 3 módulos p/ fechar bloco |
-| 2026-09-11 | M040      | AI events live (snapshots em upgrade, mockups regen +72/-0, latência unitsConfig fechada) |
+| Data       | Módulo    | Alteração                                                                                                                 |
+| ---------- | --------- | ------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-10 | M002      | R-50 MITIGATED (residual declarado); R-51 sem impacto; R-52 criado                                                        |
+| 2026-09-10 | M003      | R-11 MITIGATED (residual declarado); R-53 criado (L-07 → M071/M085)                                                       |
+| 2026-09-10 | M004      | R-12 nota (mecanismo VERIFIED, fog real M015); R-54 criado (L-08 → M006)                                                  |
+| 2026-09-10 | M005      | R-10 MITIGATED (E2E provado, residual M009/M069+); R-53 += timeline (L-09 → M062)                                         |
+| 2026-09-10 | M006      | R-54 MITIGATED (cap, L-08 CLOSED, residual L-12 → M088); L-10 CLOSED; R-11/R-20 notas                                     |
+| 2026-09-10 | M007      | R-53 += events (L-09 estendido → M062); L-15/L-16 criados (delivery/payloads futuros)                                     |
+| 2026-09-10 | M008      | L-17/L-18 criados (score/eliminação futuros); R-20 nota (verdict-integrity)                                               |
+| 2026-09-11 | M009      | R-50 CLOSED (Fase 1 prova stack); R-10 residual M009 cumprido; L-19 criado (scan)                                         |
+| 2026-09-11 | M010      | R-12/R-20 notas (blindness/map-preserved); L-20/L-21 criados (stagger/conteúdo)                                           |
+| 2026-09-11 | M011      | L-22 criado (high-ground⟺mountain, sem elevation); R-02/R-51 notas                                                        |
+| 2026-09-11 | M012      | R-20 nota (nós sob map-preserved); L-23 (amounts por tile); REPARO: dup §2–§4 removida                                    |
+| 2026-09-11 | FIX-AUDIT | R-55 criado (integridade de registos); L-24/L-25 (tick-clock, spawn-roster)                                               |
+| 2026-09-11 | M013      | R-12 nota (computação fog); L-26/L-27 (on-demand, viewer-membership)                                                      |
+| 2026-09-11 | M014      | R-12 nota (memória explored); L-28 (anti-forge residual → M021+)                                                          |
+| 2026-09-11 | M015      | R-12 nota (fog real); L-04/L-27 CLOSED; L-29 (→ M028); selo re-locked                                                     |
+| 2026-09-11 | M016      | L-30/L-31 (grants→M019, caps→M018); sem invariante (M020 owns)                                                            |
+| 2026-09-11 | M017      | R-20 nota (map-preserved cede depleção); L-23 CLOSED; L-32 (gather sem worker→M021/M022)                                  |
+| 2026-09-11 | M018      | L-31 CLOSED (caps derivados, default uncap); enforcement→M020; BUILD_*→M019                                               |
+| 2026-09-11 | M019      | L-30 CLOSED (sem grants); advance emendado cercado; invariante→M020; fila/cap→FUTURE                                      |
+| 2026-09-11 | M020      | L-31 enforcement LANDED (caps+conservação live); Fase 3 CLOSED; L-32→M021/M022                                            |
+| 2026-09-11 | M021      | L-32 REPOINT→M022 (gate precisa movimento); Fase 4 aberta; criação→M025 presumível                                        |
+| 2026-09-11 | M022      | L-32 CLOSED (worker exact-cell); 1-step live; mockups rebuild; cri→M025 mantém                                            |
+| 2026-09-11 | M023      | Combate live (dano+chão 0); 0hp não age; remoção→M024; produtor assume alvo                                               |
+| 2026-09-11 | M028      | L-29 CLOSED (terrain-memory live, OOB soft); intel inimiga mantém fail-closed                                             |
+| 2026-09-11 | PROMPTS   | Ticks mortos (budget live, exaustão=draw); tuning X=10→#92; sem unlimited (M09X)                                          |
+| 2026-09-11 | M029      | Lifecycle live (commission+flips+eventos owner-only); `active` sem leitor→M043+/M035+; roster sem cap                     |
+| 2026-09-11 | M030      | L-28 CLOSED (visão stateful; writer canónico só-genuíno); tuning visão 2→#92; sem lost-contact                            |
+| 2026-09-11 | M031      | DNA live (vocabulário+guard+mirror, zero consumers); writer→FUTURO; mirror-drift coberto por battery                      |
+| 2026-09-11 | M032      | Personalities live (fixo-5+presets votados, zero behavior); tuning matriz→#92; extensão futura declarada                  |
+| 2026-09-11 | M033      | Doctrines live (fixo-6+deltas votados, zero behavior/composer); tuning matriz→#92; composição só-registada                |
+| 2026-09-11 | M034      | Harness live (drill 0 violations + suite transversal, zero prod); bloco M031–M034 CLOSED; composição→M035+                |
+| 2026-09-11 | M035      | Composer live (total+puro, 84-combo ∀-válido, zero wiring); consumers→M036+; bloco Strategic AI aberto                    |
+| 2026-09-11 | M036      | Assessment live (pura L2, médias exactas, zero pesos/wiring); consumers→M037+; bloco segue                                |
+| 2026-09-11 | M037      | Stance live (votada margem-15, 1.º consumer M035, zero wiring); consumers→M038+; bloco segue                              |
+| 2026-09-11 | M038      | Wiring live (queries read-only, IA no bundle +4820); zero estado/eventos; bloco segue                                     |
+| 2026-09-11 | M039      | Posture live (L3 votada + query, 1.º consumer M037); 3 módulos p/ fechar bloco                                            |
+| 2026-09-11 | M040      | AI events live (snapshots em upgrade, mockups regen +72/-0, latência unitsConfig fechada)                                 |
 | 2026-09-11 | M041      | Strategy drill live (harness votado, 7 invariantes, 1200 applied/0 violações, sans-ms idêntico); 1 módulo p/ fechar bloco |
-| 2026-09-11 | M042      | Transversal live (suite votada, arco IA ponta-a-ponta, 1417/1417); bloco M035–M042 FECHADO |
-| 2026-09-11 | M043      | Orders data live (5 verbos engine, guards totais, espelho, bundle +775); bloco M043–M045 ABERTO; readers→M044+ |
-| 2026-09-11 | M044      | Queue transitions live (amend orders?+cap, issue/cancel owner-only, bundle +3481); semântica por kind→M045 |
-| 2026-09-11 | M045      | Order execution live (pop-head + live verbs, factos compostos, drill 1200/0); bloco M043–M045 FECHADO |
-| 2026-09-11 | M046      | Refutation data live (reasons fechadas, ref auto-validável, espelho, bundle +427); bloco M046–M050 ABERTO; mecânica→M047 |
-| 2026-09-11 | M047      | Override live (head+fresh, facto overridden, bundle +2250); raise+scoring→M048+ |
-| 2026-09-11 | M048      | Confidence live (5 evaluators + score, read-only, bundle +3446); counterfactual→M049–M050 |
-| 2026-09-11 | M049      | What-if live (fork+handlers vivos, confidence outcome, bundle +938); ranking→M050 |
+| 2026-09-11 | M042      | Transversal live (suite votada, arco IA ponta-a-ponta, 1417/1417); bloco M035–M042 FECHADO                                |
+| 2026-09-11 | M043      | Orders data live (5 verbos engine, guards totais, espelho, bundle +775); bloco M043–M045 ABERTO; readers→M044+            |
+| 2026-09-11 | M044      | Queue transitions live (amend orders?+cap, issue/cancel owner-only, bundle +3481); semântica por kind→M045                |
+| 2026-09-11 | M045      | Order execution live (pop-head + live verbs, factos compostos, drill 1200/0); bloco M043–M045 FECHADO                     |
+| 2026-09-11 | M046      | Refutation data live (reasons fechadas, ref auto-validável, espelho, bundle +427); bloco M046–M050 ABERTO; mecânica→M047  |
+| 2026-09-11 | M047      | Override live (head+fresh, facto overridden, bundle +2250); raise+scoring→M048+                                           |
+| 2026-09-11 | M048      | Confidence live (5 evaluators + score, read-only, bundle +3446); counterfactual→M049–M050                                 |
+| 2026-09-11 | M049      | What-if live (fork+handlers vivos, confidence outcome, bundle +938); ranking→M050                                         |
+| 2026-09-11 | M050      | Ranking live (scripts+failedAt, ranking+recommended, delegação M049 intacta, bundle +1087); bloco M046–M050 FECHADO       |

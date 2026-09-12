@@ -225,4 +225,95 @@ describe('whatIf (live query)', () => {
     expect(match.getRevision()).toBe(revision);
     expect(JSON.parse(JSON.stringify(match.getSnapshot().prompts)) as unknown).toEqual(prompts);
   });
+
+  it('runs live scripts without touching reality (gather-then-move)', () => {
+    const match = campaign({
+      p1Orders: [{ kind: 'unit.move', params: { id: 'u0', col: 0, row: 1 } }],
+    });
+    // The fork gathers (funds +1) then marches u0 onto its own target.
+    expect(
+      match.whatIfScript('c0', 0, [
+        { kind: 'economy.gather', params: { col: 0, row: 0 } },
+        { kind: 'unit.move', params: { id: 'u0', col: 0, row: 1 } },
+      ]),
+    ).toEqual({
+      applied: true,
+      outcome: {
+        orderIndex: 0,
+        kind: 'unit.move',
+        score: 60,
+        failed: ['out-of-range', 'redundant'],
+      },
+    });
+    // Reality never gathered nor marched.
+    expect(match.getSnapshot().stockpiles?.stockpiles.p1).toMatchObject({
+      gold: 200,
+      wood: 200,
+      food: 200,
+    });
+    expect(unitAt(match, 'u0')).toEqual({ col: 0, row: 0 });
+  });
+
+  it('pins live mid-script failures with their step index', () => {
+    const match = campaign({
+      p1Orders: [{ kind: 'unit.move', params: { id: 'u0', col: 0, row: 1 } }],
+    });
+    expect(
+      match.whatIfScript('c0', 0, [
+        { kind: 'unit.move', params: { id: 'u0', col: 0, row: 1 } },
+        { kind: 'economy.gather', params: { col: 0, row: 0 } },
+      ]),
+    ).toEqual({
+      applied: false,
+      reason: 'gather: no worker here.',
+      failedAt: 1,
+    });
+    expect(match.getSnapshot().stockpiles?.stockpiles.p1).toMatchObject({
+      gold: 200,
+      wood: 200,
+      food: 200,
+    });
+  });
+});
+
+describe('rankCandidates (live ranking)', () => {
+  it('recommends the live candidate that best serves the target', () => {
+    const match = campaign({
+      p1Orders: [{ kind: 'unit.move', params: { id: 'u0', col: 0, row: 1 } }],
+    });
+    const ranking = match.rankCandidates('c0', 0, [
+      { kind: 'unit.move', params: { id: 'u0', col: 0, row: 1 } },
+      { kind: 'economy.gather', params: { col: 0, row: 0 } },
+    ]);
+    // Gather holds u0 (target adjacent: 100); the march lands ON it (60).
+    expect(ranking?.ranking.map((entry) => [entry.index, entry.score])).toEqual([
+      [1, 100],
+      [0, 60],
+    ]);
+    expect(ranking?.recommended).toBe(1);
+    // Reality never gathered.
+    expect(match.getSnapshot().stockpiles?.stockpiles.p1).toMatchObject({
+      gold: 200,
+      wood: 200,
+      food: 200,
+    });
+    const map = match.getSnapshot().map as MapData | undefined;
+    expect(map?.cells.find((cell) => cell.col === 0 && cell.row === 0)?.resource?.amount).toBe(5);
+  });
+
+  it('sinks live rejections with their reasons', () => {
+    const match = campaign({
+      p1Orders: [{ kind: 'unit.move', params: { id: 'u0', col: 0, row: 1 } }],
+    });
+    const ranking = match.rankCandidates('c0', 0, [
+      { kind: 'unit.move', params: { id: 'u0', col: 2, row: 2 } },
+      { kind: 'economy.gather', params: { col: 0, row: 0 } },
+    ]);
+    expect(ranking?.ranking.map((entry) => [entry.index, entry.applied])).toEqual([
+      [1, true],
+      [0, false],
+    ]);
+    expect(ranking?.ranking[1]).toMatchObject({ reason: 'move: not adjacent.' });
+    expect(ranking?.recommended).toBe(1);
+  });
 });

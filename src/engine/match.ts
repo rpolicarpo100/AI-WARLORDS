@@ -127,10 +127,14 @@ import { isUnitType, type UnitType } from './units.js';
 import { isBuildingId } from './buildings.js';
 import { confidenceOfOrder, type ConfidenceRules, type OrderConfidence } from './confidence.js';
 import {
+  rankCandidates,
   whatIfConfidence,
+  whatIfScript,
+  type CandidateRanking,
   type CounterfactualDeps,
   type HypotheticalOrder,
   type WhatIfConfidence,
+  type WhatIfScript,
 } from './counterfactual.js';
 
 declare const matchBrand: unique symbol;
@@ -640,18 +644,64 @@ export class Match {
     hypothetical: HypotheticalOrder,
   ): WhatIfConfidence | undefined {
     const snapshot = this.kernel.getSnapshot();
-    const deps: CounterfactualDeps = {
-      handlers: this.domainHandlers,
-      rules: this.domainRules,
-      confidenceFor: (outcome: WorldState) => this.confidenceRules(outcome),
-    };
     return whatIfConfidence(
       snapshot.commanders?.commanders.find((record) => record.id === commanderId),
       orderIndex,
       snapshot,
       hypothetical,
-      deps,
+      this.counterfactualDeps(),
     );
+  }
+
+  /**
+   * M050 — live counterfactual script: what would confidence say about
+   * one queued order after a hypothetical sequence applied in order
+   * (read-only; undefined when the commander or the target is
+   * missing). First failure wins with its step index.
+   */
+  whatIfScript(
+    commanderId: string,
+    orderIndex: number,
+    script: readonly HypotheticalOrder[],
+  ): WhatIfScript | undefined {
+    const snapshot = this.kernel.getSnapshot();
+    return whatIfScript(
+      snapshot.commanders?.commanders.find((record) => record.id === commanderId),
+      orderIndex,
+      snapshot,
+      script,
+      this.counterfactualDeps(),
+    );
+  }
+
+  /**
+   * M050 — live candidate ranking: which hypothetical best serves one
+   * queued order (read-only; undefined when the commander or the
+   * target is missing). Best-first by outcome score, stable ties,
+   * unapplied sink; recommended names the input index to play.
+   */
+  rankCandidates(
+    commanderId: string,
+    orderIndex: number,
+    candidates: readonly HypotheticalOrder[],
+  ): CandidateRanking | undefined {
+    const snapshot = this.kernel.getSnapshot();
+    return rankCandidates(
+      snapshot.commanders?.commanders.find((record) => record.id === commanderId),
+      orderIndex,
+      snapshot,
+      candidates,
+      this.counterfactualDeps(),
+    );
+  }
+
+  /** M050 — CounterfactualDeps (shared by the three counterfactual queries). */
+  private counterfactualDeps(): CounterfactualDeps {
+    return {
+      handlers: this.domainHandlers,
+      rules: this.domainRules,
+      confidenceFor: (outcome: WorldState) => this.confidenceRules(outcome),
+    };
   }
 
   /** M048/M049 — ConfidenceRules over one snapshot (shared by both queries). */

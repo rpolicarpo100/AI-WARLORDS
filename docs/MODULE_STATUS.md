@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 49 (M001–M049)  |
-| `PLANNED`  | 116 (M050–M165) |
+| `VERIFIED` | 50 (M001–M050)  |
+| `PLANNED`  | 115 (M051–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -107,10 +107,10 @@ Checkpoints `VERIFIED`:
   1169/1169 testes, 100×4, L-29 CLOSED.
   Registo em `docs/modules/M028.md`.
 - **M029 @ 2026-09-11** — lifecycle Commander (commission
-  + activate/deactivate + eventos + wiring Match; `active`
-  marcador, roster N, owner-only); 1264/1264 testes, 100
-  global, 3 votos de âmbito.
-  Registo em `docs/modules/M029.md`.
+  - activate/deactivate + eventos + wiring Match; `active`
+    marcador, roster N, owner-only); 1264/1264 testes, 100
+    global, 3 votos de âmbito.
+    Registo em `docs/modules/M029.md`.
 - **M030 @ 2026-09-11** — pipeline descoberta (sourcesOf +
   postStep-explored + cell.discovered LOW + unit.spotted
   NORMAL #33; 3 votos); 1281/1281 testes, 100 global,
@@ -200,14 +200,21 @@ Checkpoints `VERIFIED`:
   Registo em `docs/modules/M047.md`.
 - **M048 @ 2026-09-11** — Confidence Engine
   (reasons votados executáveis: 5 evaluators
-  + score, queries read-only); 1613/1613
-  testes, 100 global.
-  Registo em `docs/modules/M048.md`.
+  - score, queries read-only); 1613/1613
+    testes, 100 global.
+    Registo em `docs/modules/M048.md`.
 - **M049 @ 2026-09-11** — Counterfactual Query
   (what-if votado: fork+handlers vivos,
   confidence do outcome, read-only);
   1634/1634 testes, 100 global.
   Registo em `docs/modules/M049.md`.
+- **M050 @ 2026-09-11** — Counterfactual Ranking
+  (scripts votados: simulateScript+failedAt,
+  ranking+recommended, M049 delega intacto);
+  1650/1650 testes, 100 global.
+  Registo em `docs/modules/M050.md`.
+  Bloco Refutation → Counterfactual M046–M050
+  FECHADO.
 
 ---
 
@@ -264,37 +271,37 @@ Checkpoints `VERIFIED`:
 
 ## Fases 5–16 — AI (Foundation → Arena)
 
-| Módulo(s) | Âmbito                                                              | Estado    |
-| --------- | ------------------------------------------------------------------- | --------- |
-| M027 | AI Foundation — Commander Core | `VERIFIED` |
-| M028 | AI Foundation — Perception | `VERIFIED` |
-| M029 | AI Foundation — Commander State | `VERIFIED` |
-| M030 | AI Foundation — Discovery Engine | `VERIFIED` |
-| M031 | Personalidade — AI DNA | `VERIFIED` |
-| M032 | Personalidade — AI Personalities | `VERIFIED` |
-| M033 | Personalidade — Unit Doctrines | `VERIFIED` |
-| M034 | Personalidade — Testing | `VERIFIED` |
-| M035 | Strategic AI — Effective DNA | `VERIFIED` |
-| M036 | Strategic AI — Player Assessment | `VERIFIED` |
-| M037 | Strategic AI — Commander Stance | `VERIFIED` |
-| M038 | Strategic AI — Match Wiring | `VERIFIED` |
-| M039 | Strategic AI — Army Posture | `VERIFIED` |
-| M040 | Strategic AI — AI Events | `VERIFIED` |
-| M041 | Strategic AI — Strategy Drill | `VERIFIED` |
-| M042 | Strategic AI — Transversal | `VERIFIED` |
-| M043 | Player → AI Command — Orders Data | `VERIFIED` |
-| M044 | Player → AI Command — Queue Transitions | `VERIFIED` |
-| M045 | Player → AI Command — Order Execution | `VERIFIED` |
-| M046 | AI Refutation Data | `VERIFIED` |
-| M047 | AI Override — Order Override | `VERIFIED` |
-| M048 | Confidence Engine — Reason Evaluators | `VERIFIED` |
-| M049 | Counterfactual AI — What-If Query | `VERIFIED` |
-| M050 | Counterfactual AI — Ranking | `PLANNED` |
-| M051–M054 | Memory                                                              | `PLANNED` |
-| M055–M058 | Player ↔ Commander                                                  | `PLANNED` |
-| M059–M061 | AI Evolution                                                        | `PLANNED` |
-| M062–M064 | Replay                                                              | `PLANNED` |
-| M065–M068 | AI Arena                                                            | `PLANNED` |
+| Módulo(s) | Âmbito                                  | Estado     |
+| --------- | --------------------------------------- | ---------- |
+| M027      | AI Foundation — Commander Core          | `VERIFIED` |
+| M028      | AI Foundation — Perception              | `VERIFIED` |
+| M029      | AI Foundation — Commander State         | `VERIFIED` |
+| M030      | AI Foundation — Discovery Engine        | `VERIFIED` |
+| M031      | Personalidade — AI DNA                  | `VERIFIED` |
+| M032      | Personalidade — AI Personalities        | `VERIFIED` |
+| M033      | Personalidade — Unit Doctrines          | `VERIFIED` |
+| M034      | Personalidade — Testing                 | `VERIFIED` |
+| M035      | Strategic AI — Effective DNA            | `VERIFIED` |
+| M036      | Strategic AI — Player Assessment        | `VERIFIED` |
+| M037      | Strategic AI — Commander Stance         | `VERIFIED` |
+| M038      | Strategic AI — Match Wiring             | `VERIFIED` |
+| M039      | Strategic AI — Army Posture             | `VERIFIED` |
+| M040      | Strategic AI — AI Events                | `VERIFIED` |
+| M041      | Strategic AI — Strategy Drill           | `VERIFIED` |
+| M042      | Strategic AI — Transversal              | `VERIFIED` |
+| M043      | Player → AI Command — Orders Data       | `VERIFIED` |
+| M044      | Player → AI Command — Queue Transitions | `VERIFIED` |
+| M045      | Player → AI Command — Order Execution   | `VERIFIED` |
+| M046      | AI Refutation Data                      | `VERIFIED` |
+| M047      | AI Override — Order Override            | `VERIFIED` |
+| M048      | Confidence Engine — Reason Evaluators   | `VERIFIED` |
+| M049      | Counterfactual AI — What-If Query       | `VERIFIED` |
+| M050      | Counterfactual AI — Ranking             | `VERIFIED` |
+| M051–M054 | Memory                                  | `PLANNED`  |
+| M055–M058 | Player ↔ Commander                      | `PLANNED`  |
+| M059–M061 | AI Evolution                            | `PLANNED`  |
+| M062–M064 | Replay                                  | `PLANNED`  |
+| M065–M068 | AI Arena                                | `PLANNED`  |
 
 ## Fases 17–20 — Multiplayer, Competitive, Security, Observability
 
