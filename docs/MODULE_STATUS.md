@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 64 (M001–M064)  |
-| `PLANNED`  | 101 (M065–M165) |
+| `VERIFIED` | 65 (M001–M065)  |
+| `PLANNED`  | 100 (M066–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -287,6 +287,11 @@ Checkpoints `VERIFIED`:
   Replay FECHADO); 1828/1828 testes, 100
   global.
   Registo em `docs/modules/M064.md`.
+- **M065 @ 2026-09-12** — AI Arena Self-Play
+  (template player + runner, bundle +449;
+  FIRST do bloco); 1839/1839 testes, 100
+  global.
+  Registo em `docs/modules/M065.md`.
 
 ---
 
@@ -383,7 +388,8 @@ Checkpoints `VERIFIED`:
 | M062      | Replay — Replay-Verify                  | `VERIFIED` |
 | M063      | Replay — Export Blob                    | `VERIFIED` |
 | M064      | Replay — Stepping                       | `VERIFIED` |
-| M065–M068 | AI Arena                                | `PLANNED`  |
+| M065      | AI Arena — Self-Play                    | `VERIFIED` |
+| M066–M068 | AI Arena                                | `PLANNED`  |
 
 ## Fases 17–20 — Multiplayer, Competitive, Security, Observability
 

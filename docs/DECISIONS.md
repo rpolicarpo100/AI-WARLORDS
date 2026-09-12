@@ -1974,3 +1974,35 @@ journal)` em match.ts (zero ficheiros,
 - RISKS: baixo — replay mold.
 - CUTS: step-back; UI (futuro); bloco
   Replay FECHA aqui.
+
+## D-059 — Self-play M065 (voto self-play)
+
+- DECISION: NOVO `selfplay.ts` (L3:
+  policy brain pura) + `Match.selfplay`
+  static (match.ts): `simplePolicy(
+snapshot, player, passable)` determinística
+  (attack adjacente > gather on-node >
+  aproximação axial greedy > patrulha;
+  workers atacam; empates por id/col/row)
+  - runner até vitória (alterna roster,
+    sessions frescas, requestIds `selfplay
+N`; pára em finished OU 2 lances
+    seguidos sem applied — terminação por
+    spend-down + stall-stop, sem cap; trust
+    na policy como M064). terrainPassable
+    extraído (refactor identical). Pins:
+    census + LAYERS `selfplay: 3`.
+- MOTIVE: voto + fecha o loop hands-free
+  (M059-61 agem, replay regista).
+- ALTERNATIVES: policy c/ RNG (rejeitado:
+  pura); cap lances (rejeitado: prova
+  spend-down chega); orders via commanders
+  (rejeitado: verbos diretos M065);
+  runner em tools/ (rejeitado: engine+100).
+- ADVANTAGES: Arena tem matches reais;
+  M066+ melhora brains s/ tocar runner.
+- DISADVANTAGES: simple-minded (jitter,
+  patrulha — documentado).
+- RISKS: baixo — moldes replay+policy.
+- CUTS: brains espertos; commander-orders
+  (M066?); UI Arena.

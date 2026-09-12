@@ -45,6 +45,7 @@ import {
   type Verdict,
   type VictoryCondition,
 } from './victory.js';
+import type { PassableCheck, PolicyMove } from './selfplay.js';
 import { isWorldState, worldHandlers, type WorldState } from './world-state.js';
 import {
   buildParamsRule,
@@ -184,6 +185,11 @@ export function createMatchId(): MatchId {
   return randomUUID() as MatchId;
 }
 
+/** M065 extraction (behavior-identical): finite move cost passes. */
+export function terrainPassable(terrainConfig: TerrainConfig, terrain: string): boolean {
+  return Number.isFinite(modifiersFor(terrainConfig, terrain as TerrainId).move);
+}
+
 export function isSeed(value: unknown): value is Seed {
   return typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= MAX_UINT32;
 }
@@ -227,6 +233,13 @@ export interface JournalEntry {
   readonly payload: unknown;
   readonly outcome: MatchDispatchOutcome;
 }
+
+/** M065 — template player signature (brains behind one seam). */
+export type SelfplayPolicy = (
+  snapshot: WorldState,
+  player: PlayerId,
+  passable: PassableCheck,
+) => PolicyMove | null;
 
 export interface MatchInit {
   readonly matchId?: string;
@@ -356,8 +369,7 @@ export class Match {
     ]);
     const orders = new Map([...orderHandlers(), ...orderOverrideHandlers()]);
     // M022: passable = finite move cost (Infinity/NaN block, fail-closed).
-    const passable = (terrain: string): boolean =>
-      Number.isFinite(modifiersFor(terrainConfig, terrain as TerrainId).move);
+    const passable = (terrain: string): boolean => terrainPassable(terrainConfig, terrain);
     const defenseOf = (terrain: string): number =>
       modifiersFor(terrainConfig, terrain as TerrainId).defense;
     const treasury: UnitTreasury = {
@@ -1139,6 +1151,54 @@ export class Match {
       );
     }
     return { match, outcomes };
+  }
+
+  /**
+   * M065 — hands-free match: a policy plays every side in roster order
+   * until victory or stall (two consecutive lances without an applied
+   * dispatch — rejects and idles). Termination is structural for
+   * spending policies (every applied lance spends toward exhaustion);
+   * custom policies are trusted like M064 journals (a policy that
+   * applies budget-free forever wedges — simplePolicy never does).
+   */
+  static selfplay(
+    init: MatchInit,
+    policy: SelfplayPolicy,
+  ): { readonly match: Match; readonly lances: number; readonly stalled: boolean } {
+    const match = new Match(init);
+    let lance = 0;
+    let turn = 0;
+    let stale = 0;
+    for (;;) {
+      if (match.getVerdict().status === 'finished') {
+        return { match, lances: lance, stalled: false };
+      }
+      // Non-empty roster (the kernel threw otherwise — cast documents it).
+      const player = init.players[turn % init.players.length] as PlayerId;
+      const move = policy(match.getSnapshot(), player, (terrain) =>
+        terrainPassable(match.terrainConfig, terrain),
+      );
+      lance += 1;
+      if (move === null) {
+        stale += 1;
+      } else {
+        const session = match.join(player);
+        const outcome = match.dispatch(
+          session,
+          markUntrusted({
+            requestId: `selfplay ${lance}` as RequestId,
+            playerId: player,
+            type: move.type,
+            payload: move.payload,
+          }),
+        );
+        stale = outcome.status === 'applied' ? 0 : stale + 1;
+      }
+      if (stale >= 2) {
+        return { match, lances: lance, stalled: true };
+      }
+      turn += 1;
+    }
   }
 
   getVerdict(): Verdict {

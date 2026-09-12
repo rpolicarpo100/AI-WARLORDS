@@ -27,6 +27,7 @@ import { SET_TRANSITION } from './directive-state.js';
 import { EXECUTE_TRANSITION } from './order-execution.js';
 import { ISSUE_TRANSITION } from './order-state.js';
 import { APPROVE_TRANSITION, DECLINE_TRANSITION, PROPOSE_TRANSITION } from './proposal-state.js';
+import { simplePolicy } from './selfplay.js';
 import { MOVE_TRANSITION, type UnitsConfig } from './warfare.js';
 import { createWorldState } from './world-state.js';
 
@@ -68,7 +69,7 @@ function battleMap(): MapData {
 }
 
 /** Fresh value-identical init per call (replay rebuilds from scratch). */
-function makeInit(): MatchInit {
+function makeInit(promptsPerPlayer?: number): MatchInit {
   const map = battleMap();
   const cells = new Map(map.cells.map((cell) => [`${cell.col},${cell.row}`, cell] as const));
   const foe = neighborsOf(map, 1, 0).find(
@@ -81,6 +82,7 @@ function makeInit(): MatchInit {
     seed: 62,
     ruleset: STANDARD_RULESET,
     players: [P1, P2],
+    ...(promptsPerPlayer === undefined ? {} : { promptsPerPlayer }),
     unitsConfig: drillUnits(),
     initialState: createWorldState({
       players: [P1, P2],
@@ -486,5 +488,61 @@ describe('replay stepper (M064 frame-by-frame playback)', () => {
     expect(stepper.total).toBe(0);
     expect(stepper.step()).toBeNull();
     expect(stepper.match.getSnapshot()).toEqual(match.getSnapshot());
+  });
+});
+
+describe('Match.selfplay (template-player runner)', () => {
+  it('finishes a one-prompt match in two lances (draw, replayable)', () => {
+    const { match, lances, stalled } = Match.selfplay(makeInit(1), simplePolicy);
+    expect(stalled).toBe(false);
+    expect(lances).toBe(2);
+    expect(match.getVerdict()).toMatchObject({
+      status: 'finished',
+      outcome: { kind: 'draw' },
+      condition: 'prompts-exhausted',
+    });
+    const journal = match.getJournal();
+    expect(journal.map((entry) => entry.requestId)).toEqual(['selfplay 1', 'selfplay 2']);
+    expect(journal.map((entry) => entry.playerId)).toEqual([P1, P2]);
+    // The self-played journal redrives (replay-synergy: M062 meets M065).
+    const { match: twin, outcomes } = Match.replay(makeInit(1), journal);
+    expect(outcomes.map((outcome) => outcome.status)).toEqual(['applied', 'applied']);
+    expect(twin.getSnapshot()).toEqual(match.getSnapshot());
+    expect(twin.getVerdict()).toEqual(match.getVerdict());
+  });
+
+  it('stalls on consecutive idle policies (no dispatch, no journal)', () => {
+    const { match, lances, stalled } = Match.selfplay(makeInit(1), () => null);
+    expect(stalled).toBe(true);
+    expect(lances).toBe(2);
+    expect(match.getJournal()).toEqual([]);
+    expect(match.getVerdict()).toEqual({ status: 'ongoing' });
+  });
+
+  it('injects a working passable check into every policy call', () => {
+    let calls = 0;
+    const seen: string[] = [];
+    const { lances, stalled } = Match.selfplay(makeInit(1), (_snapshot, player, passable) => {
+      calls += 1;
+      seen.push(player);
+      expect(typeof passable('field')).toBe('boolean');
+      return null;
+    });
+    expect([calls, lances, stalled]).toEqual([2, 2, true]);
+    expect(seen).toEqual([P1, P2]);
+  });
+
+  it('stalls on consecutive rejected lances (garbage journals twice)', () => {
+    const { match, lances, stalled } = Match.selfplay(makeInit(1), () => ({
+      type: 'unit.move',
+      payload: { bogus: true },
+    }));
+    expect(stalled).toBe(true);
+    expect(lances).toBe(2);
+    expect(match.getVerdict()).toEqual({ status: 'ongoing' });
+    expect(match.getJournal().map((entry) => entry.outcome.status)).toEqual([
+      'rejected',
+      'rejected',
+    ]);
   });
 });

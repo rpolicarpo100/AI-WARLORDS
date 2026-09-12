@@ -456,6 +456,7 @@ describe('determinism hygiene (static security review)', () => {
       'refutations.ts',
       'resources.ts',
       'rng.ts',
+      'selfplay.ts',
       'stance.ts',
       'stockpiles.ts',
       'terrain.ts',
@@ -562,6 +563,7 @@ describe('architecture boundary (static review)', () => {
     posture: 3,
     'ai-events': 3,
     counterfactual: 3,
+    selfplay: 3,
     match: 4,
   };
 
