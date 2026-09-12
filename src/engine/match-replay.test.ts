@@ -27,6 +27,7 @@ import { SET_TRANSITION } from './directive-state.js';
 import { EXECUTE_TRANSITION } from './order-execution.js';
 import { ISSUE_TRANSITION } from './order-state.js';
 import { APPROVE_TRANSITION, DECLINE_TRANSITION, PROPOSE_TRANSITION } from './proposal-state.js';
+import { scorePlayer } from './score.js';
 import { simplePolicy } from './selfplay.js';
 import { MOVE_TRANSITION, type UnitsConfig } from './warfare.js';
 import { createWorldState } from './world-state.js';
@@ -493,9 +494,11 @@ describe('replay stepper (M064 frame-by-frame playback)', () => {
 
 describe('Match.selfplay (template-player runner)', () => {
   it('finishes a one-prompt match in two lances (draw, replayable)', () => {
-    const { match, lances, stalled } = Match.selfplay(makeInit(1), simplePolicy);
+    const { match, lances, stalled, scores } = Match.selfplay(makeInit(1), simplePolicy);
     expect(stalled).toBe(false);
     expect(lances).toBe(2);
+    expect(scores[P1]).toBe(scorePlayer(match.getSnapshot(), P1));
+    expect(scores[P2]).toBe(scorePlayer(match.getSnapshot(), P2));
     expect(match.getVerdict()).toMatchObject({
       status: 'finished',
       outcome: { kind: 'draw' },
@@ -512,9 +515,10 @@ describe('Match.selfplay (template-player runner)', () => {
   });
 
   it('stalls on consecutive idle policies (no dispatch, no journal)', () => {
-    const { match, lances, stalled } = Match.selfplay(makeInit(1), () => null);
+    const { match, lances, stalled, scores } = Match.selfplay(makeInit(1), () => null);
     expect(stalled).toBe(true);
     expect(lances).toBe(2);
+    expect(Object.keys(scores).sort()).toEqual(['p1', 'p2']);
     expect(match.getJournal()).toEqual([]);
     expect(match.getVerdict()).toEqual({ status: 'ongoing' });
   });

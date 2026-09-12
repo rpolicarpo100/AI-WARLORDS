@@ -131,3 +131,4 @@
 | 2026-09-12 | M064      | Stepping live (O(n) stepper, shaken +0); Replay CLOSED                                                                    |
 | 2026-09-12 | M065      | Self-play live (template player + runner, bundle +449); arena scoring→M066                                                |
 | 2026-09-12 | M066      | Smarter brains live (flee/focus-fire/seek, shaken +0); scoring→M067                                                       |
+| 2026-09-12 | M067      | Scoring live (all-ones + selfplay scores, bundle +545); arena UI→M068                                                     |

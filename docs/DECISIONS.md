@@ -2034,3 +2034,28 @@ N`; pára em finished OU 2 lances
 - RISKS: baixo — mesma assinatura, pins
   intactos.
 - CUTS: scoring (M067?); UI Arena.
+
+## D-061 — Arena scoring M067 (sem voto: sequência natural)
+
+- DECISION: NOVO `score.ts` (L2, puro,
+  só type-imports): `scorePlayer(state,
+player)` = hp vivo + stock + city level
+  - buildings (pesos v1 todos-um, sem
+    falsa precisão); `rankPlayers` (score
+    desc, empate id) + `scoreTable`.
+    `Match.selfplay` devolve `scores` finais.
+    Victory/draws INTOCADOS (upgrade
+    draw→win = ripple M060/gate — futuro).
+- MOTIVE: Arena precisa de ranking antes
+  de UI; victory.ts documenta o upgrade.
+- ALTERNATIVES: pesos tuned (rejeitado:
+  túning s/ dados); victory c/ wins
+  (rejeitado: ripple 5 ficheiros);
+  kills/damage (rejeitado: estado não
+  tem contadores).
+- ADVANTAGES: zero ripple (só adições);
+  scores sobrevivem replay (derivados).
+- DISADVANTAGES: pesos-um crus.
+- RISKS: baixo — puro + pins.
+- CUTS: buildings? INCLUÍDOS (+1);
+  UI Arena (M068?); score-wins.

@@ -45,6 +45,7 @@ import {
   type Verdict,
   type VictoryCondition,
 } from './victory.js';
+import { scoreTable } from './score.js';
 import type { PassableCheck, PolicyMove } from './selfplay.js';
 import { isWorldState, worldHandlers, type WorldState } from './world-state.js';
 import {
@@ -1164,14 +1165,24 @@ export class Match {
   static selfplay(
     init: MatchInit,
     policy: SelfplayPolicy,
-  ): { readonly match: Match; readonly lances: number; readonly stalled: boolean } {
+  ): {
+    readonly match: Match;
+    readonly lances: number;
+    readonly stalled: boolean;
+    readonly scores: Readonly<Record<PlayerId, number>>;
+  } {
     const match = new Match(init);
     let lance = 0;
     let turn = 0;
     let stale = 0;
     for (;;) {
       if (match.getVerdict().status === 'finished') {
-        return { match, lances: lance, stalled: false };
+        return {
+          match,
+          lances: lance,
+          stalled: false,
+          scores: scoreTable(match.getSnapshot(), init.players),
+        };
       }
       // Non-empty roster (the kernel threw otherwise — cast documents it).
       const player = init.players[turn % init.players.length] as PlayerId;
@@ -1195,7 +1206,12 @@ export class Match {
         stale = outcome.status === 'applied' ? 0 : stale + 1;
       }
       if (stale >= 2) {
-        return { match, lances: lance, stalled: true };
+        return {
+          match,
+          lances: lance,
+          stalled: true,
+          scores: scoreTable(match.getSnapshot(), init.players),
+        };
       }
       turn += 1;
     }
