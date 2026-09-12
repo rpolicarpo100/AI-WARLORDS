@@ -2402,3 +2402,38 @@ rev R (seed S)` últimas 6,
 - DISADVANTAGES: nenhum.
 - RISKS: baixo.
 - CUTS: sparklines; perfis.
+
+## D-075 — Rate limit M081 (user: IP/wallet?)
+
+- DECISION: fixed-window 120 req/
+  60s por chave (3º param
+  createTransport, default
+  v1); chave = rateKey(req):
+  XFF-last não-vazio, senão
+  remoteAddress (single-proxy
+  Render; sem XFF local =
+  remoteAddress). Tudo conta
+  (1ª linha route); 429
+  {error} sem Retry-After
+  (mínimo honesto). Suite usa
+  limites altos explícitos
+  (harness config, mold clock);
+  mecanismo provado c/ limites
+  baixos; default pinado.
+- MOTIVE: wallet não existe
+  (M098+) — chave wallet hoje
+  era fake; IP é o real.
+- ALTERNATIVES: remoteAddress
+  only (rejeitado: bucket
+  partilhado no Render);
+  Retry-After (CUT); exempt
+  localhost (rejeitado: buraco).
+- ADVANTAGES: por-cliente no
+  Render; zero branches mortos.
+- DISADVANTAGES: XFF spoofável
+  local (RISK: allowlist proxy
+  futuro); buckets sem sweep
+  (RISK: memória).
+- RISKS: médio-baixo.
+- CUTS: Retry-After; sweep;
+  key wallet (M098+).

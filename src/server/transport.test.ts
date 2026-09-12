@@ -13,7 +13,12 @@ import {
   type ServerResponse,
 } from 'node:http';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { PRESENCE_TIMEOUT_MS, createTransport } from './transport.js';
+import {
+  DEFAULT_RATE_LIMIT,
+  PRESENCE_TIMEOUT_MS,
+  createTransport,
+  type RateLimit,
+} from './transport.js';
 
 let server: Server;
 let port = 0;
@@ -31,7 +36,9 @@ async function waitFor(cond: () => boolean, label: string): Promise<void> {
 }
 
 beforeAll(async () => {
-  server = createServer(createTransport());
+  // Suite volume would trip the shipped default (harness config, not a
+  // bypass — the limiter mechanism is proven with low limits below).
+  server = createServer(createTransport(Date.now, 50, { windowMs: 60_000, max: 1_000_000 }));
   await new Promise<void>((resolve) => {
     server.listen(0, () => {
       port = (server.address() as { port: number }).port;
@@ -82,6 +89,19 @@ function options(
       res.resume();
       res.on('end', () => {
         resolve({ code: res.statusCode ?? 0, headers: { ...res.headers } });
+      });
+    });
+    req.on('error', reject);
+    req.end();
+  });
+}
+
+function getWith(path: string, headers: Record<string, string>): Promise<{ code: number }> {
+  return new Promise((resolve, reject) => {
+    const req = httpRequest({ port, path, method: 'GET', headers }, (res) => {
+      res.resume();
+      res.on('end', () => {
+        resolve({ code: res.statusCode ?? 0 });
       });
     });
     req.on('error', reject);
@@ -152,10 +172,11 @@ async function sessionFor(playerId: string): Promise<{ matchId: string; sessionI
 async function withClock(
   fn: (clock: { now: number }) => Promise<void>,
   maxResults?: number,
+  rateLimit?: RateLimit,
 ): Promise<void> {
   const main = port;
   const clock = { now: 1_000_000 };
-  const manual = createServer(createTransport(() => clock.now, maxResults));
+  const manual = createServer(createTransport(() => clock.now, maxResults, rateLimit));
   await new Promise<void>((resolve) => manual.listen(0, resolve));
   port = (manual.address() as { port: number }).port;
   try {
@@ -792,6 +813,55 @@ describe('GET /ratings (elo)', () => {
   it('404s ratings lookalikes', async () => {
     expect(await get('/ratings/x')).toMatchObject({ code: 404 });
     expect(await postJson('/ratings', {})).toMatchObject({ code: 404 });
+  });
+});
+
+describe('rate limiting (fixed window per key)', () => {
+  it('pins the shipped default policy', () => {
+    expect(DEFAULT_RATE_LIMIT).toEqual({ windowMs: 60_000, max: 120 });
+  });
+
+  it('refuses past the max, then serves again past the window', async () => {
+    await withClock(
+      async (clock) => {
+        expect((await get('/ratings')).code).toBe(200);
+        expect((await get('/ratings')).code).toBe(200);
+        expect(await get('/ratings')).toEqual({ code: 429, json: { error: 'rate limited' } });
+        clock.now += 60_000;
+        expect((await get('/ratings')).code).toBe(200);
+      },
+      50,
+      { windowMs: 60_000, max: 2 },
+    );
+  });
+
+  it('keys distinct XFF clients apart', async () => {
+    await withClock(
+      async () => {
+        expect((await getWith('/ratings', { 'X-Forwarded-For': '10.0.0.1' })).code).toBe(200);
+        expect((await getWith('/ratings', { 'X-Forwarded-For': '10.0.0.1' })).code).toBe(429);
+        expect((await getWith('/ratings', { 'X-Forwarded-For': '10.0.0.2' })).code).toBe(200);
+      },
+      50,
+      { windowMs: 60_000, max: 1 },
+    );
+  });
+
+  it('reads the last hop and falls back on empty XFF', async () => {
+    await withClock(
+      async () => {
+        expect((await getWith('/ratings', { 'X-Forwarded-For': 'spoof, 10.0.0.9' })).code).toBe(
+          200,
+        );
+        expect((await getWith('/ratings', { 'X-Forwarded-For': 'spoof, 10.0.0.9' })).code).toBe(
+          429,
+        );
+        expect((await getWith('/ratings', { 'X-Forwarded-For': '' })).code).toBe(200);
+        expect((await get('/ratings')).code).toBe(429);
+      },
+      50,
+      { windowMs: 60_000, max: 1 },
+    );
   });
 });
 

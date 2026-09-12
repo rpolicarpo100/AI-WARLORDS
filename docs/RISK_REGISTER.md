@@ -153,3 +153,5 @@
 - M079: ratings live (Elo 1200/K32); RISK: sem UI (ver M080 leaderboard).
 
 - M080: COMPETITIVE FECHADO (board live); próximo: Security M081–M087.
+
+- M081: rate limit live (120/60s IP); RISK: bodies sem cap (ver M082).
