@@ -10,10 +10,10 @@ import type { WorldState } from './world-state.js';
  * (#40: never invent happenings). Engine-side only: validation guards
  * field-level corruption (the realistic bug class for typed seams).
  *
- * The only real condition today is prompt exhaustion (D-022 reforms #46):
- * with no score tracked yet, an undecided match where nobody can act is
- * a draw (a winner would have to be invented). Score comparison upgrades
- * this when scoring exists.
+ * Prompt exhaustion draws matches nobody can act in (D-022 reforms #46).
+ * Since M078 the score-superiority rule (victory-score.ts, L3 — layers
+ * forbid it here) judges standard matches first, so only true score
+ * ties still reach this draw.
  */
 
 export type VerdictOutcome =
@@ -51,6 +51,11 @@ export function promptsExhaustedCondition(): VictoryCondition {
     }
     return { outcome: { kind: 'draw' }, condition: 'prompts-exhausted' };
   };
+}
+
+/** Reads the crown off a finished outcome (draws wear none). */
+export function winnerOf(outcome: VerdictOutcome): PlayerId | null {
+  return outcome.kind === 'win' ? outcome.winner : null;
 }
 
 export function matchConditions(): readonly VictoryCondition[] {

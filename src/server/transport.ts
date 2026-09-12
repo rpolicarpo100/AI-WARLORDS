@@ -39,6 +39,7 @@ import {
 import type { MapCell, MapId } from '../engine/map.js';
 import { Match, STANDARD_RULESET, createMatchId, isSeed, type MatchInit } from '../engine/match.js';
 import { scoreTable } from '../engine/score.js';
+import { winnerOf } from '../engine/victory.js';
 import { createWorldState } from '../engine/world-state.js';
 
 interface Stream {
@@ -65,6 +66,7 @@ export interface MatchResult {
   readonly seed: number;
   readonly status: 'finished' | 'ongoing';
   readonly outcome: 'win' | 'draw' | null;
+  readonly winner: string | null;
   readonly condition: string | null;
   readonly scores: Readonly<Record<string, number>>;
   readonly revision: number;
@@ -423,6 +425,7 @@ export function createTransport(
         seed: entry.seed,
         status: verdict.status,
         outcome: verdict.status === 'finished' ? verdict.outcome.kind : null,
+        winner: verdict.status === 'finished' ? winnerOf(verdict.outcome) : null,
         condition: verdict.status === 'finished' ? verdict.condition : null,
         scores: scoreTable(entry.match.getSnapshot(), rosterPlayers),
         revision: entry.match.getRevision(),

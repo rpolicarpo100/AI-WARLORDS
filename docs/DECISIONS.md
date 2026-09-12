@@ -2311,3 +2311,41 @@ p2:M` + 1 linha/unidade
 - DISADVANTAGES: memória (cap 50).
 - RISKS: baixo.
 - CUTS: ratings (M078).
+
+## D-072 — Score victory M078 (sem voto: apontada)
+
+- DECISION: header victory.ts +
+  D-061 deferiram ("Score comparison
+  upgrades this when scoring
+  exists") — scoring existe (M067).
+  Novo `victory-score.ts` L3
+  (layers enforced: victory:2 não
+  pode importar score:2; events:3
+  veta subir victory): dryness +
+  strict-max via scorePlayer
+  (scoreTable indexava → branch
+  incobrível c/ noUncheckedIndexed-
+  Access); tie/empty → null
+  (prompts-exhausted desenha).
+  match.ts compõe via seam extras-
+  first; victory.ts ganha winnerOf
+  (transport regista winner sem
+  branch morto); condition
+  'score-superior'.
+- MOTIVE: wins existem (ratings
+  M079 mexem dia 1); RISK M077
+  replan honestamente.
+- ALTERNATIVES: ratings já (M078
+  impotente — rejeitado); closure
+  inline match.ts (rejeitado:
+  regra partida); victory→L3
+  (rejeitado: quebra events:3).
+- ADVANTAGES: zero pins além
+  census+LAYERS; victory.test
+  intacto (registry igual).
+- DISADVANTAGES: teste M077 draw
+  vira win (rule change intended).
+- RISKS: médio-baixo — ripple
+  audit (gate/replay fixtures
+  tied→draw preservado; suite dirá).
+- CUTS: sudden-death; margin bonus.

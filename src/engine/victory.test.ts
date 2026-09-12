@@ -12,6 +12,7 @@ import {
   evaluateVictory,
   matchConditions,
   promptsExhaustedCondition,
+  winnerOf,
   type ConditionDecision,
   type ConditionInput,
   type VictoryCondition,
@@ -100,6 +101,13 @@ describe('promptsExhaustedCondition (unit)', () => {
       outcome: { kind: 'draw' },
       condition: 'prompts-exhausted',
     });
+  });
+});
+
+describe('winnerOf (unit)', () => {
+  it('reads the crown off wins and none off draws', () => {
+    expect(winnerOf({ kind: 'win', winner: P1 })).toBe(P1);
+    expect(winnerOf({ kind: 'draw' })).toBeNull();
   });
 });
 

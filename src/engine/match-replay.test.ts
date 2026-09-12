@@ -493,7 +493,7 @@ describe('replay stepper (M064 frame-by-frame playback)', () => {
 });
 
 describe('Match.selfplay (template-player runner)', () => {
-  it('finishes a one-prompt match in two lances (draw, replayable)', () => {
+  it('finishes a one-prompt match in two lances (score wins, replayable)', () => {
     const { match, lances, stalled, scores } = Match.selfplay(makeInit(1), simplePolicy);
     expect(stalled).toBe(false);
     expect(lances).toBe(2);
@@ -501,8 +501,8 @@ describe('Match.selfplay (template-player runner)', () => {
     expect(scores[P2]).toBe(scorePlayer(match.getSnapshot(), P2));
     expect(match.getVerdict()).toMatchObject({
       status: 'finished',
-      outcome: { kind: 'draw' },
-      condition: 'prompts-exhausted',
+      outcome: { kind: 'win', winner: P1 },
+      condition: 'score-superior',
     });
     const journal = match.getJournal();
     expect(journal.map((entry) => entry.requestId)).toEqual(['selfplay 1', 'selfplay 2']);

@@ -692,6 +692,7 @@ describe('GET /results (history)', () => {
             seed: 7,
             status: 'ongoing',
             outcome: null,
+            winner: null,
             condition: null,
             scores: { p1: 177, p2: 113 },
             revision: 1,
@@ -703,7 +704,7 @@ describe('GET /results (history)', () => {
     });
   });
 
-  it('records a finished draw with its condition', async () => {
+  it('records a finished win with its crown (skirmish p1 outscores)', async () => {
     const { matchId, sessionId } = await sessionFor('p1');
     const joined = await postJson(`/match/${matchId}/join`, { playerId: 'p2' });
     await spendAll(matchId, sessionId, (joined.json as { sessionId: string }).sessionId);
@@ -712,13 +713,15 @@ describe('GET /results (history)', () => {
       matchId: string;
       status: string;
       outcome: string;
+      winner: string;
       condition: string;
       revision: number;
     }[];
     expect(history.find((row) => row.matchId === matchId)).toMatchObject({
       status: 'finished',
-      outcome: 'draw',
-      condition: 'prompts-exhausted',
+      outcome: 'win',
+      winner: 'p1',
+      condition: 'score-superior',
       revision: 20,
     });
   });

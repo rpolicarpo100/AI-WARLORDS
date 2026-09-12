@@ -46,6 +46,7 @@ import {
   type VictoryCondition,
 } from './victory.js';
 import { scoreTable } from './score.js';
+import { scoreSuperiorCondition } from './victory-score.js';
 import type { PassableCheck, PolicyMove } from './selfplay.js';
 import { isWorldState, worldHandlers, type WorldState } from './world-state.js';
 import {
@@ -589,7 +590,9 @@ export class Match {
     }
     this.producers = producers;
     const extraConditions: readonly VictoryCondition[] = init.extraConditions ?? [];
-    this.conditions = [...extraConditions, ...matchConditions()];
+    // Score superiority judges every standard match ahead of the built-ins
+    // (extras-first seam; ties fall through to the exhaustion draw).
+    this.conditions = [...extraConditions, scoreSuperiorCondition(), ...matchConditions()];
     this.players = freezeState([...init.players]);
     this.kernel = new AuthorityKernel<WorldState>({
       players: init.players,

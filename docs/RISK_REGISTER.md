@@ -147,3 +147,5 @@
 - M076: BLOCO M065–M076 FECHADO (multiplayer ponta-a-ponta live); próximo bloco a votar.
 
 - M077: histórico live (cap 50 memória); RISK: resultados sem rating (ver M078).
+
+- M078: wins existem (score-superior); RISK: sem ratings (ver M079).
