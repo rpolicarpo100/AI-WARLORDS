@@ -2694,3 +2694,26 @@ rev R (seed S)` últimas 6,
 - DISADVANTAGES: nenhum.
 - RISKS: baixo.
 - CUTS: gráficos; alertas.
+
+## D-087 — Prod drill M092 (sem voto: sequência apontada)
+
+- DECISION: tools/prod-drill.mjs
+  + `npm run drill:prod` (AW_API
+  default prod): health→forge→
+  join×2→noop→attack→move→
+  state→board→close→healthz,
+  asserts shapes; fecha a mesa
+  (rasto: 1 history, void
+  rating); sem vitest (tools/
+  verifica-se a correr — molde
+  smoke).
+- MOTIVE: RISK M091; prova
+  pós-deploy repetível.
+- ALTERNATIVES: curl manual
+  (status quo — rejeitado:
+  lento, propenso a erro).
+- ADVANTAGES: gate live em ~5s.
+- DISADVANTAGES: bate no prod
+  (documentado).
+- RISKS: baixo.
+- CUTS: cron; alertas.

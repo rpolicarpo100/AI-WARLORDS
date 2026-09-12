@@ -1,7 +1,7 @@
 {
   "name": "ai-warlords",
   "version": "0.0.0",
-  "description": "AI WARLORDS \u2014 deterministic strategy game with AI commanders. M002: development environment.",
+  "description": "AI WARLORDS — deterministic strategy game with AI commanders. M002: development environment.",
   "type": "module",
   "private": true,
   "engines": {
@@ -30,7 +30,8 @@
     "smoke:attack": "ATTACK_TEST=1 node tools/smoke-match.mjs",
     "smoke:arena": "ARENA_TEST=1 node tools/smoke-match.mjs",
     "smoke:api": "API_TEST=1 node tools/smoke-match.mjs",
-    "verify:bundle": "node tools/verify-bundle.mjs"
+    "verify:bundle": "node tools/verify-bundle.mjs",
+    "drill:prod": "node tools/prod-drill.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

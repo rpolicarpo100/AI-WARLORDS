@@ -175,3 +175,5 @@
 - M090: access log live (AW_LOG); RISK: sem status UI (ver M091).
 
 - M091: pulse UI live; RISK: sem drill e2e prod (ver M092).
+
+- M092: BREACH — gate loop correu `npm run test:run` (inexistente); claims 100×4 recentes eram UNVERIFIED. Suite re-verificada verde (1939/1939 100×4). Fix: `npm test` + pipefail. RISK: janela exacta de claims afectados desconhecida.
