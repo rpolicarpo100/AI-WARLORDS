@@ -1702,3 +1702,34 @@ recollection)` em stance.ts (MESMO
 - RISKS: baixo — molde provado.
 - CUTS: autonomy actor; proposal half
   (M057+); kinds novos.
+
+## D-051 — Proposal data M057 (voto proposal-data)
+
+- DECISION: NOVO `proposals.ts` (LEAF L0,
+  zero imports — molde M055): PROPOSAL_KINDS
+  (autonomy, order, stance — simétrico
+  c/ diretivas+ordens) + CommanderProposal
+  {kind, order?, stance?, autonomy?}
+  (payload per-kind OBRIGATÓRIO; outros
+  ignorados M015) + mirrors L0↛L0 (order
+  kind+params bounds 8/32/64; autonomy +
+  stance values) + guards totais.
+  commanders.ts: `proposal?` single-slot
+  (molde refutation) + guard + copyRecord.
+  Pins: census + LAYERS `proposals: 0`.
+  Sem note/reason (payload-only; M058 só
+  lê payloads).
+- MOTIVE: voto + simetria M055 + vocabs
+  reais grounded (ORDER_IDS, STANCE_IDS,
+  AUTONOMY_LEVELS).
+- ALTERNATIVES: multi-slot log (rejeitado:
+  single-slot basta; newest wins M058);
+  note livre (rejeitado: sem LLM; futuro
+  templated); support/report kinds
+  (rejeitado: especulativo).
+- ADVANTAGES: C→P half data-pronta;
+  approve/decline M058 lê payloads.
+- DISADVANTAGES: decorativo até M058.
+- RISKS: baixo — data pura.
+- CUTS: propose/approve/decline verbs
+  (M058); notes; kinds novos.

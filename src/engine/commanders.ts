@@ -26,6 +26,8 @@
  * canonical, L0↛L0; recording/recall NOT mirrored, M052+ owns).
  * M055 embeds optional directives (shape mirror — directives.ts
  * canonical, L0↛L0; set/clear NOT mirrored, M056+ owns).
+ * M057 embeds an optional proposal (shape mirror — proposals.ts
+ * canonical, L0↛L0; propose/approve NOT mirrored, M058 owns).
  */
 
 export const COMMANDERS_SCHEMA_VERSION = 1;
@@ -115,6 +117,23 @@ export type CommanderAutonomy = 'manual' | 'assisted' | 'autonomous';
 export type CommanderDirectiveStance =
   'aggressive' | 'defensive' | 'expansionist' | 'diplomatic' | 'balanced';
 
+/** M057 mirror of ProposalKind (proposals.ts canonical; L0↛L0: deliberately not imported). */
+export type CommanderProposalKind = 'autonomy' | 'order' | 'stance';
+
+/** M057 mirror of ProposalOrder (proposals.ts canonical; L0↛L0: deliberately not imported). */
+export interface CommanderProposalOrder {
+  readonly kind: CommanderOrderKind;
+  readonly params?: CommanderOrderParams;
+}
+
+/** M057 mirror of CommanderProposal (proposals.ts canonical; L0↛L0: deliberately not imported). */
+export interface CommanderProposal {
+  readonly kind: CommanderProposalKind;
+  readonly order?: CommanderProposalOrder;
+  readonly stance?: CommanderDirectiveStance;
+  readonly autonomy?: CommanderAutonomy;
+}
+
 export interface CommanderRecord {
   readonly id: string;
   readonly owner: string;
@@ -126,6 +145,7 @@ export interface CommanderRecord {
   readonly refutation?: CommanderRefutation;
   readonly memories?: CommanderMemories;
   readonly directives?: CommanderDirectives;
+  readonly proposal?: CommanderProposal;
 }
 
 export interface CommandersData {
@@ -413,6 +433,30 @@ const MIRRORED_DIRECTIVE_STANCES: readonly string[] = [
   'balanced',
 ];
 
+/** Mirrors PROPOSAL_KINDS (proposals.ts). Leaf: deliberately not imported. */
+const MIRRORED_PROPOSAL_KINDS: readonly string[] = ['autonomy', 'order', 'stance'];
+
+/** Mirrors isCommanderProposal (proposals.ts): kind-switched payload, extras ignored (M015). */
+function isMirroredProposal(value: unknown): value is CommanderProposal {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const fields = value as Record<string, unknown>;
+  const kind = fields['kind'];
+  if (typeof kind !== 'string' || !MIRRORED_PROPOSAL_KINDS.includes(kind)) {
+    return false;
+  }
+  if (kind === 'order') {
+    return isMirroredOrder(fields['order']);
+  }
+  if (kind === 'stance') {
+    const stance = fields['stance'];
+    return typeof stance === 'string' && MIRRORED_DIRECTIVE_STANCES.includes(stance);
+  }
+  const autonomy = fields['autonomy'];
+  return typeof autonomy === 'string' && MIRRORED_AUTONOMY_LEVELS.includes(autonomy);
+}
+
 /** Mirrors isCommanderDirectives (directives.ts): total check, extras ignored (M015). */
 function isMirroredDirectives(value: unknown): value is CommanderDirectives {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
@@ -444,7 +488,8 @@ export function isCommanderRecord(value: unknown): value is CommanderRecord {
     (fields['orders'] === undefined || isMirroredOrders(fields['orders'])) &&
     (fields['refutation'] === undefined || isMirroredRefutation(fields['refutation'])) &&
     (fields['memories'] === undefined || isMirroredMemories(fields['memories'])) &&
-    (fields['directives'] === undefined || isMirroredDirectives(fields['directives']))
+    (fields['directives'] === undefined || isMirroredDirectives(fields['directives'])) &&
+    (fields['proposal'] === undefined || isMirroredProposal(fields['proposal']))
   );
 }
 
@@ -490,7 +535,7 @@ export function commandersOf(data: CommandersData | undefined, holder: string): 
     .map((commander) => copyRecord(commander));
 }
 
-/** Fresh copy incl. nested DNA (M031), queued orders (M044: spreads alias nested), refutation (M046: flat scalars, one spread suffices), memories (M051: flat scalars, spread each) and directives (M055: flat scalars, one spread suffices). */
+/** Fresh copy incl. nested DNA (M031), queued orders (M044: spreads alias nested), refutation (M046: flat scalars, one spread suffices), memories (M051: flat scalars, spread each), directives (M055: flat scalars, one spread suffices) and proposal (M057: nested order spread like M044). */
 function copyRecord(commander: CommanderRecord): CommanderRecord {
   let copy: CommanderRecord = { ...commander };
   if (commander.dna !== undefined) {
@@ -507,6 +552,24 @@ function copyRecord(commander: CommanderRecord): CommanderRecord {
   }
   if (commander.directives !== undefined) {
     copy = { ...copy, directives: { ...commander.directives } };
+  }
+  if (commander.proposal !== undefined) {
+    copy = {
+      ...copy,
+      proposal: {
+        ...commander.proposal,
+        ...(commander.proposal.order === undefined
+          ? {}
+          : {
+              order: {
+                ...commander.proposal.order,
+                ...(commander.proposal.order.params === undefined
+                  ? {}
+                  : { params: { ...commander.proposal.order.params } }),
+              },
+            }),
+      },
+    };
   }
   return copy;
 }

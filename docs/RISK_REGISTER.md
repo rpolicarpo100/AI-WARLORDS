@@ -121,3 +121,4 @@
 | 2026-09-12 | M054      | Recall-stance live (nudge 5/2, stancesOf, M037 intact, bundle +419); bloco Memory FECHADO                                 |
 | 2026-09-12 | M055      | Directive data live (2 kinds, set por kind, espelho, bundle +428); bloco P↔C ABERTO; set→M056                             |
 | 2026-09-12 | M056      | Directive set live (set/clear+facts, precedência stance, bundle +3564); autonomy/proposals→M057+                          |
+| 2026-09-12 | M057      | Proposal data live (3 kinds, payload per-kind, single-slot, bundle +574); verbs→M058                                      |

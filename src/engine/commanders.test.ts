@@ -18,12 +18,14 @@ import {
   type CommanderDirectives,
   type CommanderMemory,
   type CommanderOrders,
+  type CommanderProposal,
   type CommanderRefutation,
   type CommandersData,
 } from './commanders.js';
 import { AUTONOMY_LEVELS, DIRECTIVE_KINDS, isCommanderDirectives } from './directives.js';
 import { isDnaTraits, TRAIT_IDS } from './dna.js';
 import { DOCTRINE_IDS, isDoctrineId } from './doctrines.js';
+import { isCommanderProposal, PROPOSAL_KINDS } from './proposals.js';
 import { isPersonalityId, PERSONALITY_IDS } from './personalities.js';
 import { isOrderQueue, ORDER_IDS } from './orders.js';
 import {
@@ -961,6 +963,73 @@ describe('directives mirror cross-check (M055)', () => {
     expect(copy?.directives).toEqual(good);
     expect(copy?.directives).not.toBe(data.commanders[0]?.directives);
     expect(commanderById(data, 'c0')?.directives).toEqual(good);
+  });
+});
+
+describe('proposal mirror cross-check (M057)', () => {
+  const good: CommanderProposal = {
+    kind: 'order',
+    order: { kind: 'unit.move', params: { id: 'u0', col: 1, row: 0 } },
+  };
+
+  it('mirror agrees with canonical on proposals + abuse battery', () => {
+    for (const kind of PROPOSAL_KINDS) {
+      const proposal =
+        kind === 'order'
+          ? good
+          : kind === 'stance'
+            ? { kind, stance: 'defensive' as const }
+            : { kind, autonomy: 'assisted' as const };
+      expect(isCommanderProposal(proposal)).toBe(true);
+      expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true, proposal })).toBe(true);
+    }
+    const battery: ReadonlyArray<{ readonly proposal: unknown; readonly valid: boolean }> = [
+      { proposal: { ...good }, valid: true },
+      { proposal: { kind: 'order', order: { kind: 'unit.move' } }, valid: true },
+      { proposal: { kind: 'stance', stance: 'balanced' }, valid: true },
+      { proposal: { kind: 'autonomy', autonomy: 'manual' }, valid: true },
+      { proposal: { ...good, note: 'extra' }, valid: true },
+      { proposal: { kind: 'order' }, valid: false },
+      { proposal: { kind: 'order', order: { kind: 'city.upgrade' } }, valid: false },
+      { proposal: { kind: 'stance' }, valid: false },
+      { proposal: { kind: 'stance', stance: 'turtle' }, valid: false },
+      { proposal: { kind: 'autonomy', autonomy: 'auto' }, valid: false },
+      { proposal: { kind: 'support' }, valid: false },
+      { proposal: 7, valid: false },
+      { proposal: null, valid: false },
+      { proposal: [], valid: false },
+    ];
+    for (const { proposal, valid } of battery) {
+      expect(isCommanderProposal(proposal)).toBe(valid);
+      expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true, proposal })).toBe(valid);
+    }
+    expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true })).toBe(true);
+  });
+
+  it('copies proposals fresh (no aliasing, all three shapes)', () => {
+    const shapes: ReadonlyArray<CommanderProposal> = [
+      good,
+      { kind: 'order', order: { kind: 'unit.move' } },
+      { kind: 'stance', stance: 'defensive' },
+    ];
+    for (const proposal of shapes) {
+      const data: CommandersData = {
+        schemaVersion: COMMANDERS_SCHEMA_VERSION,
+        nextId: 1,
+        commanders: [{ id: 'c0', owner: 'p1', active: true, proposal }],
+      };
+      const [copy] = commandersOf(data, 'p1');
+      expect(copy?.proposal).toEqual(proposal);
+      expect(copy?.proposal).not.toBe(data.commanders[0]?.proposal);
+      expect(commanderById(data, 'c0')?.proposal).toEqual(proposal);
+    }
+    const parammed: CommandersData = {
+      schemaVersion: COMMANDERS_SCHEMA_VERSION,
+      nextId: 1,
+      commanders: [{ id: 'c0', owner: 'p1', active: true, proposal: good }],
+    };
+    const [copy] = commandersOf(parammed, 'p1');
+    expect(copy?.proposal?.order?.params).not.toBe(parammed.commanders[0]?.proposal?.order?.params);
   });
 });
 

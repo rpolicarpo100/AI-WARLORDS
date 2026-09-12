@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 56 (M001–M056)  |
-| `PLANNED`  | 109 (M057–M165) |
+| `VERIFIED` | 57 (M001–M057)  |
+| `PLANNED`  | 108 (M058–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -248,6 +248,11 @@ Checkpoints `VERIFIED`:
   precedência stance); 1761/1761 testes,
   100 global.
   Registo em `docs/modules/M056.md`.
+- **M057 @ 2026-09-12** — Proposal Data
+  (vocabulário votado: 3 kinds, payload
+  per-kind, single-slot); 1774/1774 testes,
+  100 global.
+  Registo em `docs/modules/M057.md`.
 
 ---
 
@@ -336,7 +341,8 @@ Checkpoints `VERIFIED`:
 | M054      | Memory — Recall-Stance                  | `VERIFIED` |
 | M055      | Player ↔ Commander — Directive Data     | `VERIFIED` |
 | M056      | Player ↔ Commander — Directive Set      | `VERIFIED` |
-| M057–M058 | Player ↔ Commander                      | `PLANNED`  |
+| M057      | Player ↔ Commander — Proposal Data      | `VERIFIED` |
+| M058      | Player ↔ Commander                      | `PLANNED`  |
 | M055–M058 | Player ↔ Commander                      | `PLANNED`  |
 | M059–M061 | AI Evolution                            | `PLANNED`  |
 | M062–M064 | Replay                                  | `PLANNED`  |
