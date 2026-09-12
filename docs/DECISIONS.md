@@ -2513,3 +2513,25 @@ rev R (seed S)` últimas 6,
   ao click.
 - RISKS: baixo.
 - CUTS: Referrer-Policy; CSP.
+
+## D-079 — Validation audit M084 (sem voto: sequência apontada)
+
+- DECISION: auditoria fechada c/
+  verdictos: timeouts node
+  default OK (tighten custa 35s
+  flaky); isSeed/from/malformed/
+  URL OK (testes+mocks);
+  deep JSON non-issue (parser
+  iterativo + cap); 4 pins novos:
+  dot-segments resolvem (Map, sem fs), PUT
+  404, giant-rid MALFORMED exacto,
+  deep40k 200. Zero src changes
+  (auditoria é o trabalho).
+- MOTIVE: RISK M083; hardening
+  provado, não assumido.
+- ALTERNATIVES: tighten timeouts
+  (rejeitado: custo/flake).
+- ADVANTAGES: superfície fechada.
+- DISADVANTAGES: nenhum.
+- RISKS: baixo.
+- CUTS: fuzz contínuo.

@@ -159,3 +159,5 @@
 - M082: bodies com cap 64KB (413); RISK: headers sem hardening (ver M083).
 
 - M083: API headers live; static BLOQUEADO dashboard (click path em M083.md); RISK: sem audit validação (ver M084).
+
+- M084: audit fechada (4 pins, 0 src); RISK: SSE sem backpressure cap (ver M085).

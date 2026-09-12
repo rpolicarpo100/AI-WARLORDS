@@ -873,6 +873,60 @@ describe('body limits (64KB choke)', () => {
   });
 });
 
+describe('audit hardness pins (M084)', () => {
+  it('resolves dot-segments via the URL parser (no fs to escape — Map router)', async () => {
+    await withClock(async () => {
+      const seen = await new Promise<{ code: number; json: unknown }>((resolve, reject) => {
+        const req = httpRequest({ port, path: '/match/../ratings', method: 'GET' }, (res) => {
+          let text = '';
+          res.on('data', (chunk) => {
+            text += chunk;
+          });
+          res.on('end', () => {
+            resolve({ code: res.statusCode ?? 0, json: JSON.parse(text) });
+          });
+        });
+        req.on('error', reject);
+        req.end();
+      });
+      expect(seen).toEqual({ code: 200, json: {} });
+    });
+  });
+
+  it('404s wrong methods on forged routes (PUT forge)', async () => {
+    const code = await new Promise<number>((resolve, reject) => {
+      const req = httpRequest({ port, path: '/match', method: 'PUT' }, (res) => {
+        res.resume();
+        res.on('end', () => {
+          resolve(res.statusCode ?? 0);
+        });
+      });
+      req.on('error', reject);
+      req.end('{}');
+    });
+    expect(code).toBe(404);
+  });
+
+  it('answers giant strings gracefully (engine id fence, exact)', async () => {
+    const { matchId, sessionId } = await sessionFor('p1');
+    const outcome = await postJson(`/match/${matchId}/dispatch`, {
+      sessionId,
+      requestId: 'r'.repeat(60_000),
+      type: 'world.noop',
+      payload: {},
+    });
+    expect(outcome).toEqual({ code: 200, json: { status: 'error', code: 'MALFORMED_REQUEST' } });
+  });
+
+  it('forges past deep-but-valid JSON (no parser crash, exact)', async () => {
+    const deep = `[`.repeat(20_000) + `]`.repeat(20_000);
+    expect(deep.length).toBeLessThan(MAX_BODY_BYTES);
+    const forged = await post('/match', deep);
+    expect(forged.code).toBe(200);
+    expect(typeof (forged.json as { matchId: string }).matchId).toBe('string');
+  });
+});
+
 describe('POST /match/:id/close (last call)', () => {
   it('ends streams, deletes the table, refuses seconds', async () => {
     const { matchId } = await sessionFor('p1');
