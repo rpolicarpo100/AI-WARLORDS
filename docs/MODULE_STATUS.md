@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 54 (M001–M054)  |
-| `PLANNED`  | 111 (M055–M165) |
+| `VERIFIED` | 55 (M001–M055)  |
+| `PLANNED`  | 110 (M056–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -237,6 +237,12 @@ Checkpoints `VERIFIED`:
   testes, 100 global.
   Registo em `docs/modules/M054.md`.
   Bloco Memory M051–M054 FECHADO.
+- **M055 @ 2026-09-12** — Directive Data
+  (vocabulário votado: autonomy+stance,
+  set por kind, espelho); 1746/1746
+  testes, 100 global.
+  Registo em `docs/modules/M055.md`.
+  Bloco Player ↔ Commander M055–M058 ABERTO.
 
 ---
 
@@ -323,7 +329,8 @@ Checkpoints `VERIFIED`:
 | M052      | Memory — Record                         | `VERIFIED` |
 | M053      | Memory — Attribution + Recall           | `VERIFIED` |
 | M054      | Memory — Recall-Stance                  | `VERIFIED` |
-| M055–M058 | Player ↔ Commander                      | `PLANNED`  |
+| M055      | Player ↔ Commander — Directive Data     | `VERIFIED` |
+| M056–M058 | Player ↔ Commander                      | `PLANNED`  |
 | M055–M058 | Player ↔ Commander                      | `PLANNED`  |
 | M059–M061 | AI Evolution                            | `PLANNED`  |
 | M062–M064 | Replay                                  | `PLANNED`  |

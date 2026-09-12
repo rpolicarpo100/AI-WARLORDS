@@ -24,6 +24,8 @@
  * refutations.ts canonical, L0↛L0; resolution NOT mirrored, M047+ owns).
  * M051 embeds an optional memory log (shape mirror — memories.ts
  * canonical, L0↛L0; recording/recall NOT mirrored, M052+ owns).
+ * M055 embeds optional directives (shape mirror — directives.ts
+ * canonical, L0↛L0; set/clear NOT mirrored, M056+ owns).
  */
 
 export const COMMANDERS_SCHEMA_VERSION = 1;
@@ -100,6 +102,19 @@ export type CommanderMemorableKind =
 /** M051 bounded log of remembered events (absent means empty; capped). */
 export type CommanderMemories = readonly CommanderMemory[];
 
+/** M055 mirror of CommanderDirectives (directives.ts canonical; L0↛L0: deliberately not imported). */
+export interface CommanderDirectives {
+  readonly autonomy?: CommanderAutonomy;
+  readonly stance?: CommanderDirectiveStance;
+}
+
+/** M055 mirror of AutonomyLevel (directives.ts canonical; L0↛L0: deliberately not imported). */
+export type CommanderAutonomy = 'manual' | 'assisted' | 'autonomous';
+
+/** M055 mirror of DirectiveStance (directives.ts canonical; L0↛L0: deliberately not imported). */
+export type CommanderDirectiveStance =
+  'aggressive' | 'defensive' | 'expansionist' | 'diplomatic' | 'balanced';
+
 export interface CommanderRecord {
   readonly id: string;
   readonly owner: string;
@@ -110,6 +125,7 @@ export interface CommanderRecord {
   readonly orders?: CommanderOrders;
   readonly refutation?: CommanderRefutation;
   readonly memories?: CommanderMemories;
+  readonly directives?: CommanderDirectives;
 }
 
 export interface CommandersData {
@@ -385,6 +401,34 @@ function isMirroredMemories(value: unknown): value is CommanderMemories {
   return true;
 }
 
+/** Mirrors AUTONOMY_LEVELS (directives.ts). Leaf: deliberately not imported. */
+const MIRRORED_AUTONOMY_LEVELS: readonly string[] = ['manual', 'assisted', 'autonomous'];
+
+/** Mirrors DirectiveStance (directives.ts). Leaf: deliberately not imported. */
+const MIRRORED_DIRECTIVE_STANCES: readonly string[] = [
+  'aggressive',
+  'defensive',
+  'expansionist',
+  'diplomatic',
+  'balanced',
+];
+
+/** Mirrors isCommanderDirectives (directives.ts): total check, extras ignored (M015). */
+function isMirroredDirectives(value: unknown): value is CommanderDirectives {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const fields = value as Record<string, unknown>;
+  const autonomy = fields['autonomy'];
+  const stance = fields['stance'];
+  return (
+    (autonomy === undefined ||
+      (typeof autonomy === 'string' && MIRRORED_AUTONOMY_LEVELS.includes(autonomy))) &&
+    (stance === undefined ||
+      (typeof stance === 'string' && MIRRORED_DIRECTIVE_STANCES.includes(stance)))
+  );
+}
+
 export function isCommanderRecord(value: unknown): value is CommanderRecord {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     return false;
@@ -399,7 +443,8 @@ export function isCommanderRecord(value: unknown): value is CommanderRecord {
     (fields['doctrine'] === undefined || isMirroredDoctrine(fields['doctrine'])) &&
     (fields['orders'] === undefined || isMirroredOrders(fields['orders'])) &&
     (fields['refutation'] === undefined || isMirroredRefutation(fields['refutation'])) &&
-    (fields['memories'] === undefined || isMirroredMemories(fields['memories']))
+    (fields['memories'] === undefined || isMirroredMemories(fields['memories'])) &&
+    (fields['directives'] === undefined || isMirroredDirectives(fields['directives']))
   );
 }
 
@@ -445,7 +490,7 @@ export function commandersOf(data: CommandersData | undefined, holder: string): 
     .map((commander) => copyRecord(commander));
 }
 
-/** Fresh copy incl. nested DNA (M031), queued orders (M044: spreads alias nested), refutation (M046: flat scalars, one spread suffices) and memories (M051: flat scalars, spread each). */
+/** Fresh copy incl. nested DNA (M031), queued orders (M044: spreads alias nested), refutation (M046: flat scalars, one spread suffices), memories (M051: flat scalars, spread each) and directives (M055: flat scalars, one spread suffices). */
 function copyRecord(commander: CommanderRecord): CommanderRecord {
   let copy: CommanderRecord = { ...commander };
   if (commander.dna !== undefined) {
@@ -459,6 +504,9 @@ function copyRecord(commander: CommanderRecord): CommanderRecord {
   }
   if (commander.memories !== undefined) {
     copy = { ...copy, memories: commander.memories.map((memory) => ({ ...memory })) };
+  }
+  if (commander.directives !== undefined) {
+    copy = { ...copy, directives: { ...commander.directives } };
   }
   return copy;
 }

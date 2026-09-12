@@ -1632,3 +1632,38 @@ recollection)` em stance.ts (MESMO
 - RISKS: baixo — aditivo + delegação.
 - CUTS: battle outcomes (M055+);
   assessment alignment; tuning 5/2.
+
+## D-049 — Directive data M055 (voto directive-data)
+
+- DECISION: NOVO `directives.ts` (LEAF L0,
+  zero imports — molde M046/M051):
+  DIRECTIVE_KINDS (autonomy, stance) +
+  AUTONOMY_LEVELS (manual, assisted,
+  autonomous) + stance values mirror
+  STANCE_IDS (L0↛L0 — stance.ts é L2) +
+  CommanderDirectives {autonomy?, stance?}
+  (SET por kind: set sobrescreve; absent
+  = unset = status quo) + guards totais
+  per-kind (extras ignored M015).
+  commanders.ts: `directives?` mirror +
+  guard + copyRecord. Pins: census +
+  LAYERS `directives: 0`. Semântica
+  (mecânica M056+): autonomy quem decide
+  (manual=status quo); stance override
+  ordenado (precedência M056+).
+- MOTIVE: voto + data-first abre-bloco
+  (M046/M051) + stance vocab real grounded.
+- ALTERNATIVES: array-log (rejeitado:
+  diretivas são ESTADO, não história);
+  kind+value genérico (rejeitado: validação
+  per-kind mais forte); engagement/focus
+  kinds (rejeitado: especulativo — 2 kinds
+  grounded bastam).
+- ADVANTAGES: set atómico; unset=quo;
+  zero leitores = zero risco.
+- DISADVANTAGES: decorativo até M056+
+  (data-first assumido).
+- RISKS: baixo — data pura.
+- CUTS: set/clear verb (M056); precedência
+  stance (M056+); AI actor p/ assisted/auto
+  (M056+/M059+); kinds novos.

@@ -119,3 +119,4 @@
 | 2026-09-12 | M052      | Record live (verb+auto-record, budget-free system, anti-spam, bundle +2614); attribution→M053                             |
 | 2026-09-12 | M053      | Attribution+recall live (fan-out caller-bound, {fresh,stale}, bundle +936); consumer→M054                                 |
 | 2026-09-12 | M054      | Recall-stance live (nudge 5/2, stancesOf, M037 intact, bundle +419); bloco Memory FECHADO                                 |
+| 2026-09-12 | M055      | Directive data live (2 kinds, set por kind, espelho, bundle +428); bloco P↔C ABERTO; set→M056                             |

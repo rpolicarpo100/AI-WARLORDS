@@ -15,11 +15,13 @@ import {
   isCommandersData,
   MAX_COMMANDER_ID_CHARS,
   MAX_HOLDER_ID_CHARS,
+  type CommanderDirectives,
   type CommanderMemory,
   type CommanderOrders,
   type CommanderRefutation,
   type CommandersData,
 } from './commanders.js';
+import { AUTONOMY_LEVELS, DIRECTIVE_KINDS, isCommanderDirectives } from './directives.js';
 import { isDnaTraits, TRAIT_IDS } from './dna.js';
 import { DOCTRINE_IDS, isDoctrineId } from './doctrines.js';
 import { isPersonalityId, PERSONALITY_IDS } from './personalities.js';
@@ -912,6 +914,53 @@ describe('memory mirror cross-check (M051)', () => {
     expect(copy?.memories).toEqual([good]);
     expect(copy?.memories?.[0]).not.toBe(data.commanders[0]?.memories?.[0]);
     expect(commanderById(data, 'c0')?.memories).toEqual([good]);
+  });
+});
+
+describe('directives mirror cross-check (M055)', () => {
+  const good: CommanderDirectives = { autonomy: 'assisted', stance: 'defensive' };
+
+  it('mirror agrees with canonical on sets + abuse battery', () => {
+    for (const autonomy of AUTONOMY_LEVELS) {
+      const directives = { ...good, autonomy };
+      expect(isCommanderDirectives(directives)).toBe(true);
+      expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true, directives })).toBe(true);
+    }
+    for (const kind of DIRECTIVE_KINDS) {
+      expect(isCommanderDirectives({ [kind]: kind === 'autonomy' ? 'manual' : 'balanced' })).toBe(
+        true,
+      );
+    }
+    const battery: ReadonlyArray<{ readonly directives: unknown; readonly valid: boolean }> = [
+      { directives: { ...good }, valid: true },
+      { directives: {}, valid: true },
+      { directives: { autonomy: 'manual' }, valid: true },
+      { directives: { stance: 'aggressive' }, valid: true },
+      { directives: { ...good, note: 'extra' }, valid: true },
+      { directives: { autonomy: 'auto' }, valid: false },
+      { directives: { stance: 'turtle' }, valid: false },
+      { directives: { autonomy: 'manual', stance: 7 }, valid: false },
+      { directives: 7, valid: false },
+      { directives: null, valid: false },
+      { directives: [], valid: false },
+    ];
+    for (const { directives, valid } of battery) {
+      expect(isCommanderDirectives(directives)).toBe(valid);
+      expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true, directives })).toBe(valid);
+    }
+    expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true })).toBe(true);
+  });
+
+  it('copies directives fresh (no aliasing)', () => {
+    const data: CommandersData = {
+      schemaVersion: COMMANDERS_SCHEMA_VERSION,
+      nextId: 1,
+      commanders: [{ id: 'c0', owner: 'p1', active: true, directives: good }],
+    };
+    const [copy] = commandersOf(data, 'p1');
+    expect(copy?.directives).toEqual(good);
+    expect(copy?.directives).not.toBe(data.commanders[0]?.directives);
+    expect(commanderById(data, 'c0')?.directives).toEqual(good);
   });
 });
 
