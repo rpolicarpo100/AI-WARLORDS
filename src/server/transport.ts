@@ -184,6 +184,9 @@ export function createTransport(
   };
 
   const onRequest = (req: IncomingMessage, res: ServerResponse): void => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     void route(req, res).catch(() => {
       send(res, 500, { error: 'transport fault' });
     });
@@ -193,6 +196,15 @@ export function createTransport(
     const method = req.method as string;
     const url = new URL(req.url as string, 'http://local');
     const parts = url.pathname.split('/').filter((part) => part.length > 0);
+    if (method === 'OPTIONS') {
+      res.writeHead(204);
+      res.end();
+      return;
+    }
+    if (parts.length === 0 && method === 'GET') {
+      send(res, 200, { service: 'ai-warlords', ok: true });
+      return;
+    }
     if (parts[0] === 'matches' && parts.length === 1 && method === 'GET') {
       const listing: unknown[] = [];
       for (const [matchId, item] of matches) {

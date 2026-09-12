@@ -74,6 +74,21 @@ function post(path: string, body: string): Promise<{ code: number; json: unknown
 const postJson = (path: string, value: unknown): Promise<{ code: number; json: unknown }> =>
   post(path, JSON.stringify(value));
 
+function options(
+  path: string,
+): Promise<{ code: number; headers: Record<string, string | string[] | undefined> }> {
+  return new Promise((resolve, reject) => {
+    const req = httpRequest({ port, path, method: 'OPTIONS' }, (res) => {
+      res.resume();
+      res.on('end', () => {
+        resolve({ code: res.statusCode ?? 0, headers: { ...res.headers } });
+      });
+    });
+    req.on('error', reject);
+    req.end();
+  });
+}
+
 function get(path: string): Promise<{ code: number; json: unknown }> {
   return new Promise((resolve, reject) => {
     const req = httpRequest({ port, path, method: 'GET' }, (res) => {
@@ -435,6 +450,7 @@ describe('routing (unknown paths fail loud)', () => {
     let code = 0;
     let text = '';
     const res = {
+      setHeader() {},
       writeHead(c: number) {
         code = c;
       },
@@ -663,5 +679,38 @@ describe('POST /match/:id/close (last call)', () => {
     } finally {
       stream.close();
     }
+  });
+});
+
+describe('root + preflight + CORS (M072 deploy seams)', () => {
+  it('serves health at /', async () => {
+    expect(await get('/')).toEqual({ code: 200, json: { service: 'ai-warlords', ok: true } });
+  });
+
+  it('404s non-GET roots', async () => {
+    expect(await postJson('/', {})).toMatchObject({ code: 404 });
+  });
+
+  it('answers preflights with CORS', async () => {
+    const { code, headers } = await options('/match/NOPE/dispatch');
+    expect(code).toBe(204);
+    expect(headers['access-control-allow-origin']).toBe('*');
+    expect(headers['access-control-allow-methods']).toContain('POST');
+  });
+
+  it('tags real responses with CORS', async () => {
+    const headers = await new Promise<Record<string, string | string[] | undefined>>(
+      (resolve, reject) => {
+        const req = httpRequest({ port, path: '/match', method: 'POST' }, (res) => {
+          res.resume();
+          res.on('end', () => {
+            resolve({ ...res.headers });
+          });
+        });
+        req.on('error', reject);
+        req.end(JSON.stringify({}));
+      },
+    );
+    expect(headers['access-control-allow-origin']).toBe('*');
   });
 });

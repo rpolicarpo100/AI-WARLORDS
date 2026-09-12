@@ -9,8 +9,8 @@
 
 | Estado     | Contagem       |
 | ---------- | -------------- |
-| `VERIFIED` | 71 (M001–M071) |
-| `PLANNED`  | 94 (M072–M165) |
+| `VERIFIED` | 72 (M001–M072) |
+| `PLANNED`  | 93 (M073–M165) |
 | Outros     | 0              |
 
 Checkpoints `VERIFIED`:
@@ -320,6 +320,11 @@ Checkpoints `VERIFIED`:
   bundle +0); 1892/1892 testes, 100
   global.
   Registo em `docs/modules/M071.md`.
+- **M072 @ 2026-09-12** — Multiplayer
+  Deploy (entry+Render API+CORS,
+  bundle +0); 1898/1898 testes, 100
+  global.
+  Registo em `docs/modules/M072.md`.
 
 ---
 
@@ -428,7 +433,8 @@ Checkpoints `VERIFIED`:
 | M069      | Multiplayer — SSE+POST Transport | `VERIFIED` |
 | M070      | Multiplayer — Presence           | `VERIFIED` |
 | M071      | Multiplayer — Lobby              | `VERIFIED` |
-| M072–M076 | Multiplayer                      | `PLANNED`  |
+| M072      | Multiplayer — Deploy             | `VERIFIED` |
+| M073–M076 | Multiplayer                      | `PLANNED`  |
 | M077–M080 | Competitive                      | `PLANNED`  |
 | M081–M087 | Security                         | `PLANNED`  |
 | M088–M093 | Observability                    | `PLANNED`  |

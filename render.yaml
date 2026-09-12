@@ -12,3 +12,10 @@ services:
       - type: rewrite
         source: /
         destination: /match.html
+  - type: web
+    name: ai-warlords-api
+    runtime: node
+    branch: main
+    buildCommand: npm ci && npm run build
+    startCommand: node dist/server/serve.js
+    healthCheckPath: /

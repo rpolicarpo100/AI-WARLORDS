@@ -2180,3 +2180,27 @@ Date.now)` (relógio injetável):
 - DISADVANTAGES: roster fixo ainda.
 - RISKS: baixo — rotas, mesmo molde.
 - CUTS: deploy; page client; paginação.
+
+## D-066 — Deploy M072 (sem voto: sequência apontada)
+
+- DECISION: `src/server/serve.ts`
+  (entry prod: PORT, log URL, Invalid
+  PORT→exit 1 — coverage-excluded c/
+  child-process tests, molde dev.ts) +
+  GET / (health {service, ok}) + OPTIONS
+  204 + CORS `*` (sem auth, sem
+  credenciais) + 2º serviço Render
+  (node, ai-warlords-api) no render.yaml.
+  Estático intocado.
+- MOTIVE: transport tem de existir em
+  prod antes de page-client.
+- ALTERNATIVES: 1 serviço híbrido
+  (rejeitado: static+node não misturam
+  no Render); CORS restrito (rejeitado:
+  sem auth — * honesto); Fly/Railway
+  (rejeitado: custo/complexidade).
+- ADVANTAGES: custo 0; health real;
+  entry testado c/ processo filho.
+- DISADVANTAGES: cold-start free-tier.
+- RISKS: baixo — moldes dev+transport.
+- CUTS: page client (M073+); domínio.

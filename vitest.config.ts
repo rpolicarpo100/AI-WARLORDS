@@ -19,6 +19,11 @@ export default defineConfig({
         // Documented exclusion with compensating control — not a way to
         // obtain PASS. (M002)
         'src/dev.ts',
+        // src/server/serve.ts is the transport production entry: it only
+        // runs on direct execution (`node dist/server/serve.js`). Same
+        // deal — real child-process execution tests in serve.test.ts
+        // (M072, src/dev.ts precedent).
+        'src/server/serve.ts',
       ],
       thresholds: {
         lines: 100,
