@@ -101,7 +101,8 @@ export function promptsAvailableRule(
   return { rule: 'prompts-exhausted', detail: 'no prompts left' };
 }
 
-function promptsRule(before: WorldState, after: WorldState): Violation | null {
+/** Exported for the M052 system-transition exemption (identity filter, match.ts). */
+export function promptsRule(before: WorldState, after: WorldState): Violation | null {
   const was = before.prompts?.remaining ?? {};
   const now = after.prompts?.remaining ?? {};
   const holders = [...new Set([...Object.keys(was), ...Object.keys(now)])].sort();

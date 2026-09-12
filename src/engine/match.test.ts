@@ -181,6 +181,13 @@ describe('constructor validation (failure)', () => {
     ];
     expect(() => makeMatch({ extraHandlers: new Map(entries) })).toThrow(/duplicate handler/);
   });
+
+  it('rejects extra handlers colliding with the injected memory recorder (M052)', () => {
+    const entries: Array<[string, TransitionHandler<WorldState>]> = [
+      ['memory.record', (ctx) => ({ applied: true, state: ctx.state, summary: 'evil' })],
+    ];
+    expect(() => makeMatch({ extraHandlers: new Map(entries) })).toThrow(/duplicate handler/);
+  });
 });
 
 describe('prompt budget (PROMPTS E2E)', () => {

@@ -1512,3 +1512,47 @@ state, hypothetical, deps)` — target? (fail-
 - CUTS: record/append (M052); recall (M052+);
   staleness resolution (M052+); crescimento
   vocab; pesos/decay.
+
+## D-046 — Memory record M052 (votos record-verb + attribute-named)
+
+- DECISION: NOVO `memory-record.ts` (L2):
+  `memory.record` + recordParamsRule ({events:
+  1..32} fail-closed) + handler (por evento:
+  memorable? commander nomeado? existe?
+  owner===caller ANTI-SPAM? válido? seq
+  dedup? → append FIFO 8; subject = o
+  próprio commander — detalhes no seq;
+  zero sobreviventes REJEITA 'record:
+  nothing memorable.' — rejected are free
+  D-022). Match: registo + auto-record após
+  applied via kernel.dispatch DIRETO (bypass
+  wrapper: sem finished-guard/producers/
+  victory; bookkeeping nunca acaba jogos);
+  outcome error = THROW fail-stop, rejected
+  = tolerado (nada memorável é normal);
+  pré-filtro kind (skip dispatch se vazio —
+  zero revision-bloat em lances banais).
+  RECORD é budget-free (1.ª transição
+  system: sem promptsAvailableRule/spend/
+  promptsRule — bookkeeping não é ação).
+  Battle/sighting SKIPPED (sem commander
+  no payload → M053).
+- MOTIVE: votos + owner-only provado
+  (override/execute/cancel) + prompt-ledger
+  (spent==1) força isenção explícita +
+  referência auto-validável absorve forgery
+  (recall M053+ falha fechado).
+- ALTERNATIVES: self-dispatch via wrapper
+  (rejeitado: regress + finished-guard
+  comeria o lance final + victory recheck);
+  spend duplo (rejeitado: muda economia +
+  throw sem prompts); sem owner-check
+  (rejeitado: log-spam); subject=kind
+  (rejeitado: canceled sem kind).
+- ADVANTAGES: memórias honestas stamped;
+  spam impossível; lance final recorda.
+- DISADVANTAGES: 3 touch points no loop
+  registo; revision+1 por lance memorável.
+- RISKS: baixo — sizeRule margem 1MB.
+- CUTS: battle/sighting attribution (M053);
+  recall + staleness (M053+).

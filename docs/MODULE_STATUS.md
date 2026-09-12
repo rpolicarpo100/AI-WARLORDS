@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 51 (M001–M051)  |
-| `PLANNED`  | 114 (M052–M165) |
+| `VERIFIED` | 52 (M001–M052)  |
+| `PLANNED`  | 113 (M053–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -221,6 +221,11 @@ Checkpoints `VERIFIED`:
   1673/1673 testes, 100 global.
   Registo em `docs/modules/M051.md`.
   Bloco Memory M051–M054 ABERTO.
+- **M052 @ 2026-09-12** — Memory Record
+  (verb votado: memory.record+auto-record,
+  budget-free, anti-spam owner-only);
+  1700/1700 testes, 100 global.
+  Registo em `docs/modules/M052.md`.
 
 ---
 
@@ -304,7 +309,8 @@ Checkpoints `VERIFIED`:
 | M049      | Counterfactual AI — What-If Query       | `VERIFIED` |
 | M050      | Counterfactual AI — Ranking             | `VERIFIED` |
 | M051      | Memory — Data                           | `VERIFIED` |
-| M052–M054 | Memory                                  | `PLANNED`  |
+| M052      | Memory — Record                         | `VERIFIED` |
+| M053–M054 | Memory                                  | `PLANNED`  |
 | M055–M058 | Player ↔ Commander                      | `PLANNED`  |
 | M059–M061 | AI Evolution                            | `PLANNED`  |
 | M062–M064 | Replay                                  | `PLANNED`  |

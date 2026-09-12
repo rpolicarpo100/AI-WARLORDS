@@ -116,3 +116,4 @@
 | 2026-09-11 | M049      | What-if live (fork+handlers vivos, confidence outcome, bundle +938); ranking→M050                                         |
 | 2026-09-11 | M050      | Ranking live (scripts+failedAt, ranking+recommended, delegação M049 intacta, bundle +1087); bloco M046–M050 FECHADO       |
 | 2026-09-12 | M051      | Memory data live (vocab fechado 6, log capped 8, espelho, bundle +569); bloco Memory ABERTO; record→M052                  |
+| 2026-09-12 | M052      | Record live (verb+auto-record, budget-free system, anti-spam, bundle +2614); attribution→M053                             |

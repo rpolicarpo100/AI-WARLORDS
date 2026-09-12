@@ -3,11 +3,13 @@ import {
   AuthorityKernel,
   freezeState,
   isPlayerId,
+  markUntrusted,
   MAX_ID_LENGTH,
   type AppliedEntry,
   type ClientRequest,
   type DispatchOutcome,
   type PlayerId,
+  type RequestId,
   type SessionHandle,
   type TransitionHandler,
   type Untrusted,
@@ -32,6 +34,7 @@ import {
   createWorldValidator,
   noParamsRule,
   promptsAvailableRule,
+  promptsRule,
   wrapWithValidation,
   type PreRule,
   type RngHandler,
@@ -94,6 +97,8 @@ import {
   orderOverrideHandlers,
   overrideParamsRule,
 } from './order-override.js';
+import { isMemorableKind } from './memories.js';
+import { memoryRecordHandlers, RECORD_TRANSITION, recordParamsRule } from './memory-record.js';
 import type { TerrainId } from './map.js';
 import {
   DEFAULT_TERRAIN_CONFIG,
@@ -353,6 +358,7 @@ export class Match {
       [CANCEL_TRANSITION, commanderIdParamsRule],
       [EXECUTE_TRANSITION, commanderIdParamsRule],
       [OVERRIDE_TRANSITION, overrideParamsRule],
+      [RECORD_TRANSITION, recordParamsRule],
     ]);
     // M045: execute runs heads through the live verb maps (treasury
     // precedent — the L2 executor cannot import them, so Match injects).
@@ -369,6 +375,13 @@ export class Match {
       }
       merged.set(name, handler);
     }
+    // M052: the memory write path registers like execution (no size-check churn).
+    for (const [name, handler] of memoryRecordHandlers()) {
+      if (merged.has(name)) {
+        throw new Error('Match: duplicate handler names.');
+      }
+      merged.set(name, handler);
+    }
     let dispatchCount = 0;
     const nextSeq = (): number => {
       dispatchCount += 1;
@@ -380,8 +393,14 @@ export class Match {
         throw new Error('Match: invalid handler registration.');
       }
       const paramRule = paramRules.get(name);
+      // M052: the system record transition is budget-free (bookkeeping
+      // is not a player action — no budget pre-check, no spend, no
+      // ledger post-check). Its wire rule is fixed, not looked up.
+      const system = name === RECORD_TRANSITION;
       let pre: readonly PreRule[];
-      if (paramRule !== undefined) {
+      if (system) {
+        pre = [recordParamsRule, ...validator.pre];
+      } else if (paramRule !== undefined) {
         pre = [promptsAvailableRule, paramRule, ...validator.pre];
       } else if (noParamHandlers.has(name)) {
         pre = [promptsAvailableRule, noParamsRule(name), ...validator.pre];
@@ -389,14 +408,16 @@ export class Match {
         pre = [promptsAvailableRule, ...validator.pre];
       }
       const postStep = (_before: WorldState, caller: PlayerId, applied: WorldState): WorldState => {
-        const prompts = spendPrompt(applied.prompts, caller);
+        // M052: the system transition keeps the prompt ledger untouched
+        // (spread-conditional — never an explicit undefined, M047 law).
+        const prompts = system ? {} : { prompts: spendPrompt(applied.prompts, caller) };
         const built =
           applied.cities === undefined
             ? undefined
             : completeConstructions(applied.cities, applied.buildings, caller);
         const stepped: WorldState = {
           ...applied,
-          prompts,
+          ...prompts,
           ...(built === undefined
             ? {}
             : {
@@ -416,9 +437,11 @@ export class Match {
         );
         return { ...stepped, explored };
       };
+      // M052: the system transition skips the spend ledger (it spends 0).
+      const post = system ? validator.post.filter((rule) => rule !== promptsRule) : validator.post;
       validated.set(
         name,
-        wrapWithValidation(handler, { ...validator, pre }, this.seed, nextSeq, postStep),
+        wrapWithValidation(handler, { ...validator, pre, post }, this.seed, nextSeq, postStep),
       );
     }
     const producers = new Map<string, readonly EventProducer[]>(matchProducers());
@@ -549,6 +572,9 @@ export class Match {
           this.events.length + 1,
         );
         this.events.push(...emitted);
+        // M052: stamped memorable events persist as commander memories
+        // (direct kernel call — bookkeeping bypasses producers/victory).
+        this.recordMemories(session, emitted);
         const verdict = evaluateVictory(this.conditions, {
           state: after,
           revision: outcome.revision,
@@ -568,6 +594,36 @@ export class Match {
       this.syncTimeline();
     }
     return outcome;
+  }
+
+  /**
+   * M052 — bookkeeping: stamped memorable events persist as commander
+   * memories. Direct kernel dispatch (no finished-guard — the final
+   * lance records too; no producers — the record emits nothing; no
+   * victory re-check — memories cannot end games). Nothing memorable
+   * skips the dispatch (zero revision-bloat on banal lances); a
+   * rejected record is tolerated (per-event fail-closed); an error
+   * FAULTS loud (the internally-built envelope must never fault).
+   */
+  private recordMemories(session: SessionHandle, emitted: readonly GameEvent[]): void {
+    const memorable = emitted.filter((event) => isMemorableKind(event.type));
+    if (memorable.length === 0) {
+      return;
+    }
+    // Deterministic request id (one record per game dispatch —
+    // twins stay identical; the hygiene gate forbids fresh randomness).
+    const outcome = this.kernel.dispatch(
+      session,
+      markUntrusted({
+        requestId: `memory.record rev ${this.kernel.getRevision()}` as RequestId,
+        playerId: session.playerId,
+        type: RECORD_TRANSITION,
+        payload: { events: memorable },
+      }),
+    );
+    if (outcome.status === 'error') {
+      throw new Error(`recordMemories: bookkeeping fault (${outcome.code}).`);
+    }
   }
 
   getSnapshot(): WorldState {
