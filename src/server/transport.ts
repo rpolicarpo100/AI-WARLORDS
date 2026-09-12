@@ -91,6 +91,9 @@ export interface RateLimit {
 /** v1 policy: one shared window (D-076 — per-key fanout dies behind proxies). */
 export const DEFAULT_RATE_LIMIT: RateLimit = { windowMs: 60_000, max: 300 };
 
+/** Largest JSON body accepted (game payloads run under 1KB — v1). */
+export const MAX_BODY_BYTES = 64_000;
+
 /** Idle strictly past this, a session dies (the boundary stays online). */
 export const PRESENCE_TIMEOUT_MS = 30_000;
 
@@ -150,20 +153,45 @@ function send(res: ServerResponse, code: number, body: unknown): void {
   res.end(JSON.stringify(body));
 }
 
-function readJson(req: IncomingMessage): Promise<{ ok: true; value: unknown } | { ok: false }> {
+type BodyResult = { ok: true; value: unknown } | { ok: false; tooLarge: boolean };
+
+function readJson(req: IncomingMessage): Promise<BodyResult> {
   return new Promise((resolve) => {
     const chunks: Buffer[] = [];
-    req.on('data', (chunk: Buffer) => {
+    let size = 0;
+    let settled = false;
+    const onData = (chunk: Buffer): void => {
+      size += chunk.length;
+      if (size > MAX_BODY_BYTES) {
+        settled = true;
+        req.off('data', onData);
+        req.resume();
+        resolve({ ok: false, tooLarge: true });
+        return;
+      }
       chunks.push(chunk);
-    });
+    };
+    req.on('data', onData);
     req.on('end', () => {
+      if (settled) {
+        return;
+      }
+      settled = true;
       try {
         resolve({ ok: true, value: JSON.parse(Buffer.concat(chunks).toString('utf8')) });
       } catch {
-        resolve({ ok: false });
+        resolve({ ok: false, tooLarge: false });
       }
     });
   });
+}
+
+function bodyError(res: ServerResponse, tooLarge: boolean): void {
+  if (tooLarge) {
+    send(res, 413, { error: 'body too large' });
+    return;
+  }
+  send(res, 400, { error: 'malformed json' });
 }
 
 function asRecord(body: unknown): Record<string, unknown> | undefined {
@@ -289,7 +317,7 @@ export function createTransport(
       }
       const body = await readJson(req);
       if (!body.ok) {
-        send(res, 400, { error: 'malformed json' });
+        bodyError(res, body.tooLarge);
         return;
       }
       const record = asRecord(body.value);
@@ -326,7 +354,7 @@ export function createTransport(
       sweep(entry);
       const body = await readJson(req);
       if (!body.ok) {
-        send(res, 400, { error: 'malformed json' });
+        bodyError(res, body.tooLarge);
         return;
       }
       const record = asRecord(body.value);
@@ -359,7 +387,7 @@ export function createTransport(
       sweep(entry);
       const body = await readJson(req);
       if (!body.ok) {
-        send(res, 400, { error: 'malformed json' });
+        bodyError(res, body.tooLarge);
         return;
       }
       const record = asRecord(body.value);
@@ -395,7 +423,7 @@ export function createTransport(
       sweep(entry);
       const body = await readJson(req);
       if (!body.ok) {
-        send(res, 400, { error: 'malformed json' });
+        bodyError(res, body.tooLarge);
         return;
       }
       const record = asRecord(body.value);
@@ -421,7 +449,7 @@ export function createTransport(
       sweep(entry);
       const body = await readJson(req);
       if (!body.ok) {
-        send(res, 400, { error: 'malformed json' });
+        bodyError(res, body.tooLarge);
         return;
       }
       const record = asRecord(body.value);

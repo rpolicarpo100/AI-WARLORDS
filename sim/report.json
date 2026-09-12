@@ -25,7 +25,7 @@
    1018,
    1019
   ],
-  "ms": 1090,
+  "ms": 1020,
   "note": "Bots play heuristic candidates; legality comes from genuine engine outcomes. Deterministic per seed."
  },
  "totals": {

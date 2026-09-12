@@ -2462,3 +2462,27 @@ rev R (seed S)` últimas 6,
   afeta todos (aceite: jogo 2p).
 - RISKS: baixo.
 - CUTS: Retry-After; sweep.
+
+## D-077 — Body limits M082 (sem voto: sequência apontada)
+
+- DECISION: MAX_BODY_BYTES=64000
+  (payloads <1KB; 64× folga;
+  v1); readJson tripa >cap
+  (off+resume+resolve — sem
+  destroy, sem flake); helper
+  bodyError central (413 vs
+  400 — 1 branch, não 5);
+  call sites intocados em
+  branches; const+v1 pinada.
+- MOTIVE: RISK M081; DoS OOM.
+- ALTERNATIVES: destroy
+  (rejeitado: semântica socket
+  arriscada); param por
+  transport (rejeitado: const
+  chega, mold TIMEOUT_MS).
+- ADVANTAGES: determinístico;
+  boundary testável.
+- DISADVANTAGES: nenhum.
+- RISKS: baixo.
+- CUTS: 413 por-rota ×5
+  (helper cobre).

@@ -155,3 +155,5 @@
 - M080: COMPETITIVE FECHADO (board live); próximo: Security M081–M087.
 
 - M081: rate limit live (120/60s IP); RISK: bodies sem cap (ver M082).
+
+- M082: bodies com cap 64KB (413); RISK: headers sem hardening (ver M083).

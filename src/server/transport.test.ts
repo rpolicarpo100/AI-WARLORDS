@@ -15,6 +15,7 @@ import {
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   DEFAULT_RATE_LIMIT,
+  MAX_BODY_BYTES,
   PRESENCE_TIMEOUT_MS,
   createTransport,
   type RateLimit,
@@ -848,6 +849,27 @@ describe('rate limiting (one shared window)', () => {
       50,
       { windowMs: 60_000, max: 1 },
     );
+  });
+});
+
+describe('body limits (64KB choke)', () => {
+  it('pins the shipped body cap', () => {
+    expect(MAX_BODY_BYTES).toBe(64_000);
+  });
+
+  it('refuses oversized bodies with 413 (valid JSON, too many bytes)', async () => {
+    const big = JSON.stringify({ pad: 'x'.repeat(70_000) });
+    expect(big.length).toBeGreaterThan(MAX_BODY_BYTES);
+    expect(await post('/match', big)).toEqual({ code: 413, json: { error: 'body too large' } });
+  });
+
+  it('serves bodies exactly at the cap (strictly-greater trips)', async () => {
+    const pad = 'x'.repeat(MAX_BODY_BYTES - 10);
+    const edge = JSON.stringify({ pad });
+    expect(edge.length).toBe(MAX_BODY_BYTES);
+    const forged = await post('/match', edge);
+    expect(forged.code).toBe(200);
+    expect(typeof (forged.json as { matchId: string }).matchId).toBe('string');
   });
 });
 
