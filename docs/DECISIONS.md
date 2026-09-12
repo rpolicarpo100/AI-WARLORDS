@@ -1593,3 +1593,42 @@ state, hypothetical, deps)` — target? (fail-
 - RISKS: baixo — handler aditivo.
 - CUTS: cross-dispatch sightings (M054+);
   recall consumers (M054); pesos/decay.
+
+## D-048 — Recall-stance M054 (voto recall-stance)
+
+- DECISION: `stanceWithRecall(record,
+recollection)` em stance.ts (MESMO
+  ficheiro, sem pins — precedente M050):
+  fresh attacked/slain contam battles
+  (só as NOSSAS, sides-caller → momentum),
+  fresh overridden/canceled contam failures
+  (self-correction → humility);
+  aggression += min(battles,2)*5, defense
+  += min(failures,2)*5; re-corre margin
+  logic (extraída stanceFromTraits;
+  stanceOf DELEGA — M037 intacto). Sem
+  battles/failures → stanceOf EXATO.
+  Recollection é SHAPE MIRROR
+  (memory-recall canónico, L2↛L2). Match:
+  stancesOf via recall+stanceWithRecall
+  (streamLookup privado partilhado;
+  record-defined ⟹ recollection-defined
+  via cast). ai-events MANTÉM stanceOf
+  (ProducerInput sem stream — DIVERGÊNCIA
+  documentada: assessment=DNA stance).
+- MOTIVE: voto + sides-caller polariza
+  batalhas honestamente (nossos kills) +
+  failures sem outcome-lookup.
+- ALTERNATIVES: outcomes via stream
+  (rejeitado: pesado p/ M054); override
+  stance (rejeitado: crude; nudge
+  respeita DNA); sucesso embolden
+  (rejeitado: executed=rotina); wiring
+  ai-events (rejeitado: sem stream).
+- ADVANTAGES: fecha o loop Memory;
+  M037/M038 intactos sem memórias.
+- DISADVANTAGES: divergência assessment
+  (pinned); tuning 5/2 arbitrário.
+- RISKS: baixo — aditivo + delegação.
+- CUTS: battle outcomes (M055+);
+  assessment alignment; tuning 5/2.

@@ -98,7 +98,7 @@ import {
   overrideParamsRule,
 } from './order-override.js';
 import { isMemorableKind } from './memories.js';
-import { recallMemories, type Recollection } from './memory-recall.js';
+import { recallMemories, type Recollection, type StreamLookup } from './memory-recall.js';
 import { memoryRecordHandlers, RECORD_TRANSITION, recordParamsRule } from './memory-record.js';
 import type { TerrainId } from './map.js';
 import {
@@ -128,7 +128,7 @@ import {
 } from './warfare.js';
 import { seedPrompts, spendPrompt } from './prompts.js';
 import { postureOf, type ArmyPosture } from './posture.js';
-import { stanceOf, type CommanderStance } from './stance.js';
+import { stanceWithRecall, type CommanderStance } from './stance.js';
 import { isUnitType, type UnitType } from './units.js';
 import { isBuildingId } from './buildings.js';
 import { confidenceOfOrder, type ConfidenceRules, type OrderConfidence } from './confidence.js';
@@ -658,11 +658,17 @@ export class Match {
     return assessPlayer(this.kernel.getSnapshot(), holder, statsOf);
   }
 
-  /** M038 — live per-commander stances of one holder, in roster order (read-only). */
+  /**
+   * M038 — live per-commander stances of one holder, in roster order
+   * (read-only). M054: stances read validated recollection (memories
+   * steer posture); memoryless records read DNA stance exactly.
+   */
   stancesOf(holder: string): ReadonlyArray<CommanderStance> {
+    const lookup = this.streamLookup();
     return commandersOf(this.kernel.getSnapshot().commanders, holder).map((record) => ({
       id: record.id,
-      stance: stanceOf(record),
+      // Defined records always recollect (cast documents the seam).
+      stance: stanceWithRecall(record, recallMemories(record, lookup) as Recollection),
     }));
   }
 
@@ -761,15 +767,16 @@ export class Match {
   recall(commanderId: string, subject?: string): Recollection | undefined {
     const snapshot = this.kernel.getSnapshot();
     const record = snapshot.commanders?.commanders.find((entry) => entry.id === commanderId);
+    return recallMemories(record, this.streamLookup(), subject);
+  }
+
+  /** M054 — stream lookup over live events (shared by recall + stancesOf). */
+  private streamLookup(): StreamLookup {
     const bySeq = new Map(this.events.map((event) => [event.seq, event] as const));
-    return recallMemories(
-      record,
-      (seq) => {
-        const found = bySeq.get(seq);
-        return found === undefined ? undefined : { revision: found.revision, kind: found.type };
-      },
-      subject,
-    );
+    return (seq) => {
+      const found = bySeq.get(seq);
+      return found === undefined ? undefined : { revision: found.revision, kind: found.type };
+    };
   }
 
   /** M050 — CounterfactualDeps (shared by the three counterfactual queries). */

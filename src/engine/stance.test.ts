@@ -6,12 +6,22 @@ import { describe, expect, it } from 'vitest';
 import type {
   CommanderDna,
   CommanderDoctrine,
+  CommanderMemory,
   CommanderPersonality,
   CommanderRecord,
 } from './commanders.js';
 import { DOCTRINE_IDS } from './doctrines.js';
 import { PERSONALITY_IDS } from './personalities.js';
-import { STANCE_IDS, STANCE_MARGIN, isStanceId, stanceOf } from './stance.js';
+import {
+  STANCE_IDS,
+  STANCE_MARGIN,
+  STANCE_RECALL_CAP,
+  STANCE_RECALL_NUDGE,
+  isStanceId,
+  stanceOf,
+  stanceWithRecall,
+  type StanceRecollection,
+} from './stance.js';
 
 function record(fields: Partial<CommanderRecord> & { id: string }): CommanderRecord {
   return { owner: 'p1', active: true, ...fields };
@@ -121,5 +131,70 @@ describe('validity battery', () => {
         stanceOf(record({ id: 'd1', dna: { ...FIFTIES, aggression: 100, defense: 100 } })),
       ),
     ).toBe(true);
+  });
+});
+
+describe('stanceWithRecall (M054 experience nudge)', () => {
+  function fresh(kinds: ReadonlyArray<CommanderMemory['kind']>): StanceRecollection {
+    return {
+      fresh: kinds.map((kind, seq) => ({ seq, revision: 1, kind, subject: 'c0' })),
+      stale: [],
+    };
+  }
+
+  it('reads stanceOf exactly when nothing steers (empty, neutral, stale)', () => {
+    const veteran = record({ id: 'c0', dna: { ...FIFTIES, aggression: 60 } });
+    expect(stanceOf(veteran)).toBe('balanced');
+    expect(stanceWithRecall(veteran, fresh([]))).toBe('balanced');
+    expect(stanceWithRecall(veteran, fresh(['order.executed', 'unit.spotted']))).toBe('balanced');
+    const haunted: StanceRecollection = {
+      fresh: [],
+      stale: [
+        { seq: 0, revision: 1, kind: 'order.canceled', subject: 'c0' },
+        { seq: 1, revision: 1, kind: 'order.canceled', subject: 'c0' },
+      ],
+    };
+    expect(stanceWithRecall(veteran, haunted)).toBe('balanced');
+  });
+
+  it('emboldens from recalled battles (attacked + slain count)', () => {
+    const veteran = record({ id: 'c0', dna: { ...FIFTIES, aggression: 60 } });
+    expect(stanceWithRecall(veteran, fresh(['unit.attacked', 'unit.attacked']))).toBe('aggressive');
+    expect(stanceWithRecall(veteran, fresh(['unit.slain', 'unit.slain']))).toBe('aggressive');
+    // One battle short of the edge (65 − 50 = 15 wins; 60 + 5 = 65).
+    expect(stanceWithRecall(veteran, fresh(['unit.attacked']))).toBe('aggressive');
+  });
+
+  it('humbles from recalled failures (overridden + canceled count)', () => {
+    const veteran = record({ id: 'c0', dna: { ...FIFTIES, defense: 60 } });
+    expect(stanceOf(veteran)).toBe('balanced');
+    expect(stanceWithRecall(veteran, fresh(['order.overridden', 'order.canceled']))).toBe(
+      'defensive',
+    );
+    expect(stanceWithRecall(veteran, fresh(['order.canceled', 'order.canceled']))).toBe(
+      'defensive',
+    );
+  });
+
+  it('caps each side at two memories (feedback-loop bound)', () => {
+    const rookie = record({ id: 'c0', dna: FIFTIES });
+    // Three battles nudge +10, not +15 (60 − 50 = 10 stays balanced).
+    expect(
+      stanceWithRecall(rookie, fresh(['unit.attacked', 'unit.attacked', 'unit.attacked'])),
+    ).toBe('balanced');
+    expect(
+      stanceWithRecall(rookie, fresh(['order.canceled', 'order.canceled', 'order.canceled'])),
+    ).toBe('balanced');
+  });
+
+  it('counts both sides (mixed battle + failure)', () => {
+    const veteran = record({ id: 'c0', dna: { ...FIFTIES, aggression: 60 } });
+    // Battle-only would flip (65 − 50 = 15); the failure holds it (65 − 55 = 10).
+    expect(stanceWithRecall(veteran, fresh(['unit.attacked', 'order.canceled']))).toBe('balanced');
+  });
+
+  it('locks the recall tuning (nudge 5, cap 2)', () => {
+    expect(STANCE_RECALL_NUDGE).toBe(5);
+    expect(STANCE_RECALL_CAP).toBe(2);
   });
 });

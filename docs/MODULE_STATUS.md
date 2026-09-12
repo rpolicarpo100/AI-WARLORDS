@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 53 (M001–M053)  |
-| `PLANNED`  | 112 (M054–M165) |
+| `VERIFIED` | 54 (M001–M054)  |
+| `PLANNED`  | 111 (M055–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -231,6 +231,12 @@ Checkpoints `VERIFIED`:
     {fresh,stale}, Match.recall); 1722/1722
     testes, 100 global.
     Registo em `docs/modules/M053.md`.
+- **M054 @ 2026-09-12** — Recall-Stance
+  (consumidor votado: nudge 5/2, stancesOf
+  via recall, stanceOf intacto); 1730/1730
+  testes, 100 global.
+  Registo em `docs/modules/M054.md`.
+  Bloco Memory M051–M054 FECHADO.
 
 ---
 
@@ -316,7 +322,8 @@ Checkpoints `VERIFIED`:
 | M051      | Memory — Data                           | `VERIFIED` |
 | M052      | Memory — Record                         | `VERIFIED` |
 | M053      | Memory — Attribution + Recall           | `VERIFIED` |
-| M054      | Memory                                  | `PLANNED`  |
+| M054      | Memory — Recall-Stance                  | `VERIFIED` |
+| M055–M058 | Player ↔ Commander                      | `PLANNED`  |
 | M055–M058 | Player ↔ Commander                      | `PLANNED`  |
 | M059–M061 | AI Evolution                            | `PLANNED`  |
 | M062–M064 | Replay                                  | `PLANNED`  |

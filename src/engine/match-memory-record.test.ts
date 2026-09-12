@@ -65,6 +65,7 @@ function battleMap(): MapData {
 
 interface CampaignOptions {
   readonly p1Orders?: CommanderRecord['orders'];
+  readonly c0Dna?: CommanderRecord['dna'];
   readonly promptsPerPlayer?: number;
   readonly extraProducers?: ReadonlyMap<string, readonly EventProducer[]>;
   readonly extraConditions?: readonly VictoryCondition[];
@@ -88,6 +89,7 @@ function campaign(options: CampaignOptions = {}): Match {
         owner: 'p1',
         active: true,
         ...(options.p1Orders === undefined ? {} : { orders: options.p1Orders }),
+        ...(options.c0Dna === undefined ? {} : { dna: options.c0Dna }),
       },
       { id: 'c1', owner: 'p2', active: true },
     ],
@@ -413,5 +415,46 @@ describe('recall (live validation)', () => {
       fresh: [],
       stale: [{ seq: 999, revision: 9, kind: 'order.executed', subject: 'c0' }],
     });
+  });
+});
+
+describe('stancesOf (M054 live recalled posture)', () => {
+  const EDGY_DNA = {
+    aggression: 60,
+    defense: 50,
+    economy: 50,
+    exploration: 50,
+    risk: 50,
+    expansion: 50,
+    diplomacy: 50,
+    patience: 50,
+    greed: 50,
+    adaptability: 50,
+  };
+
+  it('reads DNA stance exactly when memoryless (M038 behavior intact)', () => {
+    const match = campaign({ c0Dna: EDGY_DNA });
+    expect(match.stancesOf('p1')).toEqual([{ id: 'c0', stance: 'balanced' }]);
+  });
+
+  it('emboldens posture after recalled battle (balanced → aggressive)', () => {
+    const match = campaign({ c0Dna: EDGY_DNA });
+    const session = match.join(P1);
+    expect(
+      dispatch(match, session, 'r1', ISSUE_TRANSITION, {
+        id: 'c0',
+        kind: 'unit.attack',
+        params: { id: 'u1', target: 'u2' },
+      }),
+    ).toMatchObject({ status: 'applied' });
+    expect(dispatch(match, session, 'r2', EXECUTE_TRANSITION, { id: 'c0' })).toMatchObject({
+      status: 'applied',
+    });
+    // One recalled battle: 60 + 5 − 50 = 15 clears the margin.
+    expect(match.stancesOf('p1')).toEqual([{ id: 'c0', stance: 'aggressive' }]);
+    expect(match.recall('c0')?.fresh.map((memory) => memory.kind)).toEqual([
+      'order.executed',
+      'unit.attacked',
+    ]);
   });
 });
