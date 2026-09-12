@@ -12,10 +12,11 @@ import {
   type SessionHandle,
   type Untrusted,
 } from './authority.js';
-import type { CommanderRecord, CommandersData } from './commanders.js';
+import type { CommanderProposal, CommanderRecord, CommandersData } from './commanders.js';
 import { Match, STANDARD_RULESET } from './match.js';
 import {
   APPROVE_TRANSITION,
+  AUTOAPPROVE_TRANSITION,
   AUTOFILE_TRANSITION,
   createApproveHandler,
   DECLINE_TRANSITION,
@@ -31,9 +32,12 @@ import { createWorldState, type WorldState } from './world-state.js';
 const P1 = 'p1' as PlayerId;
 const P2 = 'p2' as PlayerId;
 
-const ORDER = { kind: 'order', order: { kind: 'unit.move', params: { id: 'u0', col: 1, row: 0 } } };
-const STANCE = { kind: 'stance', stance: 'defensive' };
-const AUTONOMY = { kind: 'autonomy', autonomy: 'assisted' };
+const ORDER: CommanderProposal = {
+  kind: 'order',
+  order: { kind: 'unit.move', params: { id: 'u0', col: 1, row: 0 } },
+};
+const STANCE: CommanderProposal = { kind: 'stance', stance: 'defensive' };
+const AUTONOMY: CommanderProposal = { kind: 'autonomy', autonomy: 'assisted' };
 
 function garrison(): CommandersData {
   return {
@@ -79,10 +83,11 @@ function recordOf(match: Match, id: string): CommanderRecord | undefined {
 }
 
 describe('proposal handlers (registration)', () => {
-  it('registers propose + approve + decline + autofile (no collisions)', () => {
+  it('registers propose + approve + decline + autofile + autoapprove (no collisions)', () => {
     const handlers = proposalStateHandlers();
     expect([...handlers.keys()].sort()).toEqual([
       'proposal.approve',
+      'proposal.autoapprove',
       'proposal.autofile',
       'proposal.decline',
       'proposal.propose',
@@ -91,6 +96,7 @@ describe('proposal handlers (registration)', () => {
     expect(APPROVE_TRANSITION).toBe('proposal.approve');
     expect(DECLINE_TRANSITION).toBe('proposal.decline');
     expect(AUTOFILE_TRANSITION).toBe('proposal.autofile');
+    expect(AUTOAPPROVE_TRANSITION).toBe('proposal.autoapprove');
   });
 });
 
@@ -350,6 +356,78 @@ describe('proposal.autofile (system actor, no owner check)', () => {
     expect(
       dispatch(bare, session, 'r1', AUTOFILE_TRANSITION, { id: 'c0', proposal: STANCE }),
     ).toEqual({ status: 'rejected', reason: 'proposal.autofile: unknown commander.' });
+  });
+});
+
+describe('proposal.autoapprove (system verdict, no owner check)', () => {
+  it('approves cross-owner on direct dispatch, budget-free', () => {
+    const match = makeMatch();
+    const session = match.join(P1);
+    expect(
+      dispatch(match, session, 'r1', AUTOFILE_TRANSITION, { id: 'c1', proposal: STANCE }),
+    ).toMatchObject({ status: 'applied' });
+    expect(dispatch(match, session, 'r2', AUTOAPPROVE_TRANSITION, { id: 'c1' })).toMatchObject({
+      status: 'applied',
+    });
+    expect(recordOf(match, 'c1')?.directives).toEqual({ stance: 'defensive' });
+    expect(recordOf(match, 'c1') !== undefined && 'proposal' in (recordOf(match, 'c1') ?? {})).toBe(
+      false,
+    );
+    expect(match.getSnapshot().prompts?.remaining['p1']).toBe(10);
+  });
+
+  it('fails closed on unknown commanders, empty slots and full queues', () => {
+    const match = makeMatch();
+    const session = match.join(P1);
+    expect(dispatch(match, session, 'r1', AUTOAPPROVE_TRANSITION, { id: 'cx' })).toEqual({
+      status: 'rejected',
+      reason: 'proposal.autoapprove: unknown commander.',
+    });
+    expect(dispatch(match, session, 'r2', AUTOAPPROVE_TRANSITION, { id: 'c0' })).toEqual({
+      status: 'rejected',
+      reason: 'proposal.autoapprove: no proposal.',
+    });
+    const full: CommandersData = {
+      ...garrison(),
+      commanders: garrison().commanders.map((record) =>
+        record.id === 'c0'
+          ? {
+              ...record,
+              proposal: ORDER,
+              orders: [
+                { kind: 'unit.move' },
+                { kind: 'unit.move' },
+                { kind: 'unit.move' },
+                { kind: 'unit.move' },
+                { kind: 'unit.move' },
+                { kind: 'unit.move' },
+                { kind: 'unit.move' },
+                { kind: 'unit.move' },
+              ],
+            }
+          : record,
+      ),
+    };
+    const crowded = makeMatch(full);
+    const crowdedSession = crowded.join(P1);
+    expect(dispatch(crowded, crowdedSession, 'r1', AUTOAPPROVE_TRANSITION, { id: 'c0' })).toEqual({
+      status: 'rejected',
+      reason: 'proposal.autoapprove: queue full.',
+    });
+  });
+
+  it('fails closed without commanders in state', () => {
+    const bare = new Match({
+      seed: 60,
+      ruleset: STANDARD_RULESET,
+      players: [P1, P2],
+      initialState: createWorldState({ players: [P1, P2] }),
+    });
+    const session = bare.join(P1);
+    expect(dispatch(bare, session, 'r1', AUTOAPPROVE_TRANSITION, { id: 'c0' })).toEqual({
+      status: 'rejected',
+      reason: 'proposal.autoapprove: unknown commander.',
+    });
   });
 });
 

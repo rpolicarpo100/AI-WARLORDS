@@ -124,3 +124,4 @@
 | 2026-09-12 | M057      | Proposal data live (3 kinds, payload per-kind, single-slot, bundle +574); verbs→M058                                      |
 | 2026-09-12 | M058      | Proposal verbs live (propose/approve/decline, bundle +4834); P↔C block CLOSED; AI writers→M059+                           |
 | 2026-09-12 | M059      | Assisted proposer live (autofile system, new-lesson gate, bundle +1302); self-approve→M060                                |
+| 2026-09-12 | M060      | Self-approve live (autoapprove system, ladder distinction, bundle +959); M061 fecha bloco                                 |

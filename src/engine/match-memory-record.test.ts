@@ -19,7 +19,7 @@ import type { EventProducer } from './events.js';
 import { isMapData, neighborsOf, type MapCell, type MapData } from './map.js';
 import { Match, STANDARD_RULESET } from './match.js';
 import { RECORD_TRANSITION } from './memory-record.js';
-import { DECLINE_TRANSITION } from './proposal-state.js';
+import { DECLINE_TRANSITION, PROPOSE_TRANSITION } from './proposal-state.js';
 import { EXECUTE_TRANSITION } from './order-execution.js';
 import { CANCEL_TRANSITION, ISSUE_TRANSITION } from './order-state.js';
 import type { VictoryCondition } from './victory.js';
@@ -510,11 +510,20 @@ describe('autofileProposals (M059 assisted proposer, live bookkeeping)', () => {
     expect(promptsOf(match, 'p1')).toBe(8);
   });
 
-  it('files for autonomous commanders too', () => {
+  it('files AND self-approves the same lance for autonomous commanders', () => {
     const match = campaign({ c0Dna: EDGY_DNA, c0Directives: { autonomy: 'autonomous' } });
     const session = match.join(P1);
     attack(match, session, 'r1');
-    expect(proposalOf(match, 'c0')).toEqual({ kind: 'stance', stance: 'aggressive' });
+    const record = match.getSnapshot().commanders?.commanders.find((entry) => entry.id === 'c0');
+    expect(record?.directives).toEqual({ autonomy: 'autonomous', stance: 'aggressive' });
+    expect(record !== undefined && 'proposal' in record).toBe(false);
+    expect(match.getEvents().find((event) => event.type === 'proposal.proposed')).toMatchObject({
+      payload: { player: 'p1', commander: 'c0', kind: 'stance' },
+    });
+    expect(match.getEvents().find((event) => event.type === 'proposal.approved')).toMatchObject({
+      priority: 'normal',
+      payload: { player: 'p1', commander: 'c0', kind: 'stance' },
+    });
   });
 
   it('stays silent for manual and directive-less commanders', () => {
@@ -619,5 +628,120 @@ describe('autofileProposals (M059 assisted proposer, live bookkeeping)', () => {
       dispatch(bare, session, 'r1', MOVE_TRANSITION, { id: 'u0', col: 0, row: 1 }),
     ).toMatchObject({ status: 'applied' });
     expect(bare.getEvents().some((event) => event.type === 'proposal.proposed')).toBe(false);
+  });
+});
+
+describe('autoapproveProposals (M060 self-verdict, live bookkeeping)', () => {
+  const EDGY_DNA = {
+    aggression: 60,
+    defense: 50,
+    economy: 50,
+    exploration: 50,
+    risk: 50,
+    expansion: 50,
+    diplomacy: 50,
+    patience: 50,
+    greed: 50,
+    adaptability: 50,
+  };
+
+  function attack(match: Match, session: SessionHandle, tag: string): void {
+    expect(
+      dispatch(match, session, `${tag}-issue`, ISSUE_TRANSITION, {
+        id: 'c0',
+        kind: 'unit.attack',
+        params: { id: 'u1', target: 'u2' },
+      }),
+    ).toMatchObject({ status: 'applied' });
+    expect(dispatch(match, session, `${tag}-exec`, EXECUTE_TRANSITION, { id: 'c0' })).toMatchObject(
+      {
+        status: 'applied',
+      },
+    );
+  }
+
+  function recordOf(match: Match, id: string): CommanderRecord | undefined {
+    return match.getSnapshot().commanders?.commanders.find((record) => record.id === id);
+  }
+
+  it('leaves assisted verdicts to the holder (THE ladder distinction)', () => {
+    const match = campaign({ c0Dna: EDGY_DNA, c0Directives: { autonomy: 'assisted' } });
+    const session = match.join(P1);
+    attack(match, session, 'r1');
+    expect(recordOf(match, 'c0')?.proposal).toEqual({ kind: 'stance', stance: 'aggressive' });
+    expect(recordOf(match, 'c0')?.directives).toEqual({ autonomy: 'assisted' });
+    expect(match.getEvents().some((event) => event.type === 'proposal.approved')).toBe(false);
+  });
+
+  it('stays silent for manual, directive-less and empty autonomous slots', () => {
+    for (const c0Directives of [
+      { autonomy: 'manual' },
+      undefined,
+      { autonomy: 'autonomous' },
+    ] as const) {
+      const match = campaign({ c0Directives });
+      const session = match.join(P1);
+      attack(match, session, 'r1');
+      expect(recordOf(match, 'c0')?.proposal).toBeUndefined();
+      expect(match.getEvents().some((event) => event.type === 'proposal.approved')).toBe(false);
+    }
+  });
+
+  it('skips inactive autonomous commanders with pending proposals', () => {
+    const match = campaign({ c0Directives: { autonomy: 'autonomous' } });
+    const session = match.join(P1);
+    expect(dispatch(match, session, 'r1', DEACTIVATE_TRANSITION, { id: 'c0' })).toMatchObject({
+      status: 'applied',
+    });
+    expect(
+      dispatch(match, session, 'r2', PROPOSE_TRANSITION, {
+        id: 'c0',
+        proposal: { kind: 'stance', stance: 'defensive' },
+      }),
+    ).toMatchObject({ status: 'applied' });
+    expect(
+      dispatch(match, session, 'r3', ISSUE_TRANSITION, {
+        id: 'c0',
+        kind: 'unit.move',
+        params: { id: 'u0', col: 0, row: 1 },
+      }),
+    ).toMatchObject({ status: 'applied' });
+    expect(recordOf(match, 'c0')?.proposal).toEqual({ kind: 'stance', stance: 'defensive' });
+  });
+
+  it('retries full queues silently until space frees', () => {
+    const match = campaign({
+      c0Directives: { autonomy: 'autonomous' },
+      p1Orders: [
+        { kind: 'unit.move' },
+        { kind: 'unit.move' },
+        { kind: 'unit.move' },
+        { kind: 'unit.move' },
+        { kind: 'unit.move' },
+        { kind: 'unit.move' },
+        { kind: 'unit.move' },
+        { kind: 'unit.move' },
+      ],
+    });
+    const session = match.join(P1);
+    const order = { kind: 'unit.move', params: { id: 'u0', col: 2, row: 2 } };
+    expect(
+      dispatch(match, session, 'r1', PROPOSE_TRANSITION, {
+        id: 'c0',
+        proposal: { kind: 'order', order },
+      }),
+    ).toMatchObject({ status: 'applied' });
+    expect(recordOf(match, 'c0')?.proposal).toMatchObject({ kind: 'order' });
+    expect(match.getEvents().some((event) => event.type === 'proposal.approved')).toBe(false);
+    expect(dispatch(match, session, 'r2', CANCEL_TRANSITION, { id: 'c0' })).toMatchObject({
+      status: 'applied',
+    });
+    const record = recordOf(match, 'c0');
+    expect(record?.orders).toHaveLength(1);
+    expect(record?.orders?.[0]).toEqual(order);
+    expect(record !== undefined && 'proposal' in record).toBe(false);
+    expect(match.getEvents().find((event) => event.type === 'proposal.approved')).toMatchObject({
+      payload: { player: 'p1', commander: 'c0', kind: 'order' },
+    });
   });
 });

@@ -88,6 +88,7 @@ import {
 } from './directive-state.js';
 import {
   APPROVE_TRANSITION,
+  AUTOAPPROVE_TRANSITION,
   AUTOFILE_TRANSITION,
   DECLINE_TRANSITION,
   PROPOSE_TRANSITION,
@@ -396,6 +397,7 @@ export class Match {
       [APPROVE_TRANSITION, commanderIdParamsRule],
       [DECLINE_TRANSITION, commanderIdParamsRule],
       [AUTOFILE_TRANSITION, proposeParamsRule],
+      [AUTOAPPROVE_TRANSITION, commanderIdParamsRule],
     ]);
     // M045: execute runs heads through the live verb maps (treasury
     // precedent — the L2 executor cannot import them, so Match injects).
@@ -435,12 +437,18 @@ export class Match {
       // ledger post-check). Its wire rule is fixed, not looked up.
       // M059: the assisted autofile rides the same system rail (its
       // fixed wire rule is proposeParamsRule — same { id, proposal }).
-      const system = name === RECORD_TRANSITION || name === AUTOFILE_TRANSITION;
+      // M060: the autonomous autoapprove rides it too ({ id } rule).
+      const system =
+        name === RECORD_TRANSITION ||
+        name === AUTOFILE_TRANSITION ||
+        name === AUTOAPPROVE_TRANSITION;
       let pre: readonly PreRule[];
       if (name === RECORD_TRANSITION) {
         pre = [recordParamsRule, ...validator.pre];
       } else if (name === AUTOFILE_TRANSITION) {
         pre = [proposeParamsRule, ...validator.pre];
+      } else if (name === AUTOAPPROVE_TRANSITION) {
+        pre = [commanderIdParamsRule, ...validator.pre];
       } else if (paramRule !== undefined) {
         pre = [promptsAvailableRule, paramRule, ...validator.pre];
       } else if (noParamHandlers.has(name)) {
@@ -624,6 +632,9 @@ export class Match {
         // M059: assisted commanders file stance proposals from new
         // lessons (after memories — recall reads this lance's record).
         this.autofileProposals(session, outcome.revision);
+        // M060: autonomous commanders verdict at once (after filing
+        // — file and approve land the same lance).
+        this.autoapproveProposals(session);
         const verdict = evaluateVictory(this.conditions, {
           state: after,
           revision: outcome.revision,
@@ -739,6 +750,57 @@ export class Match {
         ...runProducers(
           { type: AUTOFILE_TRANSITION, caller: session.playerId, params: payload, before, after },
           [proposalProposedProducer],
+          this.kernel.getRevision(),
+          this.events.length + 1,
+        ),
+      );
+    }
+  }
+
+  /**
+   * M060 — bookkeeping: autonomous commanders verdict their pending
+   * proposal at once (assisted holders keep the verdict — THE ladder
+   * distinction; manual and directive-less stay silent). Runs after
+   * filing, so an autonomous file approves the same lance (battle,
+   * counsel, verdict, one move). Full queues and corrupt slots are
+   * tolerated (the slot retries silently next lance). Direct kernel
+   * dispatches, fire-and-forget (M059 mold); each approval runs the
+   * approved producer by hand (the holder MUST notice a verdict).
+   */
+  private autoapproveProposals(session: SessionHandle): void {
+    for (const record of this.kernel.getSnapshot().commanders?.commanders ?? []) {
+      if (!record.active) {
+        continue;
+      }
+      if ((record.directives ?? {}).autonomy !== 'autonomous') {
+        continue;
+      }
+      if (record.proposal === undefined) {
+        continue;
+      }
+      const payload = { id: record.id };
+      const before = this.kernel.getSnapshot();
+      this.kernel.dispatch(
+        session,
+        markUntrusted({
+          requestId:
+            `proposal.autoapprove ${record.id} rev ${this.kernel.getRevision()}` as RequestId,
+          playerId: session.playerId,
+          type: AUTOAPPROVE_TRANSITION,
+          payload,
+        }),
+      );
+      const after = this.kernel.getSnapshot();
+      this.events.push(
+        ...runProducers(
+          {
+            type: AUTOAPPROVE_TRANSITION,
+            caller: session.playerId,
+            params: payload,
+            before,
+            after,
+          },
+          [proposalApprovedProducer],
           this.kernel.getRevision(),
           this.events.length + 1,
         ),

@@ -17,6 +17,9 @@
  * owner-dispatched (training wheels until M059). M059 adds the
  * system fourth verb proposal.autofile (same write as propose,
  * NO owner check — the assisted proposer files both holders).
+ * M060 adds the fifth verb proposal.autoapprove (shared approval
+ * core, NO owner check — autonomous commanders verdict
+ * themselves).
  * LAYER L2 (imports authority/commanders/
  * proposals L0 + world-state L1 type-only, all downward;
  * replaceRecord is local — directive-state sits at L2 too, L2↛L2).
@@ -37,6 +40,7 @@ export const PROPOSE_TRANSITION = 'proposal.propose';
 export const APPROVE_TRANSITION = 'proposal.approve';
 export const DECLINE_TRANSITION = 'proposal.decline';
 export const AUTOFILE_TRANSITION = 'proposal.autofile';
+export const AUTOAPPROVE_TRANSITION = 'proposal.autoapprove';
 
 /** Validated propose parameters: target commander, full suggestion. */
 export interface ProposeParams {
@@ -103,6 +107,55 @@ export function createProposeHandler(): TransitionHandler<WorldState> {
   };
 }
 
+/**
+ * Shared approval core (M060 extraction — behavior-identical):
+ * executes one pending proposal (order appends, stance/autonomy
+ * write the directive, slot clears) or fails closed. Both the
+ * player verb and the system verb run it; only the reason prefix
+ * differs.
+ */
+function applyApproval(
+  record: CommanderRecord,
+  verb: typeof APPROVE_TRANSITION | typeof AUTOAPPROVE_TRANSITION,
+):
+  | { readonly applied: true; readonly record: CommanderRecord; readonly summary: string }
+  | { readonly applied: false; readonly reason: string } {
+  const proposal = record.proposal;
+  if (proposal === undefined) {
+    return { applied: false, reason: `${verb}: no proposal.` };
+  }
+  if (proposal.kind === 'order') {
+    const order = proposal.order;
+    if (order === undefined) {
+      return { applied: false, reason: `${verb}: no proposal.` };
+    }
+    const orders = record.orders ?? [];
+    if (orders.length >= 8) {
+      return { applied: false, reason: `${verb}: queue full.` };
+    }
+    const cleared = dropProposal(record);
+    return {
+      applied: true,
+      record: { ...cleared, orders: [...orders, order] },
+      summary: `approved order on ${record.id}`,
+    };
+  }
+  const grant: {
+    readonly stance?: CommanderDirectiveStance;
+    readonly autonomy?: CommanderAutonomy;
+  } = proposal.kind === 'stance' ? { stance: proposal.stance } : { autonomy: proposal.autonomy };
+  if (grant.stance === undefined && grant.autonomy === undefined) {
+    return { applied: false, reason: `${verb}: no proposal.` };
+  }
+  const next: CommanderDirectives = { ...record.directives, ...grant };
+  const cleared = dropProposal(record);
+  return {
+    applied: true,
+    record: { ...cleared, directives: next },
+    summary: `approved ${proposal.kind} on ${record.id}`,
+  };
+}
+
 export function createApproveHandler(): TransitionHandler<WorldState> {
   return (ctx) => {
     // The wire pre-rule (commanderIdParamsRule) validated { id } on
@@ -116,45 +169,14 @@ export function createApproveHandler(): TransitionHandler<WorldState> {
     if (record.owner !== ctx.caller) {
       return { applied: false, reason: 'proposal.approve: not owner.' };
     }
-    const proposal = record.proposal;
-    if (proposal === undefined) {
-      return { applied: false, reason: 'proposal.approve: no proposal.' };
+    const verdict = applyApproval(record, APPROVE_TRANSITION);
+    if (!verdict.applied) {
+      return verdict;
     }
-    if (proposal.kind === 'order') {
-      const order = proposal.order;
-      if (order === undefined) {
-        return { applied: false, reason: 'proposal.approve: no proposal.' };
-      }
-      const orders = record.orders ?? [];
-      if (orders.length >= 8) {
-        return { applied: false, reason: 'proposal.approve: queue full.' };
-      }
-      const cleared = dropProposal(record);
-      return {
-        applied: true,
-        state: {
-          ...ctx.state,
-          commanders: replaceRecord(data, id, { ...cleared, orders: [...orders, order] }),
-        },
-        summary: `approved order on ${id}`,
-      };
-    }
-    const grant: {
-      readonly stance?: CommanderDirectiveStance;
-      readonly autonomy?: CommanderAutonomy;
-    } = proposal.kind === 'stance' ? { stance: proposal.stance } : { autonomy: proposal.autonomy };
-    if (grant.stance === undefined && grant.autonomy === undefined) {
-      return { applied: false, reason: 'proposal.approve: no proposal.' };
-    }
-    const next: CommanderDirectives = { ...record.directives, ...grant };
-    const cleared = dropProposal(record);
     return {
       applied: true,
-      state: {
-        ...ctx.state,
-        commanders: replaceRecord(data, id, { ...cleared, directives: next }),
-      },
-      summary: `approved ${proposal.kind} on ${id}`,
+      state: { ...ctx.state, commanders: replaceRecord(data, id, verdict.record) },
+      summary: verdict.summary,
     };
   };
 }
@@ -209,12 +231,37 @@ export function createAutofileHandler(): TransitionHandler<WorldState> {
   };
 }
 
+export function createAutoapproveHandler(): TransitionHandler<WorldState> {
+  return (ctx) => {
+    // System actor (M060): the wire pre-rule (commanderIdParamsRule,
+    // fixed in match.ts) validated { id }; this cast documents the
+    // seam. NO owner check — the engine verdicts for autonomous
+    // commanders of both holders.
+    const { id } = ctx.params as { readonly id: string };
+    const data = ctx.state.commanders;
+    const record = commanderById(data, id);
+    if (data === undefined || record === undefined) {
+      return { applied: false, reason: 'proposal.autoapprove: unknown commander.' };
+    }
+    const verdict = applyApproval(record, AUTOAPPROVE_TRANSITION);
+    if (!verdict.applied) {
+      return verdict;
+    }
+    return {
+      applied: true,
+      state: { ...ctx.state, commanders: replaceRecord(data, id, verdict.record) },
+      summary: verdict.summary,
+    };
+  };
+}
+
 export function proposalStateHandlers(): Map<string, TransitionHandler<WorldState>> {
   return new Map([
     [PROPOSE_TRANSITION, createProposeHandler()],
     [APPROVE_TRANSITION, createApproveHandler()],
     [DECLINE_TRANSITION, createDeclineHandler()],
     [AUTOFILE_TRANSITION, createAutofileHandler()],
+    [AUTOAPPROVE_TRANSITION, createAutoapproveHandler()],
   ]);
 }
 

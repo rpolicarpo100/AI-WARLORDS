@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 59 (M001–M059)  |
-| `PLANNED`  | 106 (M060–M165) |
+| `VERIFIED` | 60 (M001–M060)  |
+| `PLANNED`  | 105 (M061–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -264,6 +264,10 @@ Checkpoints `VERIFIED`:
   100 global.
   Registo em `docs/modules/M059.md`.
   Bloco AI Evolution M059–M061 ABERTO.
+- **M060 @ 2026-09-12** — Self-Approve
+  (autoapprove system, assisted guarda o
+  veredicto); 1807/1807 testes, 100 global.
+  Registo em `docs/modules/M060.md`.
 
 ---
 
@@ -355,7 +359,8 @@ Checkpoints `VERIFIED`:
 | M057      | Player ↔ Commander — Proposal Data      | `VERIFIED` |
 | M058      | Player ↔ Commander — Proposal Verbs     | `VERIFIED` |
 | M059      | AI Evolution — Assisted Proposer        | `VERIFIED` |
-| M060–M061 | AI Evolution                            | `PLANNED`  |
+| M060      | AI Evolution — Self-Approve             | `VERIFIED` |
+| M061      | AI Evolution                            | `PLANNED`  |
 | M062–M064 | Replay                                  | `PLANNED`  |
 | M065–M068 | AI Arena                                | `PLANNED`  |
 

@@ -1816,3 +1816,35 @@ recollection)` em stance.ts (MESMO
 - RISKS: baixo — molde M052 verbatim.
 - CUTS: order/autonomy templates (M061?);
   self-approve (M060).
+
+## D-054 — Self-approve M060 (sem voto: D-053 + moldes)
+
+- DECISION: AUTO-STEP Match após
+  autofile: `autoapproveProposals(session)`
+  — active + autonomy === 'autonomous'
+  APENAS (assisted espera pelo jogador:
+  THE ladder distinction) + slot ocupado
+  → inner `proposal.autoapprove` {id}
+  (NOVA SYSTEM em proposal-state.ts:
+  core approve extraído e partilhado c/
+  approve — behavior-identical — sem
+  owner check, budget-free, wire rule =
+  commanderIdParamsRule reutilizada) +
+  hand-run approved producer. File→approve
+  no MESMO lance p/ autonomous (batalha→
+  directive set numa jogada). Fire-and-
+  forget (molde M059); queue-full/corrupt
+  tolerados (retry silencioso).
+- MOTIVE: D-053 declarou + fecha o loop
+  autonomous + assisted↔autonomous ganha
+  significado real.
+- ALTERNATIVES: largar owner check no
+  approve (rejeitado: quebra segurança);
+  delay 1 lance (rejeitado: teatro —
+  autonomous = confiança total);
+  auto-execute junto (rejeitado: eixo
+  separado, M061?).
+- ADVANTAGES: ladder completo e visível.
+- DISADVANTAGES: nenhum novo conceito.
+- RISKS: baixo — molde M059 verbatim.
+- CUTS: auto-execute; order templates.
