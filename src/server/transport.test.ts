@@ -13,7 +13,7 @@ import {
   type ServerResponse,
 } from 'node:http';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createTransport } from './transport.js';
+import { PRESENCE_TIMEOUT_MS, createTransport } from './transport.js';
 
 let server: Server;
 let port = 0;
@@ -119,6 +119,23 @@ async function sessionFor(playerId: string): Promise<{ matchId: string; sessionI
   const joined = await postJson(`/match/${matchId}/join`, { playerId });
   const { sessionId } = joined.json as { sessionId: string };
   return { matchId, sessionId };
+}
+
+async function withClock(fn: (clock: { now: number }) => Promise<void>): Promise<void> {
+  const main = port;
+  const clock = { now: 1_000_000 };
+  const manual = createServer(createTransport(() => clock.now));
+  await new Promise<void>((resolve) => manual.listen(0, resolve));
+  port = (manual.address() as { port: number }).port;
+  try {
+    await fn(clock);
+  } finally {
+    port = main;
+    manual.closeAllConnections();
+    await new Promise<void>((resolve, reject) => {
+      manual.close((err) => (err === undefined ? resolve() : reject(err)));
+    });
+  }
 }
 
 describe('POST /match (forge skirmish)', () => {
@@ -371,6 +388,8 @@ describe('routing (unknown paths fail loud)', () => {
     expect(await get(`/match/${matchId}/dispatch`)).toMatchObject({ code: 404 });
     expect(await postJson(`/match/${matchId}/events`, {})).toMatchObject({ code: 404 });
     expect(await postJson(`/match/${matchId}/state`, {})).toMatchObject({ code: 404 });
+    expect(await get(`/match/${matchId}/heartbeat`)).toMatchObject({ code: 404 });
+    expect(await get(`/match/${matchId}/leave`)).toMatchObject({ code: 404 });
   });
 
   it('treats handler throws as 500 faults (TEST MOCK req)', async () => {
@@ -396,5 +415,133 @@ describe('routing (unknown paths fail loud)', () => {
     await sleep(20);
     expect(code).toBe(500);
     expect(JSON.parse(text)).toEqual({ error: 'transport fault' });
+  });
+});
+
+describe('POST /match/:id/heartbeat (roster)', () => {
+  it('reports the sorted online roster', async () => {
+    const first = await sessionFor('p2');
+    await postJson(`/match/${first.matchId}/join`, { playerId: 'p1' });
+    const beat = await postJson(`/match/${first.matchId}/heartbeat`, {
+      sessionId: first.sessionId,
+    });
+    expect(beat.code).toBe(200);
+    expect(beat.json).toEqual({ online: ['p1', 'p2'] });
+  });
+
+  it('dedupes multi-session players', async () => {
+    const { matchId } = await sessionFor('p1');
+    const twice = await postJson(`/match/${matchId}/join`, { playerId: 'p1' });
+    const { json } = await postJson(`/match/${matchId}/heartbeat`, {
+      sessionId: (twice.json as { sessionId: string }).sessionId,
+    });
+    expect(json).toEqual({ online: ['p1'] });
+  });
+
+  it('rejects bad heartbeats', async () => {
+    const { matchId } = await sessionFor('p1');
+    expect(await postJson(`/match/${matchId}/heartbeat`, {})).toMatchObject({ code: 400 });
+    expect(await postJson(`/match/${matchId}/heartbeat`, { sessionId: 'NOPE' })).toMatchObject({
+      code: 400,
+    });
+    expect(await postJson(`/match/${matchId}/heartbeat`, null)).toMatchObject({ code: 400 });
+    expect(await post(`/match/${matchId}/heartbeat`, '{oops')).toMatchObject({ code: 400 });
+  });
+
+  it('404s unknown matches', async () => {
+    expect(await postJson('/match/NOPE/heartbeat', { sessionId: 's' })).toMatchObject({
+      code: 404,
+    });
+  });
+});
+
+describe('POST /match/:id/leave (goodbye)', () => {
+  it('removes the session and reports the rest', async () => {
+    const first = await sessionFor('p1');
+    await postJson(`/match/${first.matchId}/join`, { playerId: 'p2' });
+    const bye = await postJson(`/match/${first.matchId}/leave`, { sessionId: first.sessionId });
+    expect(bye.code).toBe(200);
+    expect(bye.json).toEqual({ online: ['p2'] });
+    expect(
+      await postJson(`/match/${first.matchId}/leave`, { sessionId: first.sessionId }),
+    ).toMatchObject({ code: 400 });
+  });
+
+  it('rejects bad goodbyes', async () => {
+    const { matchId } = await sessionFor('p1');
+    expect(await postJson(`/match/${matchId}/leave`, {})).toMatchObject({ code: 400 });
+    expect(await postJson(`/match/${matchId}/leave`, null)).toMatchObject({ code: 400 });
+    expect(await post(`/match/${matchId}/leave`, '{oops')).toMatchObject({ code: 400 });
+  });
+
+  it('404s unknown matches', async () => {
+    expect(await postJson('/match/NOPE/leave', { sessionId: 's' })).toMatchObject({ code: 404 });
+  });
+});
+
+describe('presence events + sweeps (manual clock)', () => {
+  it('announces joins live (never in backlog)', async () => {
+    await withClock(async () => {
+      const { matchId } = await sessionFor('p1');
+      const stream = openSse(`/match/${matchId}/events?from=0`);
+      try {
+        await waitFor(() => stream.chunks.length > 0, 'backlog chunk');
+        expect(stream.chunks.join('')).not.toContain('event: presence');
+        stream.chunks.length = 0;
+        await postJson(`/match/${matchId}/join`, { playerId: 'p2' });
+        await waitFor(() => stream.chunks.join('').includes('event: presence'), 'join presence');
+        expect(stream.chunks.join('')).toContain('"playerId":"p2"');
+        expect(stream.chunks.join('')).toContain('"online":true');
+      } finally {
+        stream.close();
+      }
+    });
+  });
+
+  it('sweeps idle sessions (timeout = death, rejoin)', async () => {
+    await withClock(async (clock) => {
+      const { matchId, sessionId } = await sessionFor('p1');
+      const stream = openSse(`/match/${matchId}/events?from=0`);
+      try {
+        await waitFor(() => stream.chunks.length > 0, 'backlog chunk');
+        stream.chunks.length = 0;
+        clock.now += PRESENCE_TIMEOUT_MS;
+        expect(await postJson(`/match/${matchId}/heartbeat`, { sessionId })).toMatchObject({
+          code: 200,
+        });
+        clock.now += PRESENCE_TIMEOUT_MS + 1;
+        await postJson(`/match/${matchId}/join`, { playerId: 'p2' });
+        await waitFor(() => stream.chunks.join('').includes('"online":false'), 'timeout presence');
+        expect(stream.chunks.join('')).toContain('"playerId":"p1"');
+        expect(await postJson(`/match/${matchId}/heartbeat`, { sessionId })).toMatchObject({
+          code: 400,
+        });
+        expect(await postJson(`/match/${matchId}/leave`, { sessionId })).toMatchObject({
+          code: 400,
+        });
+        expect(await postJson(`/match/${matchId}/join`, { playerId: 'p1' })).toMatchObject({
+          code: 200,
+        });
+      } finally {
+        stream.close();
+      }
+    });
+  });
+
+  it('counts dispatches as activity', async () => {
+    await withClock(async (clock) => {
+      const { matchId, sessionId } = await sessionFor('p1');
+      clock.now += PRESENCE_TIMEOUT_MS - 10_000;
+      await postJson(`/match/${matchId}/dispatch`, {
+        sessionId,
+        requestId: 'keep',
+        type: 'world.noop',
+        payload: {},
+      });
+      clock.now += PRESENCE_TIMEOUT_MS - 10_000;
+      expect(await postJson(`/match/${matchId}/heartbeat`, { sessionId })).toMatchObject({
+        code: 200,
+      });
+    });
   });
 });

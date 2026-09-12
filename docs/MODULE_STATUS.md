@@ -9,8 +9,8 @@
 
 | Estado     | Contagem       |
 | ---------- | -------------- |
-| `VERIFIED` | 69 (M001–M069) |
-| `PLANNED`  | 96 (M070–M165) |
+| `VERIFIED` | 70 (M001–M070) |
+| `PLANNED`  | 95 (M071–M165) |
 | Outros     | 0              |
 
 Checkpoints `VERIFIED`:
@@ -310,6 +310,11 @@ Checkpoints `VERIFIED`:
   bundle +0); 1876/1876 testes, 100
   global.
   Registo em `docs/modules/M069.md`.
+- **M070 @ 2026-09-12** — Multiplayer
+  Presence (heartbeat/roster/sweep,
+  bundle +0); 1886/1886 testes, 100
+  global.
+  Registo em `docs/modules/M070.md`.
 
 ---
 
@@ -416,7 +421,8 @@ Checkpoints `VERIFIED`:
 | Módulo(s) | Âmbito                           | Estado     |
 | --------- | -------------------------------- | ---------- |
 | M069      | Multiplayer — SSE+POST Transport | `VERIFIED` |
-| M070–M076 | Multiplayer                      | `PLANNED`  |
+| M070      | Multiplayer — Presence           | `VERIFIED` |
+| M071–M076 | Multiplayer                      | `PLANNED`  |
 | M077–M080 | Competitive                      | `PLANNED`  |
 | M081–M087 | Security                         | `PLANNED`  |
 | M088–M093 | Observability                    | `PLANNED`  |

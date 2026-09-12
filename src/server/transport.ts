@@ -9,13 +9,19 @@
  * payload} dispatches with the caller DERIVED from the session
  * (spoof-proof by construction — the wire never carries playerId);
  * GET /:id/events?from=N streams match events (SSE backlog + live);
- * GET /:id/state returns the frozen snapshot. Well-formed domain
- * traffic always answers 200 (outcomes carry domain errors —
- * transport never re-interprets them); malformed bodies, unknown
- * sessions and bad cursors answer 400; unknown routes and matches
- * answer 404. No auth (the Security phase owns it), no roster
- * flexibility (fixed skirmish), no production listener yet (tests
- * drive real localhost HTTP; deployment is a later module's call).
+ * GET /:id/state returns the frozen snapshot. M070 (D-064, voted
+ * presence) adds life: POST /:id/heartbeat {sessionId} → {online}
+ * and POST /:id/leave; a lazy sweep kills sessions idle past
+ * PRESENCE_TIMEOUT_MS (timeout = death, rejoin; dispatch counts as
+ * activity); join/leave/timeout emit live-only `event: presence`
+ * lines (the engine cursor never mixes with transport chatter).
+ * Well-formed domain traffic always answers 200 (outcomes carry
+ * domain errors — transport never re-interprets them); malformed
+ * bodies, unknown sessions and bad cursors answer 400; unknown
+ * routes and matches answer 404. No auth (the Security phase owns
+ * it), no roster flexibility (fixed skirmish), no production
+ * listener yet (tests drive real localhost HTTP; deployment is a
+ * later module's call).
  */
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import {
@@ -33,11 +39,19 @@ interface Stream {
   cursor: number;
 }
 
+interface SessionRecord {
+  readonly handle: SessionHandle;
+  lastSeen: number;
+}
+
 interface Entry {
   readonly match: Match;
-  readonly sessions: Map<string, SessionHandle>;
+  readonly sessions: Map<string, SessionRecord>;
   readonly streams: Set<Stream>;
 }
+
+/** Idle strictly past this, a session dies (the boundary stays online). */
+export const PRESENCE_TIMEOUT_MS = 30_000;
 
 /** Seed for seedless forges (fixed — matchIds still differ). */
 const DEFAULT_SKIRMISH_SEED = 69;
@@ -118,9 +132,39 @@ function asRecord(body: unknown): Record<string, unknown> | undefined {
   return body as Record<string, unknown>;
 }
 
-/** node:http request handler (never throws — every seam guarded). */
-export function createTransport(): (req: IncomingMessage, res: ServerResponse) => void {
+/**
+ * node:http request handler (never throws — every seam guarded).
+ * The clock is injectable (manual in tests — deterministic sweeps).
+ */
+export function createTransport(
+  now: () => number = Date.now,
+): (req: IncomingMessage, res: ServerResponse) => void {
   const matches = new Map<string, Entry>();
+
+  const presence = (entry: Entry, playerId: string, online: boolean): void => {
+    const line = `event: presence\ndata: ${JSON.stringify({ source: 'transport', kind: 'presence', playerId, online, at: now() })}\n\n`;
+    for (const stream of entry.streams) {
+      stream.res.write(line, () => {});
+    }
+  };
+
+  const sweep = (entry: Entry): void => {
+    const moment = now();
+    for (const [sessionId, record] of entry.sessions) {
+      if (moment - record.lastSeen > PRESENCE_TIMEOUT_MS) {
+        entry.sessions.delete(sessionId);
+        presence(entry, record.handle.playerId, false);
+      }
+    }
+  };
+
+  const roster = (entry: Entry): string[] => {
+    const online = new Set<string>();
+    for (const record of entry.sessions.values()) {
+      online.add(record.handle.playerId);
+    }
+    return [...online].sort();
+  };
 
   const broadcast = (entry: Entry): void => {
     const events = entry.match.getEvents();
@@ -181,6 +225,7 @@ export function createTransport(): (req: IncomingMessage, res: ServerResponse) =
       return;
     }
     if (parts[2] === 'join' && method === 'POST') {
+      sweep(entry);
       const body = await readJson(req);
       if (!body.ok) {
         send(res, 400, { error: 'malformed json' });
@@ -203,11 +248,13 @@ export function createTransport(): (req: IncomingMessage, res: ServerResponse) =
         send(res, 400, { error: 'unknown player' });
         return;
       }
-      entry.sessions.set(handle.sessionId, handle);
+      entry.sessions.set(handle.sessionId, { handle, lastSeen: now() });
+      presence(entry, handle.playerId, true);
       send(res, 200, { sessionId: handle.sessionId, playerId: handle.playerId });
       return;
     }
     if (parts[2] === 'dispatch' && method === 'POST') {
+      sweep(entry);
       const body = await readJson(req);
       if (!body.ok) {
         send(res, 400, { error: 'malformed json' });
@@ -223,16 +270,17 @@ export function createTransport(): (req: IncomingMessage, res: ServerResponse) =
         send(res, 400, { error: 'bad sessionId' });
         return;
       }
-      const handle = entry.sessions.get(sessionId);
-      if (handle === undefined) {
+      const found = entry.sessions.get(sessionId);
+      if (found === undefined) {
         send(res, 400, { error: 'unknown session' });
         return;
       }
+      found.lastSeen = now();
       const outcome = entry.match.dispatch(
-        handle,
+        found.handle,
         markUntrusted({
           requestId: record['requestId'],
-          playerId: handle.playerId,
+          playerId: found.handle.playerId,
           type: record['type'],
           payload: record['payload'],
         } as ClientRequest),
@@ -241,7 +289,61 @@ export function createTransport(): (req: IncomingMessage, res: ServerResponse) =
       send(res, 200, outcome);
       return;
     }
+    if (parts[2] === 'heartbeat' && method === 'POST') {
+      sweep(entry);
+      const body = await readJson(req);
+      if (!body.ok) {
+        send(res, 400, { error: 'malformed json' });
+        return;
+      }
+      const record = asRecord(body.value);
+      if (record === undefined) {
+        send(res, 400, { error: 'malformed body' });
+        return;
+      }
+      const sessionId = record['sessionId'];
+      if (typeof sessionId !== 'string') {
+        send(res, 400, { error: 'bad sessionId' });
+        return;
+      }
+      const found = entry.sessions.get(sessionId);
+      if (found === undefined) {
+        send(res, 400, { error: 'unknown session' });
+        return;
+      }
+      found.lastSeen = now();
+      send(res, 200, { online: roster(entry) });
+      return;
+    }
+    if (parts[2] === 'leave' && method === 'POST') {
+      sweep(entry);
+      const body = await readJson(req);
+      if (!body.ok) {
+        send(res, 400, { error: 'malformed json' });
+        return;
+      }
+      const record = asRecord(body.value);
+      if (record === undefined) {
+        send(res, 400, { error: 'malformed body' });
+        return;
+      }
+      const sessionId = record['sessionId'];
+      if (typeof sessionId !== 'string') {
+        send(res, 400, { error: 'bad sessionId' });
+        return;
+      }
+      const found = entry.sessions.get(sessionId);
+      if (found === undefined) {
+        send(res, 400, { error: 'unknown session' });
+        return;
+      }
+      entry.sessions.delete(sessionId);
+      presence(entry, found.handle.playerId, false);
+      send(res, 200, { online: roster(entry) });
+      return;
+    }
     if (parts[2] === 'events' && method === 'GET') {
+      sweep(entry);
       const from = url.searchParams.get('from');
       const cursor = from === null ? 0 : Number(from);
       if (!Number.isInteger(cursor) || cursor < 0) {

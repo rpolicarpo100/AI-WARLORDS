@@ -2123,3 +2123,34 @@ player)` = hp vivo + stock + city level
 - RISKS: baixo — kernel valida resto.
 - CUTS: prod listener; roster N;
   body-limit; auth; match.html client.
+
+## D-064 — Presence M070 (voto presence)
+
+- DECISION: `createTransport(now =
+Date.now)` (relógio injetável):
+  POST /:id/heartbeat {sessionId} →
+  {online} (sorted, dedup); POST
+  /:id/leave → apaga + {online};
+  sweep lazy no topo dos handlers
+  (timeout 30s = morte, rejoin;
+  dispatch conta actividade);
+  presença via SSE `event: presence`
+  (live-only, sem cursor —
+  backlog é só engine); join/leave/
+  timeout emitem; roster tardio =
+  heartbeat.
+- MOTIVE: voto + sessões precisam de
+  vida antes de lobby/deploy.
+- ALTERNATIVES: presença no cursor
+  engine (rejeitado: quebra seq);
+  timeout revive (rejeitado: morte
+  estrita, rejoin); sweep só no
+  heartbeat (rejeitado: uniformidade
+  — state excluído de propósito,
+  GET puro).
+- ADVANTAGES: zero churn M069
+  (black-box intacto); 100% c/
+  relógio manual (determinístico).
+- DISADVANTAGES: TIMEOUT fixo 30s.
+- RISKS: baixo — loops, poucos ifs.
+- CUTS: lobby; deploy; roster no join.
