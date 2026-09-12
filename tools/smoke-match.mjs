@@ -213,7 +213,7 @@ fire('tArena', 'click');
 fire('arenaRun', 'click');
 globalThis.document.getElementById('apiUrl').value = 'http://127.0.0.1:1/';
 fire('tOnline', 'click');
-for (const id of ['netLobby', 'netForge', 'netJoin', 'netNoop', 'netAttack', 'netStop'])
+for (const id of ['netLobby', 'netForge', 'netJoin', 'netNoop', 'netAttack', 'netMove', 'netStop'])
   fire(id, 'click');
 fire('tMute', 'click');
 fire('tMute', 'click');
@@ -379,6 +379,8 @@ if (process.env.API_TEST) {
   try {
     globalThis.document.getElementById('apiUrl').value = url;
     globalThis.document.getElementById('netSide').value = 'p1';
+    globalThis.document.getElementById('netUnit').value = 'u1';
+    globalThis.document.getElementById('netTarget').value = 'u2';
     const out = () => byId['netOut'].textContent;
     const waitOut = async (needle, label) => {
       for (let i = 0; i < 200; i += 1) {
@@ -399,6 +401,14 @@ if (process.env.API_TEST) {
     await waitOut('dispatch: applied rev 1', 'noop outcome');
     fire('netAttack', 'click');
     await waitOut('event: unit.attacked', 'live attack event');
+    globalThis.document.getElementById('netTo').value = 'bogus';
+    fire('netMove', 'click');
+    await waitOut('dest must be col,row', 'bad dest hint');
+    globalThis.document.getElementById('netUnit').value = 'u1';
+    globalThis.document.getElementById('netTo').value = '1,1';
+    fire('netMove', 'click');
+    await waitOut('dispatch: applied rev 3', 'move outcome');
+    await waitOut('event: unit.moved', 'live move event');
     fire('netStop', 'click');
     await waitOut('watch stopped', 'stop line');
     const closed = await globalThis.fetch(`${url}/match/${mid}/close`, { method: 'POST' });

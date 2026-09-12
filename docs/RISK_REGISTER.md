@@ -139,3 +139,5 @@
 | 2026-09-12 | M072      | Deploy live (entry + Render API + CORS, bundle +0); page client→M073                                                      |
 
 - M073: page client online jogável (default prod); RISK: ataques online ainda drill fixo u1→u2 (ver M074).
+
+- M074: ordens online livres (attack/move); RISK: posição online não visível (ver M075 state).

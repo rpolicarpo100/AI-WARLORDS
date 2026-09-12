@@ -175,8 +175,12 @@
     <button class="tbtn" id="netLobby" title="list open tables">🗺 Lobby</button>
     <button class="tbtn" id="netForge" title="forge a new skirmish">⚒ Forge</button>
     <button class="tbtn" id="netJoin" title="join the forged table">🚪 Join</button>
+    <input id="netUnit" value="u1" title="acting unit id" size="4">
+    <input id="netTarget" value="u2" title="attack target unit id" size="4">
+    <input id="netTo" value="1,1" title="move destination col,row" size="6">
     <button class="tbtn" id="netNoop" title="spend a prompt doing nothing">⏳ Noop</button>
-    <button class="tbtn" id="netAttack" title="u1 strikes u2 (skirmish drill)">⚔ Attack</button>
+    <button class="tbtn" id="netAttack" title="netUnit strikes netTarget">⚔ Attack</button>
+    <button class="tbtn" id="netMove" title="march netUnit to netTo">➡ Move</button>
     <button class="tbtn" id="netStop" title="stop watching">⏹ Stop</button>
     <pre id="netOut">Offline, sire.</pre>
   </div>
@@ -10853,9 +10857,19 @@
   async function netAct(kind) {
     if (NET.sessionId === '') { netLog('join first'); return; }
     NET.rid += 1;
-    const lance = kind === 'attack'
-      ? { type: 'unit.attack', payload: { id: 'u1', target: 'u2' } }
-      : { type: 'world.noop', payload: {} };
+    const unit = $('netUnit').value.trim();
+    let lance = null;
+    if (kind === 'noop') lance = { type: 'world.noop', payload: {} };
+    else if (kind === 'attack') {
+      const target = $('netTarget').value.trim();
+      if (unit === '' || target === '') { netLog('unit and target first'); return; }
+      lance = { type: 'unit.attack', payload: { id: unit, target } };
+    } else {
+      if (unit === '') { netLog('unit first'); return; }
+      const m = /^(\d+),(\d+)$/.exec($('netTo').value.trim());
+      if (!m) { netLog('dest must be col,row'); return; }
+      lance = { type: 'unit.move', payload: { id: unit, col: Number(m[1]), row: Number(m[2]) } };
+    }
     try {
       const out = await netCall(`/match/${NET.matchId}/dispatch`, {
         sessionId: NET.sessionId, requestId: `web${NET.rid}`, type: lance.type, payload: lance.payload,
@@ -12086,6 +12100,7 @@
   $('netJoin').addEventListener('click', () => { void netJoin(); });
   $('netNoop').addEventListener('click', () => { void netAct('noop'); });
   $('netAttack').addEventListener('click', () => { void netAct('attack'); });
+  $('netMove').addEventListener('click', () => { void netAct('move'); });
   $('netStop').addEventListener('click', netStop);
   const cmdSide = () => { const u = cmdSelUnit(); return u ? u.owner : 'p1'; };
   $('cmdGather').addEventListener('click', () => {

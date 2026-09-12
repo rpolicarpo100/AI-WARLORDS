@@ -2232,3 +2232,23 @@ Date.now)` (relógio injetável):
 - DISADVANTAGES: painel ~120 linhas.
 - RISKS: baixo — fetch+try/catch.
 - CUTS: board render online; auto-rejoin.
+
+## D-068 — Online orders M074 (sem voto: sequência apontada)
+
+- DECISION: inputs netUnit/netTarget/
+  netTo + botão Move; Attack lê
+  (unit,target); Move faz parse
+  `col,row` → unit.move {id,col,row}
+  (shape probado, não assumido);
+  hints client-side p/ vazio/
+  inválido; sem sessão → join first.
+- MOTIVE: M073 atacava drill fixo
+  u1→u2 (ver RISK); ordens livres.
+- ALTERNATIVES: seleção canvas
+  (rejeitado: invasivo, misturava
+  fluxos local/online).
+- ADVANTAGES: testável (harness
+  seta inputs); usável (ids livres).
+- DISADVANTAGES: digitar ids.
+- RISKS: baixo — try/catch+guards.
+- CUTS: click-to-target online.
