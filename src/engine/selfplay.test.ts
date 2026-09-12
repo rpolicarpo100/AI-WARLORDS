@@ -227,3 +227,143 @@ describe('simplePolicy (template player)', () => {
     expect(move?.type).toBe('unit.move');
   });
 });
+
+describe('simplePolicy v2 (M066 smarter brains)', () => {
+  function nodeMap(amounts: Readonly<Record<string, number>>): MapData {
+    const cells: MapCell[] = [];
+    for (let row = 0; row < 3; row += 1) {
+      for (let col = 0; col < 3; col += 1) {
+        const amount = amounts[`${col},${row}`];
+        cells.push(
+          amount === undefined
+            ? { col, row, terrain: 'field' }
+            : { col, row, terrain: 'resource', resource: { type: 'gold', amount } },
+        );
+      }
+    }
+    return mapWith(cells);
+  }
+
+  it('focus-fires the weakest adjacent foe (ties by id)', () => {
+    const seen = snapshot(fieldGrid(), [
+      { id: 'u0', owner: 'p1', type: 'warrior', hp: 12, col: 0, row: 0 },
+      { id: 'u1', owner: 'p2', type: 'archer', hp: 8, col: 1, row: 0 },
+      { id: 'u2', owner: 'p2', type: 'archer', hp: 3, col: 0, row: 1 },
+    ]);
+    expect(simplePolicy(seen, P1, FIELD_ONLY)).toEqual({
+      type: 'unit.attack',
+      payload: { id: 'u0', target: 'u2' },
+    });
+    const tied = snapshot(fieldGrid(), [
+      { id: 'u0', owner: 'p1', type: 'warrior', hp: 12, col: 0, row: 0 },
+      { id: 'u1', owner: 'p2', type: 'archer', hp: 8, col: 1, row: 0 },
+      { id: 'u2', owner: 'p2', type: 'archer', hp: 8, col: 0, row: 1 },
+    ]);
+    expect(simplePolicy(tied, P1, FIELD_ONLY)).toEqual({
+      type: 'unit.attack',
+      payload: { id: 'u0', target: 'u1' },
+    });
+  });
+
+  it('seeks the nearest live node (col/row ties), starves when walled', () => {
+    const seen = snapshot(nodeMap({ '2,0': 5, '0,2': 5, '2,2': 5 }), [
+      { id: 'u0', owner: 'p1', type: 'worker', hp: 5, col: 0, row: 0 },
+      { id: 'u9', owner: 'p2', type: 'archer', hp: 8, col: 1, row: 1 },
+    ]);
+    expect(simplePolicy(seen, P1, FIELD_ONLY)).toEqual({
+      type: 'unit.move',
+      payload: { id: 'u0', col: 0, row: 1 },
+    });
+    const walledCells: MapCell[] = [];
+    for (let row = 0; row < 3; row += 1) {
+      for (let col = 0; col < 3; col += 1) {
+        walledCells.push(
+          col === 0 && row === 0
+            ? { col, row, terrain: 'resource', resource: { type: 'gold', amount: 5 } }
+            : col === 1 && row === 1
+              ? { col, row, terrain: 'field' }
+              : { col, row, terrain: 'mountain' },
+        );
+      }
+    }
+    const walled = snapshot(mapWith(walledCells), [
+      { id: 'u0', owner: 'p1', type: 'worker', hp: 5, col: 1, row: 1 },
+    ]);
+    expect(simplePolicy(walled, P1, FIELD_ONLY)).toBeNull();
+  });
+
+  it('skips depleted nodes on the way to blood', () => {
+    const seen = snapshot(nodeMap({ '2,0': 0 }), [
+      { id: 'u0', owner: 'p1', type: 'worker', hp: 5, col: 0, row: 0 },
+      { id: 'u9', owner: 'p2', type: 'archer', hp: 8, col: 1, row: 1 },
+    ]);
+    expect(simplePolicy(seen, P1, FIELD_ONLY)).toEqual({
+      type: 'unit.move',
+      payload: { id: 'u0', col: 0, row: 1 },
+    });
+  });
+
+  it('brawls adjacent foes instead of seeking far nodes', () => {
+    const seen = snapshot(nodeMap({ '2,0': 5 }), [
+      { id: 'u0', owner: 'p1', type: 'worker', hp: 5, col: 0, row: 0 },
+      { id: 'u9', owner: 'p2', type: 'archer', hp: 8, col: 0, row: 1 },
+    ]);
+    expect(simplePolicy(seen, P1, FIELD_ONLY)).toEqual({
+      type: 'unit.attack',
+      payload: { id: 'u0', target: 'u9' },
+    });
+  });
+
+  it('flees at critical hp (col/row escape ties), fights at hp 3', () => {
+    const flight = snapshot(fieldGrid(), [
+      { id: 'u0', owner: 'p1', type: 'warrior', hp: 2, col: 1, row: 0 },
+      { id: 'u9', owner: 'p2', type: 'archer', hp: 8, col: 2, row: 0 },
+    ]);
+    expect(simplePolicy(flight, P1, FIELD_ONLY)).toEqual({
+      type: 'unit.move',
+      payload: { id: 'u0', col: 0, row: 0 },
+    });
+    const tiebreak = snapshot(fieldGrid(), [
+      { id: 'u0', owner: 'p1', type: 'warrior', hp: 2, col: 1, row: 0 },
+      { id: 'u9', owner: 'p2', type: 'archer', hp: 8, col: 0, row: 0 },
+    ]);
+    expect(simplePolicy(tiebreak, P1, FIELD_ONLY)).toEqual({
+      type: 'unit.move',
+      payload: { id: 'u0', col: 1, row: 1 },
+    });
+    const sturdy = snapshot(fieldGrid(), [
+      { id: 'u0', owner: 'p1', type: 'warrior', hp: 3, col: 1, row: 0 },
+      { id: 'u9', owner: 'p2', type: 'archer', hp: 8, col: 2, row: 0 },
+    ]);
+    expect(simplePolicy(sturdy, P1, FIELD_ONLY)).toEqual({
+      type: 'unit.attack',
+      payload: { id: 'u0', target: 'u9' },
+    });
+  });
+
+  it('fights cornered, walks unhurt when no foe is near', () => {
+    const cells: MapCell[] = [];
+    for (let row = 0; row < 3; row += 1) {
+      for (let col = 0; col < 3; col += 1) {
+        cells.push(
+          col === 1 && row === 0
+            ? { col, row, terrain: 'mountain' }
+            : { col, row, terrain: 'field' },
+        );
+      }
+    }
+    const cornered = snapshot(mapWith(cells), [
+      { id: 'u0', owner: 'p1', type: 'warrior', hp: 2, col: 0, row: 0 },
+      { id: 'u9', owner: 'p2', type: 'archer', hp: 8, col: 0, row: 1 },
+    ]);
+    expect(simplePolicy(cornered, P1, FIELD_ONLY)).toEqual({
+      type: 'unit.attack',
+      payload: { id: 'u0', target: 'u9' },
+    });
+    const calm = snapshot(fieldGrid(), [
+      { id: 'u0', owner: 'p1', type: 'warrior', hp: 1, col: 0, row: 0 },
+      { id: 'u9', owner: 'p2', type: 'archer', hp: 8, col: 2, row: 2 },
+    ]);
+    expect(simplePolicy(calm, P1, FIELD_ONLY)?.type).toBe('unit.move');
+  });
+});

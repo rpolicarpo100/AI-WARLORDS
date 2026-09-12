@@ -2006,3 +2006,31 @@ N`; pára em finished OU 2 lances
 - RISKS: baixo — moldes replay+policy.
 - CUTS: brains espertos; commander-orders
   (M066?); UI Arena.
+
+## D-060 — Smarter brains M066 (voto smarter-brains)
+
+- DECISION: `simplePolicy` v2 (mesma
+  assinatura; runner intocado): FLEE hp ≤
+  2 c/ foe adjacente (foge p/ vizinho que
+  aumenta strictly a distância; encurralado
+  luta); ATTACK focus-fire (menor hp,
+  empate id); worker SEEK (fora do node →
+  passo greedy p/ live node mais próximo;
+  sem nodes → approach); military/patrol
+  M065 intactos. Empates col/row.
+- MOTIVE: voto + Arena precisa de jogo
+  menos suicida antes de scoring/UI.
+- ALTERNATIVES: thresholds por damage
+  (rejeitado: snapshot s/ config —
+  CRITICAL=2 documentado); worker foge
+  sempre (rejeitado: brawl vence seek,
+  flee vence brawl); seek c/ pathfinding
+  (rejeitado: greedy chega).
+- ADVANTAGES: 11 testes M065 intactos
+  (comportamento velho = caso especial);
+  terminação inalterada (spend-down).
+- DISADVANTAGES: CRITICAL=2 arbitrário
+  mas explícito; greedy ainda jitter.
+- RISKS: baixo — mesma assinatura, pins
+  intactos.
+- CUTS: scoring (M067?); UI Arena.

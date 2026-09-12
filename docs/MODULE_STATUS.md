@@ -7,11 +7,11 @@
 
 ## Resumo
 
-| Estado     | Contagem        |
-| ---------- | --------------- |
-| `VERIFIED` | 65 (M001–M065)  |
-| `PLANNED`  | 100 (M066–M165) |
-| Outros     | 0               |
+| Estado     | Contagem       |
+| ---------- | -------------- |
+| `VERIFIED` | 66 (M001–M066) |
+| `PLANNED`  | 99 (M067–M165) |
+| Outros     | 0              |
 
 Checkpoints `VERIFIED`:
 
@@ -292,6 +292,10 @@ Checkpoints `VERIFIED`:
   FIRST do bloco); 1839/1839 testes, 100
   global.
   Registo em `docs/modules/M065.md`.
+- **M066 @ 2026-09-12** — AI Arena Smarter
+  Brains (flee/focus/seek, shaken +0);
+  1845/1845 testes, 100 global.
+  Registo em `docs/modules/M066.md`.
 
 ---
 
@@ -389,7 +393,8 @@ Checkpoints `VERIFIED`:
 | M063      | Replay — Export Blob                    | `VERIFIED` |
 | M064      | Replay — Stepping                       | `VERIFIED` |
 | M065      | AI Arena — Self-Play                    | `VERIFIED` |
-| M066–M068 | AI Arena                                | `PLANNED`  |
+| M066      | AI Arena — Smarter Brains               | `VERIFIED` |
+| M067–M068 | AI Arena                                | `PLANNED`  |
 
 ## Fases 17–20 — Multiplayer, Competitive, Security, Observability
 

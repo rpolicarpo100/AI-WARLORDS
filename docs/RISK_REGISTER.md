@@ -130,3 +130,4 @@
 | 2026-09-12 | M063      | Export blob live (strict import, shaken +0); stepping→M064                                                                |
 | 2026-09-12 | M064      | Stepping live (O(n) stepper, shaken +0); Replay CLOSED                                                                    |
 | 2026-09-12 | M065      | Self-play live (template player + runner, bundle +449); arena scoring→M066                                                |
+| 2026-09-12 | M066      | Smarter brains live (flee/focus-fire/seek, shaken +0); scoring→M067                                                       |
