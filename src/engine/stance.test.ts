@@ -197,4 +197,17 @@ describe('stanceWithRecall (M054 experience nudge)', () => {
     expect(STANCE_RECALL_NUDGE).toBe(5);
     expect(STANCE_RECALL_CAP).toBe(2);
   });
+
+  it('ordered posture beats DNA and recall alike (M056 precedence)', () => {
+    const veteran = record({
+      id: 'c0',
+      dna: { ...FIFTIES, aggression: 100 },
+      directives: { stance: 'defensive' },
+    });
+    expect(stanceOf(veteran)).toBe('aggressive');
+    expect(stanceWithRecall(veteran, fresh([]))).toBe('defensive');
+    expect(stanceWithRecall(veteran, fresh(['unit.attacked', 'unit.slain', 'unit.attacked']))).toBe(
+      'defensive',
+    );
+  });
 });

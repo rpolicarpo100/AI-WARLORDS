@@ -49,7 +49,8 @@ export function isAutonomyLevel(value: unknown): value is AutonomyLevel {
   return typeof value === 'string' && (AUTONOMY_LEVELS as readonly string[]).includes(value);
 }
 
-function isDirectiveStance(value: unknown): value is DirectiveStance {
+/** M056: exported for the set wire-rule (per-kind values, directive-state.ts). */
+export function isDirectiveStance(value: unknown): value is DirectiveStance {
   return typeof value === 'string' && DIRECTIVE_STANCES.includes(value);
 }
 

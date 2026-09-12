@@ -98,6 +98,11 @@ export function stanceWithRecall(
   record: CommanderRecord,
   recollection: StanceRecollection,
 ): Stance {
+  // M056: player-ordered posture beats DNA + memory (precedence voted).
+  const ordered = record.directives?.stance;
+  if (ordered !== undefined) {
+    return ordered;
+  }
   let battles = 0;
   let failures = 0;
   for (const memory of recollection.fresh) {

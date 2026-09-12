@@ -1667,3 +1667,38 @@ recollection)` em stance.ts (MESMO
 - CUTS: set/clear verb (M056); precedência
   stance (M056+); AI actor p/ assisted/auto
   (M056+/M059+); kinds novos.
+
+## D-050 — Directive set+precedence M056 (voto directive-set-stance)
+
+- DECISION: NOVO `directive-state.ts` (L2,
+  molde order-state): `directive.set`
+  {id,kind,value} + `directive.clear`
+  {id,kind} (owner-only; unknown/not-owner
+  reject; clear unset reject 'not set'
+  — molde cancel; set sobrescreve;
+  replaceRecord LOCAL L2↛L2) + producers
+  estruturais (directive.set/cleared,
+  diffs before/after; NÃO memoráveis —
+  memória de diretivas é futuro). Match:
+  merge no mapa commanders + paramRules +
+  producers. Precedência: stanceWithRecall
+  retorna directives.stance primeiro
+  (player > recall > DNA); stanceOf intacto.
+  Export aditivo isDirectiveStance (M055).
+  Pins: census + LAYERS `directive-state: 2`.
+- MOTIVE: voto + molde M044 verbatim +
+  factos p/ audit (kernel log não basta
+  no stream).
+- ALTERNATIVES: clear idempotente-applied
+  (rejeitado: molde cancel rejecta vazio);
+  set mesma-value reject (rejeitado:
+  overwrite harmless); sem producers
+  (rejeitado: verbos order todos emitem);
+  memoráveis (rejeitado: fora do voto).
+- ADVANTAGES: metade stance COMPLETA
+  (data→verb→consumer); autonomy stored.
+- DISADVANTAGES: autonomy sem leitor
+  (actor M059+?); precedência só stancesOf.
+- RISKS: baixo — molde provado.
+- CUTS: autonomy actor; proposal half
+  (M057+); kinds novos.

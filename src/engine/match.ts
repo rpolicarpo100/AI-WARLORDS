@@ -78,6 +78,15 @@ import {
   stateFlipProducer,
 } from './commander-state.js';
 import {
+  CLEAR_TRANSITION,
+  clearParamsRule,
+  directiveClearedProducer,
+  directiveSetProducer,
+  directiveStateHandlers,
+  SET_TRANSITION,
+  setParamsRule,
+} from './directive-state.js';
+import {
   CANCEL_TRANSITION,
   ISSUE_TRANSITION,
   issueParamsRule,
@@ -305,7 +314,7 @@ export class Match {
     const world = worldHandlers();
     const economy = economyHandlers(economyConfig, buildingsConfig);
     const city = cityHandlers(buildingsConfig);
-    const commanders = commanderHandlers();
+    const commanders = new Map([...commanderHandlers(), ...directiveStateHandlers()]);
     const orders = new Map([...orderHandlers(), ...orderOverrideHandlers()]);
     // M022: passable = finite move cost (Infinity/NaN block, fail-closed).
     const passable = (terrain: string): boolean =>
@@ -360,6 +369,8 @@ export class Match {
       [EXECUTE_TRANSITION, commanderIdParamsRule],
       [OVERRIDE_TRANSITION, overrideParamsRule],
       [RECORD_TRANSITION, recordParamsRule],
+      [SET_TRANSITION, setParamsRule],
+      [CLEAR_TRANSITION, clearParamsRule],
     ]);
     // M045: execute runs heads through the live verb maps (treasury
     // precedent — the L2 executor cannot import them, so Match injects).
@@ -471,6 +482,8 @@ export class Match {
     producers.set(CANCEL_TRANSITION, [orderCanceledProducer]);
     producers.set(EXECUTE_TRANSITION, [createOrderExecutedProducer(orderSubProducers)]);
     producers.set(OVERRIDE_TRANSITION, [orderOverriddenProducer]);
+    producers.set(SET_TRANSITION, [directiveSetProducer]);
+    producers.set(CLEAR_TRANSITION, [directiveClearedProducer]);
     // M030: sightings need before/after visibility, computed here (L4 may
     // import fog; the L2 producer cannot — L2↛L2). Either map absent (or
     // the maps differing, impossible live) yields silence, never a fault.

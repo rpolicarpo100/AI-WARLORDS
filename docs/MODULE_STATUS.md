@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 55 (M001–M055)  |
-| `PLANNED`  | 110 (M056–M165) |
+| `VERIFIED` | 56 (M001–M056)  |
+| `PLANNED`  | 109 (M057–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -243,6 +243,11 @@ Checkpoints `VERIFIED`:
   testes, 100 global.
   Registo em `docs/modules/M055.md`.
   Bloco Player ↔ Commander M055–M058 ABERTO.
+- **M056 @ 2026-09-12** — Directive Set
+  (verbos votados set/clear+facts,
+  precedência stance); 1761/1761 testes,
+  100 global.
+  Registo em `docs/modules/M056.md`.
 
 ---
 
@@ -330,7 +335,8 @@ Checkpoints `VERIFIED`:
 | M053      | Memory — Attribution + Recall           | `VERIFIED` |
 | M054      | Memory — Recall-Stance                  | `VERIFIED` |
 | M055      | Player ↔ Commander — Directive Data     | `VERIFIED` |
-| M056–M058 | Player ↔ Commander                      | `PLANNED`  |
+| M056      | Player ↔ Commander — Directive Set      | `VERIFIED` |
+| M057–M058 | Player ↔ Commander                      | `PLANNED`  |
 | M055–M058 | Player ↔ Commander                      | `PLANNED`  |
 | M059–M061 | AI Evolution                            | `PLANNED`  |
 | M062–M064 | Replay                                  | `PLANNED`  |
