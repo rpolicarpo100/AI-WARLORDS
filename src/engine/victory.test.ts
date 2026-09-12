@@ -10,6 +10,7 @@ import { Match, STANDARD_RULESET } from './match.js';
 import { seedPrompts } from './prompts.js';
 import {
   evaluateVictory,
+  exemptFree,
   matchConditions,
   promptsExhaustedCondition,
   winnerOf,
@@ -358,5 +359,22 @@ describe('verdict integrity', () => {
     }).toThrow(TypeError);
     expect(match.getVerdict()).not.toBe(first);
     expect(match.getVerdict()).toEqual(first);
+  });
+});
+
+describe('exemptFree (M095)', () => {
+  const decisive: VictoryCondition = () => ({
+    outcome: { kind: 'draw' },
+    condition: 'test-draw',
+  });
+  const input = (state: WorldState): ConditionInput => ({ state, revision: 0 });
+
+  it('abstains in free mode (even over a decisive inner)', () => {
+    const state = createWorldState({ players: [P1, P2] });
+    expect(exemptFree('free', decisive)(input(state))).toBeNull();
+  });
+
+  it('passes standard through (identity)', () => {
+    expect(exemptFree('standard', decisive)).toBe(decisive);
   });
 });

@@ -2763,3 +2763,32 @@ rev R (seed S)` últimas 6,
 - DISADVANTAGES: mais um report.
 - RISKS: nenhum (sim only).
 - CUTS: UI; projecção.
+
+## D-090 — Free endless M095 (voto m095: endless)
+
+- DECISION: mode.ts L0 (flag
+  standard/free) + Match mode
+  (default standard, getMode);
+  free = sem seed + sem spend
+  + sem ledger + sem pré
+  + conditions exemptFree
+  (wrapper, WorldState
+  intocado); views intocadas
+  (fail-closed 0; M097 owns
+  display ∞).
+- MOTIVE: D-022 deferiu
+  unlimited a M09X; R-32
+  anti-farming (exclusão M096).
+- ALTERNATIVES: sentinel
+  MAX_UINT32 (rejeitado: hack,
+  não design); mode no
+  WorldState (rejeitado:
+  churn canónico/selo).
+- ADVANTAGES: cirúrgico, 5
+  seams match.ts + wrapper.
+- DISADVANTAGES: free nunca
+  termina in-engine (close
+  transport; resign futuro).
+- RISKS: AI vê 0 prompts em
+  free (M097+).
+- CUTS: transport; página.

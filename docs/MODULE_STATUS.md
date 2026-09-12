@@ -9,8 +9,8 @@
 
 | Estado     | Contagem       |
 | ---------- | -------------- |
-| `VERIFIED` | 94 (M001–M094) |
-| `PLANNED`  | 71 (M095–M165) |
+| `VERIFIED` | 95 (M001–M095) |
+| `PLANNED`  | 70 (M096–M165) |
 | Outros     | 0              |
 
 Checkpoints `VERIFIED`:
@@ -407,6 +407,10 @@ Checkpoints `VERIFIED`:
   (economy-drill pressure + ledger,
   1200/0); Fase 21 aberta.
   Registo em `docs/modules/M094.md`.
+- **M095 @ 2026-09-12** — Free Mode Endless Data
+  (mode L0 + 5 seams + exemptFree;
+  1958/1958; bundle 250c35ac).
+  Registo em `docs/modules/M095.md`.
 
 ---
 
@@ -543,7 +547,8 @@ Checkpoints `VERIFIED`:
 | Módulo(s) | Âmbito             | Estado                                                      |
 | --------- | ------------------ | ----------------------------------------------------------- |
 | M094      | Economy Simulator  | `VERIFIED`                                                   |
-| M095–M097 | Free Mode          | `PLANNED`                                                   |
+| M095      | Free Mode (endless data) | `VERIFIED`                                                  |
+| M096–M097 | Free Mode          | `PLANNED`                                                   |
 | M098–M101 | Solana Foundation  | `PLANNED`                                                   |
 | M102–M107 | USDC               | `PLANNED`                                                   |
 | M108–M111 | Financial Security | `PLANNED`                                                   |

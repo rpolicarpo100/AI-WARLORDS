@@ -16,6 +16,7 @@ import {
   type MatchInit,
 } from './match.js';
 import { createWorldState, type WorldState } from './world-state.js';
+import { seedPrompts } from './prompts.js';
 
 const P1 = 'p1' as PlayerId;
 const P2 = 'p2' as PlayerId;
@@ -524,5 +525,51 @@ describe('match integrity (failure/security)', () => {
 
   it('rejects joins for unknown players (delegation)', () => {
     expect(() => makeMatch().join(P3)).toThrow(/unknown player/);
+  });
+});
+
+describe('match mode (M095)', () => {
+  it.each([['endless'], [42], [{}]] as Array<[unknown]>)('rejects invalid mode %j', (mode) => {
+    expect(() => makeMatch({ mode })).toThrow('Match: invalid mode.');
+  });
+
+  it('defaults to standard (absent + null; budget seeded + enforced)', () => {
+    const match = makeMatch({});
+    expect(match.mode).toBe('standard');
+    expect(match.getSnapshot().prompts?.remaining).toEqual({ p1: 10, p2: 10 });
+    expect(makeMatch({ mode: null }).mode).toBe('standard');
+  });
+
+  it('free: no budget, endless past 10, never exhausts', () => {
+    const match = makeMatch({ mode: 'free' });
+    expect(match.mode).toBe('free');
+    expect(match.getSnapshot().prompts).toBeUndefined();
+    const s1 = match.join(P1);
+    const s2 = match.join(P2);
+    for (let i = 0; i < 12; i += 1) {
+      const even = i % 2 === 0;
+      const outcome = match.dispatch(
+        even ? s1 : s2,
+        raw({ requestId: `f${i}`, playerId: even ? 'p1' : 'p2', type: 'world.noop', payload: {} }),
+      );
+      expect(outcome.status).toBe('applied');
+    }
+    expect(match.getSnapshot().prompts).toBeUndefined();
+    expect(match.getVerdict().status).toBe('ongoing');
+    expect(match.getRevision()).toBe(12);
+  });
+
+  it('free respects present prompts (frozen, never spent)', () => {
+    const match = makeMatch({
+      mode: 'free',
+      initialState: createWorldState({ players: [P1, P2], prompts: seedPrompts(['p1', 'p2'], 3) }),
+    });
+    const s1 = match.join(P1);
+    const outcome = match.dispatch(
+      s1,
+      raw({ requestId: 'fz', playerId: 'p1', type: 'world.noop', payload: {} }),
+    );
+    expect(outcome.status).toBe('applied');
+    expect(match.getSnapshot().prompts?.remaining).toEqual({ p1: 3, p2: 3 });
   });
 });

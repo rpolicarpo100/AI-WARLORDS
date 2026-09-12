@@ -41,12 +41,14 @@ import {
 } from './validation.js';
 import {
   evaluateVictory,
+  exemptFree,
   matchConditions,
   type Verdict,
   type VictoryCondition,
 } from './victory.js';
 import { scoreTable } from './score.js';
 import { scoreSuperiorCondition } from './victory-score.js';
+import { DEFAULT_MATCH_MODE, isMatchMode, type MatchMode } from './mode.js';
 import type { PassableCheck, PolicyMove } from './selfplay.js';
 import { isWorldState, worldHandlers, type WorldState } from './world-state.js';
 import {
@@ -250,6 +252,7 @@ export interface MatchInit {
   readonly players: readonly PlayerId[];
   readonly initialState: unknown;
   readonly promptsPerPlayer?: unknown;
+  readonly mode?: unknown;
   readonly extraHandlers?: ReadonlyMap<string, RngHandler<WorldState>>;
   readonly extraProducers?: ReadonlyMap<string, readonly EventProducer[]>;
   readonly extraConditions?: readonly VictoryCondition[];
@@ -278,6 +281,7 @@ export class Match {
   readonly seed: Seed;
   readonly ruleset: MatchRuleset;
   readonly players: readonly PlayerId[];
+  readonly mode: MatchMode;
   private readonly kernel: AuthorityKernel<WorldState>;
   private readonly unitsConfig: UnitsConfig;
   private readonly buildingsConfig: BuildingsConfig;
@@ -310,6 +314,11 @@ export class Match {
     } else {
       promptsPerPlayer = init.promptsPerPlayer;
     }
+    const mode = init.mode ?? DEFAULT_MATCH_MODE;
+    if (!isMatchMode(mode)) {
+      throw new Error('Match: invalid mode.');
+    }
+    this.mode = mode;
     const ruleset = init.ruleset;
     if (typeof ruleset !== 'object' || ruleset === null) {
       throw new Error('Match: invalid ruleset (not an object).');
@@ -339,7 +348,7 @@ export class Match {
     }
     // PROMPTS: seed an absent budget (present slots are respected as-is).
     const seeded: WorldState =
-      init.initialState.prompts === undefined
+      init.initialState.prompts === undefined && mode === 'standard'
         ? { ...init.initialState, prompts: seedPrompts(init.players, promptsPerPlayer) }
         : init.initialState;
     const economyConfig = init.economyConfig ?? DEFAULT_ECONOMY_CONFIG;
@@ -458,6 +467,8 @@ export class Match {
       return dispatchCount;
     };
     const validated = new Map<string, TransitionHandler<WorldState>>();
+    // M095: free matches run budget-free (RECORD rail precedent).
+    const budget: readonly PreRule[] = mode === 'free' ? [] : [promptsAvailableRule];
     for (const [name, handler] of merged) {
       if (name.length === 0 || typeof handler !== 'function') {
         throw new Error('Match: invalid handler registration.');
@@ -481,16 +492,17 @@ export class Match {
       } else if (name === AUTOAPPROVE_TRANSITION) {
         pre = [commanderIdParamsRule, ...validator.pre];
       } else if (paramRule !== undefined) {
-        pre = [promptsAvailableRule, paramRule, ...validator.pre];
+        pre = [...budget, paramRule, ...validator.pre];
       } else if (noParamHandlers.has(name)) {
-        pre = [promptsAvailableRule, noParamsRule(name), ...validator.pre];
+        pre = [...budget, noParamsRule(name), ...validator.pre];
       } else {
-        pre = [promptsAvailableRule, ...validator.pre];
+        pre = [...budget, ...validator.pre];
       }
       const postStep = (_before: WorldState, caller: PlayerId, applied: WorldState): WorldState => {
         // M052: the system transition keeps the prompt ledger untouched
         // (spread-conditional — never an explicit undefined, M047 law).
-        const prompts = system ? {} : { prompts: spendPrompt(applied.prompts, caller) };
+        const prompts =
+          system || mode === 'free' ? {} : { prompts: spendPrompt(applied.prompts, caller) };
         const built =
           applied.cities === undefined
             ? undefined
@@ -518,7 +530,10 @@ export class Match {
         return { ...stepped, explored };
       };
       // M052: the system transition skips the spend ledger (it spends 0).
-      const post = system ? validator.post.filter((rule) => rule !== promptsRule) : validator.post;
+      const post =
+        system || mode === 'free'
+          ? validator.post.filter((rule) => rule !== promptsRule)
+          : validator.post;
       validated.set(
         name,
         wrapWithValidation(handler, { ...validator, pre, post }, this.seed, nextSeq, postStep),
@@ -592,7 +607,9 @@ export class Match {
     const extraConditions: readonly VictoryCondition[] = init.extraConditions ?? [];
     // Score superiority judges every standard match ahead of the built-ins
     // (extras-first seam; ties fall through to the exhaustion draw).
-    this.conditions = [...extraConditions, scoreSuperiorCondition(), ...matchConditions()];
+    this.conditions = [...extraConditions, scoreSuperiorCondition(), ...matchConditions()].map(
+      (condition) => exemptFree(mode, condition),
+    );
     this.players = freezeState([...init.players]);
     this.kernel = new AuthorityKernel<WorldState>({
       players: init.players,

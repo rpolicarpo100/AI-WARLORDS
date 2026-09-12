@@ -1,4 +1,5 @@
 import { freezeState, isPlayerId, MAX_ID_LENGTH, type PlayerId } from './authority.js';
+import type { MatchMode } from './mode.js';
 import { promptsOf } from './prompts.js';
 import type { WorldState } from './world-state.js';
 
@@ -60,6 +61,18 @@ export function winnerOf(outcome: VerdictOutcome): PlayerId | null {
 
 export function matchConditions(): readonly VictoryCondition[] {
   return [promptsExhaustedCondition()];
+}
+
+/**
+ * M095 — free-mode exemption wrapper: conditions abstain in endless
+ * matches (mode lives on Match, not canonical state — this wrapper
+ * applied at construction is the seam; standard passes through).
+ */
+export function exemptFree(mode: MatchMode, condition: VictoryCondition): VictoryCondition {
+  if (mode === 'free') {
+    return () => null;
+  }
+  return condition;
 }
 
 function assertDecision(
