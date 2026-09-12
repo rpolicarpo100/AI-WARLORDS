@@ -90,16 +90,28 @@ function get(path: string): Promise<{ code: number; json: unknown }> {
   });
 }
 
-function openSse(path: string): { chunks: string[]; code: Promise<number>; close: () => void } {
+function openSse(path: string): {
+  chunks: string[];
+  code: Promise<number>;
+  ended: Promise<void>;
+  close: () => void;
+} {
   const chunks: string[] = [];
   let codeResolve: (code: number) => void = () => {};
   const code = new Promise<number>((resolve) => {
     codeResolve = resolve;
   });
+  let endResolve: () => void = () => {};
+  const ended = new Promise<void>((resolve) => {
+    endResolve = resolve;
+  });
   const req = httpRequest({ port, path, method: 'GET' }, (res) => {
     codeResolve(res.statusCode ?? 0);
     res.on('data', (chunk) => {
       chunks.push(String(chunk));
+    });
+    res.on('end', () => {
+      endResolve();
     });
   });
   req.on('error', () => {});
@@ -107,6 +119,7 @@ function openSse(path: string): { chunks: string[]; code: Promise<number>; close
   return {
     chunks,
     code,
+    ended,
     close: () => {
       req.destroy();
     },
@@ -134,6 +147,23 @@ async function withClock(fn: (clock: { now: number }) => Promise<void>): Promise
     manual.closeAllConnections();
     await new Promise<void>((resolve, reject) => {
       manual.close((err) => (err === undefined ? resolve() : reject(err)));
+    });
+  }
+}
+
+async function spendAll(matchId: string, first: string, second: string): Promise<void> {
+  for (let i = 0; i < 10; i += 1) {
+    await postJson(`/match/${matchId}/dispatch`, {
+      sessionId: first,
+      requestId: `e1-${i}`,
+      type: 'world.noop',
+      payload: {},
+    });
+    await postJson(`/match/${matchId}/dispatch`, {
+      sessionId: second,
+      requestId: `e2-${i}`,
+      type: 'world.noop',
+      payload: {},
     });
   }
 }
@@ -390,6 +420,7 @@ describe('routing (unknown paths fail loud)', () => {
     expect(await postJson(`/match/${matchId}/state`, {})).toMatchObject({ code: 404 });
     expect(await get(`/match/${matchId}/heartbeat`)).toMatchObject({ code: 404 });
     expect(await get(`/match/${matchId}/leave`)).toMatchObject({ code: 404 });
+    expect(await get(`/match/${matchId}/close`)).toMatchObject({ code: 404 });
   });
 
   it('treats handler throws as 500 faults (TEST MOCK req)', async () => {
@@ -543,5 +574,94 @@ describe('presence events + sweeps (manual clock)', () => {
         code: 200,
       });
     });
+  });
+});
+
+describe('GET /matches (lobby)', () => {
+  it('lists nothing on a fresh server', async () => {
+    await withClock(async () => {
+      expect(await get('/matches')).toEqual({ code: 200, json: [] });
+    });
+  });
+
+  it('lists one open table exactly', async () => {
+    await withClock(async () => {
+      const created = await postJson('/match', {});
+      const matchId = (created.json as { matchId: string }).matchId;
+      expect(await get('/matches')).toEqual({
+        code: 200,
+        json: [
+          {
+            matchId,
+            players: ['p1', 'p2'],
+            online: [],
+            status: 'open',
+            revision: 0,
+            createdAt: 1_000_000,
+          },
+        ],
+      });
+    });
+  });
+
+  it('tracks roster, revision and the finished line (join-guarded, dispatch-carried)', async () => {
+    const { matchId, sessionId } = await sessionFor('p1');
+    const joined = await postJson(`/match/${matchId}/join`, { playerId: 'p2' });
+    const tables = (await get('/matches')).json as { matchId: string; online: string[] }[];
+    expect(tables.find((table) => table.matchId === matchId)?.online).toEqual(['p1', 'p2']);
+    await spendAll(matchId, sessionId, (joined.json as { sessionId: string }).sessionId);
+    const done = (await get('/matches')).json as {
+      matchId: string;
+      status: string;
+      revision: number;
+    }[];
+    const table = done.find((entry) => entry.matchId === matchId);
+    expect(table?.status).toBe('finished');
+    expect(table?.revision).toBe(20);
+    const late = await postJson(`/match/${matchId}/join`, { playerId: 'p1' });
+    expect(late).toEqual({ code: 400, json: { error: 'match finished' } });
+    const last = await postJson(`/match/${matchId}/dispatch`, {
+      sessionId,
+      requestId: 'after-end',
+      type: 'world.noop',
+      payload: {},
+    });
+    expect(last).toEqual({ code: 200, json: { status: 'error', code: 'MATCH_FINISHED' } });
+  });
+
+  it('sweeps ghosts before listing', async () => {
+    await withClock(async (clock) => {
+      await sessionFor('p1');
+      clock.now += PRESENCE_TIMEOUT_MS + 1;
+      const tables = (await get('/matches')).json as { online: string[] }[];
+      expect(tables).toHaveLength(1);
+      expect(tables[0]?.online).toEqual([]);
+    });
+  });
+
+  it('404s lobby lookalikes', async () => {
+    expect(await get('/matches/x')).toMatchObject({ code: 404 });
+    expect(await postJson('/matches', {})).toMatchObject({ code: 404 });
+  });
+});
+
+describe('POST /match/:id/close (last call)', () => {
+  it('ends streams, deletes the table, refuses seconds', async () => {
+    const { matchId } = await sessionFor('p1');
+    const stream = openSse(`/match/${matchId}/events?from=0`);
+    try {
+      await waitFor(() => stream.chunks.length > 0, 'backlog chunk');
+      expect(await postJson(`/match/${matchId}/close`, {})).toEqual({
+        code: 200,
+        json: { closed: true },
+      });
+      await stream.ended;
+      expect(await postJson(`/match/${matchId}/join`, { playerId: 'p1' })).toMatchObject({
+        code: 404,
+      });
+      expect(await postJson(`/match/${matchId}/close`, {})).toMatchObject({ code: 404 });
+    } finally {
+      stream.close();
+    }
   });
 });

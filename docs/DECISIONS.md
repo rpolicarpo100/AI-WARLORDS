@@ -2154,3 +2154,29 @@ Date.now)` (relógio injetável):
 - DISADVANTAGES: TIMEOUT fixo 30s.
 - RISKS: baixo — loops, poucos ifs.
 - CUTS: lobby; deploy; roster no join.
+
+## D-065 — Lobby M071 (sem voto: sequência apontada)
+
+- DECISION: GET /matches (sweep-all +
+  lista [{matchId, players, online,
+  status, revision, createdAt}];
+  status open/finished do verdict;
+  POST /:id/close (drena body, ends
+  streams, apaga; fechar 2× = 404);
+  join em finished → 400 (dispatch
+  em finished segue 200 c/ outcome
+  MATCH_FINISHED — split honesto:
+  join-guarded, dispatch-carried).
+- MOTIVE: servidor vira sala antes
+  de deploy/client.
+- ALTERNATIVES: close c/ sessão
+  (rejeitado: sem auth, sessão não
+  prova nada); lista sem sweep
+  (rejeitado: fantasmas); delete
+  finished auto (rejeitado: close
+  explícito).
+- ADVANTAGES: exaustão real nos
+  testes (20 noops → finished).
+- DISADVANTAGES: roster fixo ainda.
+- RISKS: baixo — rotas, mesmo molde.
+- CUTS: deploy; page client; paginação.

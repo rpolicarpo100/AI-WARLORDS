@@ -15,13 +15,19 @@
  * PRESENCE_TIMEOUT_MS (timeout = death, rejoin; dispatch counts as
  * activity); join/leave/timeout emit live-only `event: presence`
  * lines (the engine cursor never mixes with transport chatter).
- * Well-formed domain traffic always answers 200 (outcomes carry
- * domain errors — transport never re-interprets them); malformed
- * bodies, unknown sessions and bad cursors answer 400; unknown
- * routes and matches answer 404. No auth (the Security phase owns
- * it), no roster flexibility (fixed skirmish), no production
- * listener yet (tests drive real localhost HTTP; deployment is a
- * later module's call).
+ * M071 (D-065) adds the lobby: GET /matches sweeps every table and
+ * lists [{matchId, players, online, status, revision, createdAt}]
+ * (status open/finished straight from the verdict); POST /:id/close
+ * drains, ends every stream and deletes (closing twice 404s);
+ * joining a finished match 400s while dispatching on one still
+ * answers 200 carrying MATCH_FINISHED (join-guarded,
+ * dispatch-carried — the honest split). Well-formed domain traffic
+ * always answers 200 (outcomes carry domain errors — transport
+ * never re-interprets them); malformed bodies, unknown sessions
+ * and bad cursors answer 400; unknown routes and matches answer
+ * 404. No auth (the Security phase owns it), no roster flexibility
+ * (fixed skirmish), no production listener yet (tests drive real
+ * localhost HTTP; deployment is a later module's call).
  */
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import {
@@ -48,6 +54,7 @@ interface Entry {
   readonly match: Match;
   readonly sessions: Map<string, SessionRecord>;
   readonly streams: Set<Stream>;
+  readonly createdAt: number;
 }
 
 /** Idle strictly past this, a session dies (the boundary stays online). */
@@ -186,6 +193,22 @@ export function createTransport(
     const method = req.method as string;
     const url = new URL(req.url as string, 'http://local');
     const parts = url.pathname.split('/').filter((part) => part.length > 0);
+    if (parts[0] === 'matches' && parts.length === 1 && method === 'GET') {
+      const listing: unknown[] = [];
+      for (const [matchId, item] of matches) {
+        sweep(item);
+        listing.push({
+          matchId,
+          players: item.match.getSnapshot().players.map((player) => player.id),
+          online: roster(item),
+          status: item.match.getVerdict().status === 'finished' ? 'finished' : 'open',
+          revision: item.match.getRevision(),
+          createdAt: item.createdAt,
+        });
+      }
+      send(res, 200, listing);
+      return;
+    }
     if (parts[0] !== 'match') {
       send(res, 404, { error: 'unknown route' });
       return;
@@ -211,7 +234,7 @@ export function createTransport(
         return;
       }
       const match = new Match(skirmishInit(seed));
-      matches.set(match.id, { match, sessions: new Map(), streams: new Set() });
+      matches.set(match.id, { match, sessions: new Map(), streams: new Set(), createdAt: now() });
       send(res, 200, { matchId: match.id });
       return;
     }
@@ -239,6 +262,10 @@ export function createTransport(
       const playerId = record['playerId'];
       if (typeof playerId !== 'string') {
         send(res, 400, { error: 'bad playerId' });
+        return;
+      }
+      if (entry.match.getVerdict().status === 'finished') {
+        send(res, 400, { error: 'match finished' });
         return;
       }
       let handle: SessionHandle;
@@ -340,6 +367,15 @@ export function createTransport(
       entry.sessions.delete(sessionId);
       presence(entry, found.handle.playerId, false);
       send(res, 200, { online: roster(entry) });
+      return;
+    }
+    if (parts[2] === 'close' && method === 'POST') {
+      req.resume();
+      for (const stream of entry.streams) {
+        stream.res.end();
+      }
+      matches.delete(parts[1] as string);
+      send(res, 200, { closed: true });
       return;
     }
     if (parts[2] === 'events' && method === 'GET') {

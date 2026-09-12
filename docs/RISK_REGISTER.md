@@ -135,3 +135,4 @@
 | 2026-09-12 | M068      | Arena UI live (self-play panel + E2E, bundle +1792); Arena CLOSED; multiplayer→M069                                       |
 | 2026-09-12 | M069      | Transport live (SSE+POST, 26 HTTP tests, bundle +0); sessions/presence→M070                                               |
 | 2026-09-12 | M070      | Presence live (heartbeat/roster/sweep, bundle +0); lobby/lifecycle→M071                                                   |
+| 2026-09-12 | M071      | Lobby live (list/close/lifecycle, bundle +0); deploy→M072                                                                 |
