@@ -1292,3 +1292,52 @@ export function importReplayBlob(json: string): {
   }
   return { init: parsed.init, journal: parsed.journal };
 }
+
+/**
+ * M064 — a live frame in a stepped replay (match observes snapshot /
+ * events / timeline at the current lance; step advances one entry).
+ */
+export interface ReplayStepper {
+  readonly match: Match;
+  readonly lance: number;
+  readonly total: number;
+  step(): MatchDispatchOutcome | null;
+}
+
+/**
+ * M064 — incremental replay stepping (one dispatch per step, O(n)
+ * total — fat slices would re-redrive O(n²)). Trusts a valid journal
+ * (importReplayBlob owns validity — seam documented). The match is
+ * live: frames read straight off it.
+ */
+export function createReplayStepper(
+  init: MatchInit,
+  journal: readonly JournalEntry[],
+): ReplayStepper {
+  const match = new Match(init);
+  let lance = 0;
+  return {
+    match,
+    get lance() {
+      return lance;
+    },
+    total: journal.length,
+    step() {
+      const entry = journal[lance];
+      if (entry === undefined) {
+        return null;
+      }
+      lance += 1;
+      const session = match.join(entry.sessionPlayer);
+      return match.dispatch(
+        session,
+        markUntrusted({
+          requestId: entry.requestId,
+          playerId: entry.playerId,
+          type: entry.type,
+          payload: entry.payload,
+        }),
+      );
+    },
+  };
+}

@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 63 (M001–M063)  |
-| `PLANNED`  | 102 (M064–M165) |
+| `VERIFIED` | 64 (M001–M064)  |
+| `PLANNED`  | 101 (M065–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -277,11 +277,16 @@ Checkpoints `VERIFIED`:
   (journal + redrive bit-identical);
   1820/1820 testes, 100 global.
   Registo em `docs/modules/M062.md`.
-  Bloco Replay M062–M064 ABERTO.
+  Bloco Replay M062–M064 FECHADO.
 - **M063 @ 2026-09-12** — Export Blob
   (round-trip estrito, shaken +0);
   1825/1825 testes, 100 global.
   Registo em `docs/modules/M063.md`.
+- **M064 @ 2026-09-12** — Replay Stepping
+  (frames live O(n), shaken +0; bloco
+  Replay FECHADO); 1828/1828 testes, 100
+  global.
+  Registo em `docs/modules/M064.md`.
 
 ---
 
@@ -377,7 +382,7 @@ Checkpoints `VERIFIED`:
 | M061      | AI Evolution — Auto-Execute             | `VERIFIED` |
 | M062      | Replay — Replay-Verify                  | `VERIFIED` |
 | M063      | Replay — Export Blob                    | `VERIFIED` |
-| M064      | Replay                                  | `PLANNED`  |
+| M064      | Replay — Stepping                       | `VERIFIED` |
 | M065–M068 | AI Arena                                | `PLANNED`  |
 
 ## Fases 17–20 — Multiplayer, Competitive, Security, Observability

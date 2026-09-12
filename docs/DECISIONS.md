@@ -1950,3 +1950,27 @@ json): {init, journal}` em match.ts
   (documentado).
 - RISKS: baixo — JSON + guards.
 - CUTS: size cap; stepping (M064).
+
+## D-058 — Replay stepping M064 (sem voto: D-056+D-057)
+
+- DECISION: `createReplayStepper(init,
+journal)` em match.ts (zero ficheiros,
+  zero pins): stepper stateful
+  {match, lance, total, step()} — dispatch
+  incremental O(n) total (fat-slice
+  O(n²) rejeitado), step() → outcome |
+  null no fim, frames observáveis via
+  match live (snapshot/events/timeline).
+  Trusts journal válido (M063 guard é o
+  dono — seam documentado). Fecha Replay.
+- MOTIVE: D-056+D-057 declararam +
+  stepper > wrapper (frames reais).
+- ALTERNATIVES: replayToLance slice
+  (rejeitado: O(n²), sem frames);
+  step-back (rejeitado: re-step do zero
+  chega — stepper barato).
+- ADVANTAGES: playback pronto p/ UI.
+- DISADVANTAGES: shaken até UI (M063).
+- RISKS: baixo — replay mold.
+- CUTS: step-back; UI (futuro); bloco
+  Replay FECHA aqui.

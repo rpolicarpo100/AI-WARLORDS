@@ -128,3 +128,4 @@
 | 2026-09-12 | M061      | Auto-execute live (act-then-think, inner record, bundle +738); AI Evolution CLOSED                                        |
 | 2026-09-12 | M062      | Replay-verify live (journal + redrive, bundle +410); export blob→M063                                                     |
 | 2026-09-12 | M063      | Export blob live (strict import, shaken +0); stepping→M064                                                                |
+| 2026-09-12 | M064      | Stepping live (O(n) stepper, shaken +0); Replay CLOSED                                                                    |

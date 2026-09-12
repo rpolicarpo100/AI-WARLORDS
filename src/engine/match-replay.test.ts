@@ -16,6 +16,7 @@ import { isMapData, neighborsOf, type MapCell, type MapData } from './map.js';
 import {
   Match,
   STANDARD_RULESET,
+  createReplayStepper,
   exportReplayBlob,
   importReplayBlob,
   isReplayBlob,
@@ -430,5 +431,60 @@ describe('replay blob (M063 portable history)', () => {
       expect(isReplayBlob(blob)).toBe(false);
       expect(() => importReplayBlob(JSON.stringify(blob))).toThrow('replay blob: bad shape.');
     }
+  });
+});
+
+describe('replay stepper (M064 frame-by-frame playback)', () => {
+  it('steps a full script (mid-frame battle + final equality + past-end null)', () => {
+    const match = new Match(makeInit());
+    runScript(match, match.join(P1));
+    const journal = match.getJournal();
+    const stepper = createReplayStepper(makeInit(), journal);
+    expect(stepper.lance).toBe(0);
+    expect(stepper.total).toBe(10);
+    const outcomes: readonly unknown[] = [
+      stepper.step(),
+      stepper.step(),
+      stepper.step(),
+      stepper.step(),
+      stepper.step(),
+      stepper.step(),
+      stepper.step(),
+      stepper.step(),
+      stepper.step(),
+      stepper.step(),
+    ];
+    expect(stepper.lance).toBe(10);
+    expect(stepper.step()).toBeNull();
+    expect(stepper.lance).toBe(10);
+    expect(outcomes).toEqual(journal.map((entry) => entry.outcome));
+    expect(stepper.match.getSnapshot()).toEqual(match.getSnapshot());
+    expect(stepper.match.getEvents()).toEqual(match.getEvents());
+    expect(stepper.match.getTimeline()).toEqual(match.getTimeline());
+    expect(stepper.match.getRevision()).toBe(match.getRevision());
+  });
+
+  it('observes mid-frames live (battle resolved at lance 3)', () => {
+    const match = new Match(makeInit());
+    runScript(match, match.join(P1));
+    const stepper = createReplayStepper(makeInit(), match.getJournal());
+    expect(stepper.step()).toMatchObject({ status: 'applied' });
+    expect(stepper.step()).toMatchObject({ status: 'applied' });
+    expect(stepper.step()).toMatchObject({ status: 'applied' });
+    expect(stepper.lance).toBe(3);
+    expect(stepper.match.getSnapshot().units?.units.find((unit) => unit.id === 'u2')?.hp).toBe(4);
+    expect(stepper.match.recall('c0')?.fresh.map((memory) => memory.kind)).toEqual([
+      'order.executed',
+      'unit.attacked',
+    ]);
+  });
+
+  it('steps empty journals to null at lance zero', () => {
+    const match = new Match(makeInit());
+    const stepper = createReplayStepper(makeInit(), match.getJournal());
+    expect(stepper.lance).toBe(0);
+    expect(stepper.total).toBe(0);
+    expect(stepper.step()).toBeNull();
+    expect(stepper.match.getSnapshot()).toEqual(match.getSnapshot());
   });
 });
