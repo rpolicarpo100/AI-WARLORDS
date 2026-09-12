@@ -141,3 +141,5 @@
 - M073: page client online jogável (default prod); RISK: ataques online ainda drill fixo u1→u2 (ver M074).
 
 - M074: ordens online livres (attack/move); RISK: posição online não visível (ver M075 state).
+
+- M075: loop online fechado (ordens+posição); RISK: mesas sem dono/dono off ficam abertas (ver M076 close).

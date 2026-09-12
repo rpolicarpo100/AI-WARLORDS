@@ -213,7 +213,16 @@ fire('tArena', 'click');
 fire('arenaRun', 'click');
 globalThis.document.getElementById('apiUrl').value = 'http://127.0.0.1:1/';
 fire('tOnline', 'click');
-for (const id of ['netLobby', 'netForge', 'netJoin', 'netNoop', 'netAttack', 'netMove', 'netStop'])
+for (const id of [
+  'netLobby',
+  'netForge',
+  'netJoin',
+  'netNoop',
+  'netAttack',
+  'netMove',
+  'netState',
+  'netStop',
+])
   fire(id, 'click');
 fire('tMute', 'click');
 fire('tMute', 'click');
@@ -409,6 +418,9 @@ if (process.env.API_TEST) {
     fire('netMove', 'click');
     await waitOut('dispatch: applied rev 3', 'move outcome');
     await waitOut('event: unit.moved', 'live move event');
+    fire('netState', 'click');
+    await waitOut('state: prompts p1:7 p2:10', 'prompts line');
+    await waitOut('- u1 p1 warrior hp12 @1,1', 'moved position line');
     fire('netStop', 'click');
     await waitOut('watch stopped', 'stop line');
     const closed = await globalThis.fetch(`${url}/match/${mid}/close`, { method: 'POST' });

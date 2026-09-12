@@ -2252,3 +2252,21 @@ Date.now)` (relógio injetável):
 - DISADVANTAGES: digitar ids.
 - RISKS: baixo — try/catch+guards.
 - CUTS: click-to-target online.
+
+## D-069 — Online state M075 (sem voto: sequência apontada)
+
+- DECISION: botão State → GET /state
+  → netOut (`state: prompts p1:N
+  p2:M` + 1 linha/unidade
+  `- id owner type hp @col,row`);
+  guard = matchId (state não exige
+  sessão); parse defensivo.
+- MOTIVE: M074 era cego (ordens
+  sem ver posição); fechar o loop.
+- ALTERNATIVES: auto-state pós-
+  dispatch (rejeitado: ruído; M076
+  decide); render no board (CUT).
+- ADVANTAGES: prova marcha u1→1,1.
+- DISADVANTAGES: texto, não visual.
+- RISKS: baixo — GET+try/catch.
+- CUTS: board render online.

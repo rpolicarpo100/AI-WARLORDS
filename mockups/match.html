@@ -181,6 +181,7 @@
     <button class="tbtn" id="netNoop" title="spend a prompt doing nothing">⏳ Noop</button>
     <button class="tbtn" id="netAttack" title="netUnit strikes netTarget">⚔ Attack</button>
     <button class="tbtn" id="netMove" title="march netUnit to netTo">➡ Move</button>
+    <button class="tbtn" id="netState" title="snapshot the table position">📡 State</button>
     <button class="tbtn" id="netStop" title="stop watching">⏹ Stop</button>
     <pre id="netOut">Offline, sire.</pre>
   </div>
@@ -10914,6 +10915,20 @@
       NET.watching = false;
     }
   }
+  async function netState() {
+    if (NET.matchId === '') { netLog('forge or pick a table first'); return; }
+    try {
+      const res = await fetch(`${netBase()}/match/${NET.matchId}/state`);
+      const snap = await res.json();
+      if (!res.ok) throw new Error((snap && snap.error) || `http ${res.status}`);
+      const left = (snap.prompts && snap.prompts.remaining) || {};
+      netLog(`state: prompts p1:${left.p1} p2:${left.p2}`);
+      const units = (snap.units && snap.units.units) || [];
+      for (const u of units) {
+        netLog(`- ${u.id} ${u.owner} ${u.type} hp${u.hp} @${u.col},${u.row}`);
+      }
+    } catch (err) { netLog(`net error: ${err.message || err}`); }
+  }
   function netStop() {
     if (NET.abort) { NET.abort.abort(); NET.abort = null; }
     NET.watching = false;
@@ -12101,6 +12116,7 @@
   $('netNoop').addEventListener('click', () => { void netAct('noop'); });
   $('netAttack').addEventListener('click', () => { void netAct('attack'); });
   $('netMove').addEventListener('click', () => { void netAct('move'); });
+  $('netState').addEventListener('click', () => { void netState(); });
   $('netStop').addEventListener('click', netStop);
   const cmdSide = () => { const u = cmdSelUnit(); return u ? u.owner : 'p1'; };
   $('cmdGather').addEventListener('click', () => {
