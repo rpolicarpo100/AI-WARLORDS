@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 52 (M001–M052)  |
-| `PLANNED`  | 113 (M053–M165) |
+| `VERIFIED` | 53 (M001–M053)  |
+| `PLANNED`  | 112 (M054–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -226,6 +226,11 @@ Checkpoints `VERIFIED`:
   budget-free, anti-spam owner-only);
   1700/1700 testes, 100 global.
   Registo em `docs/modules/M052.md`.
+- **M053 @ 2026-09-12** — Memory Attribution
+  - Recall (fan-out votado caller-bound,
+    {fresh,stale}, Match.recall); 1722/1722
+    testes, 100 global.
+    Registo em `docs/modules/M053.md`.
 
 ---
 
@@ -310,7 +315,8 @@ Checkpoints `VERIFIED`:
 | M050      | Counterfactual AI — Ranking             | `VERIFIED` |
 | M051      | Memory — Data                           | `VERIFIED` |
 | M052      | Memory — Record                         | `VERIFIED` |
-| M053–M054 | Memory                                  | `PLANNED`  |
+| M053      | Memory — Attribution + Recall           | `VERIFIED` |
+| M054      | Memory                                  | `PLANNED`  |
 | M055–M058 | Player ↔ Commander                      | `PLANNED`  |
 | M059–M061 | AI Evolution                            | `PLANNED`  |
 | M062–M064 | Replay                                  | `PLANNED`  |

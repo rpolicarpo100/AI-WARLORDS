@@ -26,6 +26,16 @@ export const MEMORABLE_KINDS = [
 /** Closed memorable vocabulary (MEMORABLE_KINDS canonical). */
 export type MemorableKind = (typeof MEMORABLE_KINDS)[number];
 
+/**
+ * M053 — ambient subset: battle and sighting facts name no commander
+ * (attribution is caller-bound fan-out, memory-record.ts). Order
+ * kinds always name their commander (payload.commander).
+ */
+export const AMBIENT_KINDS = ['unit.attacked', 'unit.slain', 'unit.spotted'] as const;
+
+/** Closed ambient vocabulary (AMBIENT_KINDS canonical). */
+export type AmbientKind = (typeof AMBIENT_KINDS)[number];
+
 /** A remembered stream event: where, when, what, about whom. */
 export interface CommanderMemory {
   readonly seq: number;
@@ -45,6 +55,11 @@ const MAX_WORD = 0xffffffff;
 
 export function isMemorableKind(value: unknown): value is MemorableKind {
   return typeof value === 'string' && (MEMORABLE_KINDS as readonly string[]).includes(value);
+}
+
+/** M053: true for the ambient (commander-less) memorable kinds. */
+export function isAmbientKind(value: unknown): value is AmbientKind {
+  return typeof value === 'string' && (AMBIENT_KINDS as readonly string[]).includes(value);
 }
 
 function isStreamWord(value: unknown): value is number {

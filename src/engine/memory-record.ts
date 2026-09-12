@@ -11,17 +11,18 @@
  * commander itself — details live at the referenced seq (the M051
  * self-validating pointer). Zero survivors reject ('record:
  * nothing memorable.' — rejected are free, D-022: the budget-free
- * system transition cannot bloat revisions). Battle and sighting
- * events carry no commander — SKIPPED whole (attribution deferred
- * to M053, vocabulary already shipped). LAYER L2 (imports
+ * system transition cannot bloat revisions). M053 attributes the
+ * commander-less battle/sighting facts caller-bound to the
+ * caller's ACTIVE commanders (subject-is-unit); enemy dispatches
+ * never write your logs. LAYER L2 (imports
  * authority/commanders/memories L0 + world-state L1 type-only, all
  * downward; the wire rule mirrors overrideParamsRule — validation
  * sits at L2 too, L2↛L2).
  */
 
 import type { PlayerId, TransitionHandler } from './authority.js';
-import type { CommanderMemory } from './commanders.js';
-import { isCommanderMemory, MAX_MEMORIES_PER_COMMANDER } from './memories.js';
+import type { CommanderMemory, CommanderRecord } from './commanders.js';
+import { isAmbientKind, isCommanderMemory, MAX_MEMORIES_PER_COMMANDER } from './memories.js';
 import type { WorldState } from './world-state.js';
 
 export const RECORD_TRANSITION = 'memory.record';
@@ -57,17 +58,18 @@ export function memoryRecordHandlers(): Map<string, TransitionHandler<WorldState
 function createRecordHandler(): TransitionHandler<WorldState> {
   return (ctx) => {
     const data = ctx.state.commanders;
+    const records = data?.commanders ?? [];
     const wanted = new Map<string, CommanderMemory[]>();
     for (const event of readRecordEvents(ctx.params)) {
-      const memory = toMemory(event);
-      if (memory === undefined) {
-        continue;
-      }
-      const known = wanted.get(memory.subject);
-      if (known === undefined) {
-        wanted.set(memory.subject, [memory]);
-      } else {
-        known.push(memory);
+      // M053: named events resolve to one commander; ambient events
+      // fan out to the caller's active commanders (or nowhere).
+      for (const attributed of attribute(event, ctx.caller, records)) {
+        const known = wanted.get(attributed.to);
+        if (known === undefined) {
+          wanted.set(attributed.to, [attributed.memory]);
+        } else {
+          known.push(attributed.memory);
+        }
       }
     }
     if (wanted.size === 0 || data === undefined) {
@@ -115,29 +117,73 @@ function readRecordEvents(params: unknown): readonly unknown[] {
   return Array.isArray(events) ? events : [];
 }
 
+/** One memory resolved to the commander that keeps it. */
+interface AttributedMemory {
+  readonly to: string;
+  readonly memory: CommanderMemory;
+}
+
 /**
- * One stamped event → one memory, or undefined (fail-closed).
- * GameEvents carry the kind in `type`; only payloads naming a
- * commander attribute (battle/sighting skip whole — M053 owns).
+ * One stamped event → attributed memories, or none (fail-closed).
+ * GameEvents carry the kind in `type`. Named events (payload
+ * commander) resolve to that commander, subject-is-self (M052).
+ * Ambient battle/sighting facts fan out to the caller's ACTIVE
+ * commanders, subject-is-unit (M053) — caller-bound, so enemy
+ * dispatches never write your logs (the budget-free transition
+ * cannot become a memory-wipe).
  */
-function toMemory(event: unknown): CommanderMemory | undefined {
+function attribute(
+  event: unknown,
+  caller: PlayerId,
+  records: readonly CommanderRecord[],
+): readonly AttributedMemory[] {
   if (typeof event !== 'object' || event === null || Array.isArray(event)) {
-    return undefined;
+    return [];
   }
   const fields = event as Record<string, unknown>;
   const payload = fields['payload'];
   if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) {
-    return undefined;
+    return [];
   }
-  const commander = (payload as Record<string, unknown>)['commander'];
-  if (typeof commander !== 'string') {
-    return undefined;
+  const named = (payload as Record<string, unknown>)['commander'];
+  if (typeof named === 'string') {
+    const candidate = {
+      seq: fields['seq'],
+      revision: fields['revision'],
+      kind: fields['type'],
+      subject: named,
+    };
+    return isCommanderMemory(candidate) ? [{ to: named, memory: candidate }] : [];
+  }
+  return ambient(fields, payload as Record<string, unknown>, caller, records);
+}
+
+function ambient(
+  fields: Record<string, unknown>,
+  payload: Record<string, unknown>,
+  caller: PlayerId,
+  records: readonly CommanderRecord[],
+): readonly AttributedMemory[] {
+  if (!isAmbientKind(fields['type'])) {
+    return [];
+  }
+  if (payload['player'] !== caller) {
+    return [];
+  }
+  const unit = payload['unit'];
+  if (typeof unit !== 'string') {
+    return [];
   }
   const candidate = {
     seq: fields['seq'],
     revision: fields['revision'],
     kind: fields['type'],
-    subject: commander,
+    subject: unit,
   };
-  return isCommanderMemory(candidate) ? candidate : undefined;
+  if (!isCommanderMemory(candidate)) {
+    return [];
+  }
+  return records
+    .filter((record) => record.active && record.owner === caller)
+    .map((record) => ({ to: record.id, memory: candidate }));
 }

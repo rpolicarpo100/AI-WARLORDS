@@ -241,7 +241,7 @@ describe('auto-record (live bookkeeping)', () => {
     ]);
   });
 
-  it('records executed heads but never their battle facts (attribute-named)', () => {
+  it('records executed heads AND their battle facts (M053 ambient fan-out)', () => {
     const match = campaign();
     const session = match.join(P1);
     expect(
@@ -254,15 +254,15 @@ describe('auto-record (live bookkeeping)', () => {
     expect(dispatch(match, session, 'r2', EXECUTE_TRANSITION, { id: 'c0' })).toMatchObject({
       status: 'applied',
     });
-    expect(match.getEvents().some((event) => event.type === 'unit.attacked')).toBe(true);
+    const executed = match.getEvents().find((event) => event.type === 'order.executed');
+    const attacked = match.getEvents().find((event) => event.type === 'unit.attacked');
+    expect(attacked).toMatchObject({ revision: 2 });
     expect(memoriesOf(match, 'c0')).toEqual([
-      {
-        seq: match.getEvents().find((event) => event.type === 'order.executed')?.seq,
-        revision: 2,
-        kind: 'order.executed',
-        subject: 'c0',
-      },
+      { seq: executed?.seq, revision: 2, kind: 'order.executed', subject: 'c0' },
+      { seq: attacked?.seq, revision: 2, kind: 'unit.attacked', subject: 'u1' },
     ]);
+    // The enemy commander keeps its own counsel (caller-bound).
+    expect(memoriesOf(match, 'c1')).toBeUndefined();
   });
 });
 
@@ -334,5 +334,84 @@ describe('record threat model (live)', () => {
     expect(
       match.getSnapshot().commanders?.commanders.find((record) => record.id === 'c0')?.orders,
     ).toEqual([]);
+  });
+});
+
+describe('recall (live validation)', () => {
+  function executedCampaign(): Match {
+    const match = campaign();
+    const session = match.join(P1);
+    const issue = dispatch(match, session, 'r1', ISSUE_TRANSITION, {
+      id: 'c0',
+      kind: 'unit.attack',
+      params: { id: 'u1', target: 'u2' },
+    });
+    if (issue.status !== 'applied') {
+      throw new Error('TEST BUG: issue must apply');
+    }
+    const execute = dispatch(match, session, 'r2', EXECUTE_TRANSITION, { id: 'c0' });
+    if (execute.status !== 'applied') {
+      throw new Error('TEST BUG: execute must apply');
+    }
+    return match;
+  }
+
+  it('recalls fresh memories validated against the stream', () => {
+    const match = executedCampaign();
+    const recollection = match.recall('c0');
+    expect(recollection?.stale).toEqual([]);
+    expect(recollection?.fresh).toEqual([
+      {
+        seq: match.getEvents().find((event) => event.type === 'order.executed')?.seq,
+        revision: 2,
+        kind: 'order.executed',
+        subject: 'c0',
+      },
+      {
+        seq: match.getEvents().find((event) => event.type === 'unit.attacked')?.seq,
+        revision: 2,
+        kind: 'unit.attacked',
+        subject: 'u1',
+      },
+    ]);
+  });
+
+  it('fails soft on unknown commanders', () => {
+    expect(executedCampaign().recall('c9')).toBeUndefined();
+  });
+
+  it('narrows recall by subject (about X)', () => {
+    const match = executedCampaign();
+    expect(match.recall('c0', 'u1')?.fresh).toEqual([
+      {
+        seq: match.getEvents().find((event) => event.type === 'unit.attacked')?.seq,
+        revision: 2,
+        kind: 'unit.attacked',
+        subject: 'u1',
+      },
+    ]);
+    expect(match.recall('c0', 'nobody')).toEqual({ fresh: [], stale: [] });
+  });
+
+  it('flags self-forged memories as stale (M052 forgery meets truth)', () => {
+    const match = campaign();
+    const session = match.join(P1);
+    expect(
+      dispatch(match, session, 'r1', RECORD_TRANSITION, {
+        events: [
+          {
+            seq: 999,
+            revision: 9,
+            type: 'order.executed',
+            priority: 'normal',
+            payload: { player: 'p1', commander: 'c0' },
+          },
+        ],
+      }),
+    ).toMatchObject({ status: 'applied' });
+    expect(match.recall('c0')).toEqual({
+      fresh: [],
+      stale: [{ seq: 999, revision: 9, kind: 'order.executed', subject: 'c0' }],
+    });
   });
 });

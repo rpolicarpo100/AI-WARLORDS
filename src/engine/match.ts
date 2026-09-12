@@ -98,6 +98,7 @@ import {
   overrideParamsRule,
 } from './order-override.js';
 import { isMemorableKind } from './memories.js';
+import { recallMemories, type Recollection } from './memory-recall.js';
 import { memoryRecordHandlers, RECORD_TRANSITION, recordParamsRule } from './memory-record.js';
 import type { TerrainId } from './map.js';
 import {
@@ -748,6 +749,26 @@ export class Match {
       snapshot,
       candidates,
       this.counterfactualDeps(),
+    );
+  }
+
+  /**
+   * M053 — live recall: what one commander remembers, validated
+   * against the stream (read-only; undefined when the commander is
+   * missing). Optional subject narrows to one entity ("about X").
+   * Fresh memories are safe to consume; stale ones flag forgery.
+   */
+  recall(commanderId: string, subject?: string): Recollection | undefined {
+    const snapshot = this.kernel.getSnapshot();
+    const record = snapshot.commanders?.commanders.find((entry) => entry.id === commanderId);
+    const bySeq = new Map(this.events.map((event) => [event.seq, event] as const));
+    return recallMemories(
+      record,
+      (seq) => {
+        const found = bySeq.get(seq);
+        return found === undefined ? undefined : { revision: found.revision, kind: found.type };
+      },
+      subject,
     );
   }
 

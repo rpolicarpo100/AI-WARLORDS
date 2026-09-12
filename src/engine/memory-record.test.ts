@@ -120,7 +120,7 @@ describe('record handler (per-event fail-closed)', () => {
     expect(outcome).toEqual({ applied: false, reason: 'record: nothing memorable.' });
   });
 
-  it('skips battle and sighting facts (no commander names them — M053 owns)', () => {
+  it('skips unit-less battle and sighting facts (ambient needs a subject)', () => {
     for (const type of ['unit.attacked', 'unit.slain', 'unit.spotted']) {
       const outcome = runRecord(staffedState([holder()]), P1, {
         events: [{ seq: 5, revision: 2, type, priority: 'normal', payload: { player: 'p1' } }],
@@ -243,5 +243,102 @@ describe('record bounds (exported)', () => {
   it('locks the transition name and the envelope ceiling', () => {
     expect(RECORD_TRANSITION).toBe('memory.record');
     expect(MAX_RECORD_EVENTS).toBe(32);
+  });
+});
+
+describe('ambient attribution (M053 caller-bound fan-out)', () => {
+  function battleEvent(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+    return {
+      seq: 7,
+      revision: 3,
+      type: 'unit.attacked',
+      priority: 'normal',
+      payload: { player: 'p1', unit: 'u1', target: 'u2', damage: 4 },
+      ...overrides,
+    };
+  }
+
+  function company(): CommanderRecord[] {
+    return [
+      holder(),
+      { id: 'c0b', owner: 'p1', active: true },
+      { id: 'd0', owner: 'p1', active: false },
+      { id: 'e0', owner: 'p2', active: true },
+    ];
+  }
+
+  function logOf(state: WorldState, id: string): unknown {
+    return state.commanders?.commanders.find((record) => record.id === id)?.memories;
+  }
+
+  it('fans battle facts out to every active commander of the caller', () => {
+    const outcome = runRecord(staffedState(company()), P1, { events: [battleEvent()] });
+    expect(outcome.applied === true ? outcome.summary : undefined).toBe('recorded 2 memories');
+    if (outcome.applied !== true) {
+      throw new Error('TEST BUG: ambient fan-out must apply');
+    }
+    const memory = { seq: 7, revision: 3, kind: 'unit.attacked', subject: 'u1' };
+    expect(logOf(outcome.state, 'c0')).toEqual([memory]);
+    expect(logOf(outcome.state, 'c0b')).toEqual([memory]);
+    expect(logOf(outcome.state, 'd0')).toBeUndefined();
+    expect(logOf(outcome.state, 'e0')).toBeUndefined();
+  });
+
+  it('records slain and spotted with subject-is-unit', () => {
+    const slain = battleEvent({ seq: 8, type: 'unit.slain' });
+    const spotted = {
+      seq: 9,
+      revision: 3,
+      type: 'unit.spotted',
+      priority: 'normal',
+      payload: { player: 'p1', unit: 'u2', owner: 'p2', col: 1, row: 1 },
+    };
+    const outcome = runRecord(staffedState([holder()]), P1, { events: [slain, spotted] });
+    expect(outcome.applied === true ? outcome.summary : undefined).toBe('recorded 2 memories');
+    if (outcome.applied !== true) {
+      throw new Error('TEST BUG: slain+spotted must apply');
+    }
+    expect(logOf(outcome.state, 'c0')).toEqual([
+      { seq: 8, revision: 3, kind: 'unit.slain', subject: 'u1' },
+      { seq: 9, revision: 3, kind: 'unit.spotted', subject: 'u2' },
+    ]);
+  });
+
+  it('rejects cross-player ambient (caller-bound: enemy logs untouchable)', () => {
+    const forged = battleEvent({ payload: { player: 'p2', unit: 'u9', target: 'u0', damage: 9 } });
+    const outcome = runRecord(staffedState(company()), P1, { events: [forged] });
+    expect(outcome).toEqual({ applied: false, reason: 'record: nothing memorable.' });
+  });
+
+  it('rejects ambient without a unit or with bad stamps', () => {
+    for (const event of [
+      battleEvent({ payload: { player: 'p1', target: 'u2' } }),
+      battleEvent({ payload: { player: 'p1', unit: 7, target: 'u2' } }),
+      battleEvent({ seq: -1 }),
+      battleEvent({ type: 'unit.moved' }),
+    ]) {
+      const outcome = runRecord(staffedState([holder()]), P1, { events: [event] });
+      expect(outcome).toEqual({ applied: false, reason: 'record: nothing memorable.' });
+    }
+  });
+
+  it('rejects commander-less order facts (named kinds need names)', () => {
+    const orphan = orderEvent({ payload: { player: 'p1', kind: 'unit.move', depth: 0 } });
+    const outcome = runRecord(staffedState([holder()]), P1, { events: [orphan] });
+    expect(outcome).toEqual({ applied: false, reason: 'record: nothing memorable.' });
+  });
+
+  it('applies mixed named + ambient batches', () => {
+    const outcome = runRecord(staffedState([holder()]), P1, {
+      events: [orderEvent(), battleEvent()],
+    });
+    expect(outcome.applied === true ? outcome.summary : undefined).toBe('recorded 2 memories');
+    if (outcome.applied !== true) {
+      throw new Error('TEST BUG: mixed batch must apply');
+    }
+    expect(logOf(outcome.state, 'c0')).toEqual([
+      { seq: 5, revision: 2, kind: 'order.executed', subject: 'c0' },
+      { seq: 7, revision: 3, kind: 'unit.attacked', subject: 'u1' },
+    ]);
   });
 });

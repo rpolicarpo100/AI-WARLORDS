@@ -7,6 +7,8 @@
  */
 import { describe, expect, it } from 'vitest';
 import {
+  AMBIENT_KINDS,
+  isAmbientKind,
   isCommanderMemory,
   isMemorableKind,
   isMemoryLog,
@@ -128,5 +130,21 @@ describe('memory bounds (exported)', () => {
   it('locks the log ceiling at 8 and the subject ceiling at 64', () => {
     expect(MAX_MEMORIES_PER_COMMANDER).toBe(8);
     expect(MAX_MEMORY_SUBJECT_CHARS).toBe(64);
+  });
+});
+
+describe('AMBIENT_KINDS (M053 commander-less subset)', () => {
+  it('locks the three ambient kinds', () => {
+    expect([...AMBIENT_KINDS]).toEqual(['unit.attacked', 'unit.slain', 'unit.spotted']);
+  });
+
+  it.each([...AMBIENT_KINDS])('accepts ambient kind %s', (kind) => {
+    expect(isAmbientKind(kind)).toBe(true);
+  });
+
+  it('rejects named order kinds and non-strings', () => {
+    for (const bad of ['order.executed', 'unit.moved', '', 7, null, undefined]) {
+      expect(isAmbientKind(bad)).toBe(false);
+    }
   });
 });

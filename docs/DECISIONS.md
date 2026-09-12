@@ -1556,3 +1556,40 @@ state, hypothetical, deps)` — target? (fail-
 - RISKS: baixo — sizeRule margem 1MB.
 - CUTS: battle/sighting attribution (M053);
   recall + staleness (M053+).
+
+## D-047 — Memory attribution+recall M053 (votos attribute-recall + sides-caller)
+
+- DECISION: ambient NO handler (named M052
+  intacto): attacked/slain/spotted com
+  payload.player===caller (CALLER-BOUND) +
+  payload.unit (subject=about) → fan-out
+  p/ commanders ATIVOS do player (named:
+  qualquer active — aconteceu-LHES; ambient:
+  só ativos — só ativos observam). Recall
+  NOVO `memory-recall.ts` (L2):
+  recallMemories(record, lookup, subject?)
+  → {fresh, stale} (seq ausente ou
+  revision/kind mismatch = stale;
+  consumidores tomam .fresh) + Match.recall
+  (lookup sobre o stream, fail-soft).
+  Subject-about: orders self, battle/unit.
+- MOTIVE: votos + attacker==caller sempre +
+  cross-write seria memory-wipe gratuito
+  (budget-free!) + {fresh,stale} é fechado
+  E auditável.
+- ALTERNATIVES: ambient sem caller-bind
+  (rejeitado: wipe inimigo free);
+  entrypoint system no kernel (rejeitado:
+  invasivo no load-bearing); recall omite
+  stale (rejeitado: esconde forgery);
+  recall-time stream-scan s/ writes
+  (rejeitado: viola o voto).
+- ADVANTAGES: batalhas completas;
+  sightings próprios completos; forgery
+  flaggada no recall.
+- DISADVANTAGES: sightings de moves
+  inimigos perdidos (CUT); fan-out
+  ruidoso (todos os ativos).
+- RISKS: baixo — handler aditivo.
+- CUTS: cross-dispatch sightings (M054+);
+  recall consumers (M054); pesos/decay.
