@@ -2561,3 +2561,26 @@ rev R (seed S)` últimas 6,
 - RISKS: baixo.
 - CUTS: byte-cap (M-futuro
   se OOM real).
+
+## D-081 — Supply chain M086 (sem voto: sequência apontada)
+
+- DECISION: engines upper bound
+  (<21, docs exigem); .npmrc
+  engine-strict (npm ci aplica);
+  .nvmrc fica "20" (float
+  patches, major pinado);
+  `npm run audit` (moderate+);
+  majors v5/v7 diferidos (RISK);
+  secrets grep limpo; sem testes
+  (config aplicada pelo próprio
+  npm — teste seria teatro).
+- MOTIVE: RISK M085; drift
+  runtime é risco real.
+- ALTERNATIVES: NODE_VERSION
+  env (rejeitado: .nvmrc chega);
+  .node-version dup (rejeitado);
+  upgrade majors (RISK futuro).
+- ADVANTAGES: builds reprodutíveis.
+- DISADVANTAGES: nenhum.
+- RISKS: baixo.
+- CUTS: lockfile lint.

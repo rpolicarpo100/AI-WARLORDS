@@ -163,3 +163,5 @@
 - M084: audit fechada (4 pins, 0 src); RISK: SSE sem backpressure cap (ver M085).
 
 - M085: watchers com cap 32 (503); RISK: deps sem audit (ver M086).
+
+- M086: supply chain pinada (0 vulns, node 20); RISK: erros podem vazar detalhe (ver M087).

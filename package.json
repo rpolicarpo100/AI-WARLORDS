@@ -5,7 +5,7 @@
   "type": "module",
   "private": true,
   "engines": {
-    "node": ">=20.10.0"
+    "node": ">=20.10.0 <21.0.0"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -14,6 +14,7 @@
     "test": "vitest run --coverage",
     "test:watch": "vitest",
     "lint": "eslint . --max-warnings=0",
+    "audit": "npm audit --audit-level=moderate",
     "format": "prettier --check .",
     "format:write": "prettier --write .",
     "typecheck": "tsc --noEmit -p tsconfig.json",
