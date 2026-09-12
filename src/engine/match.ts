@@ -631,12 +631,21 @@ export class Match {
         this.recordMemories(session, emitted);
         // M059: assisted commanders file stance proposals from new
         // lessons (after memories — recall reads this lance's record).
+        // M061: autonomous heads pop FIRST (own-action lessons
+        // record inside — counsel sees this lance's doing).
+        this.autoexecuteHeads(session);
+        // M059: assisted commanders file stance proposals from new
+        // lessons (after memories + executions — recall reads the
+        // whole chain's record).
         this.autofileProposals(session, outcome.revision);
         // M060: autonomous commanders verdict at once (after filing
         // — file and approve land the same lance).
         this.autoapproveProposals(session);
+        // Victory reads the post-bookkeeping state (M061: autonomous
+        // spends can exhaust the ledger — the deciding lance owns
+        // the verdict, stamped with its revision).
         const verdict = evaluateVictory(this.conditions, {
-          state: after,
+          state: this.kernel.getSnapshot(),
           revision: outcome.revision,
         });
         if (verdict.status === 'finished') {
@@ -721,11 +730,13 @@ export class Match {
       }
       // Defined records always recollect (cast documents the seam).
       const recollected = recallMemories(record, lookup) as Recollection;
+      // This lance's chain: the outer revision or a later inner one
+      // (M061: own-action lessons stamp inner revisions).
       const lesson = recollected.fresh.some(
         (memory) =>
           (STANCE_BATTLE_KINDS.includes(memory.kind) ||
             STANCE_FAILURE_KINDS.includes(memory.kind)) &&
-          memory.revision === outerRevision,
+          memory.revision >= outerRevision,
       );
       if (!lesson) {
         continue;
@@ -805,6 +816,65 @@ export class Match {
           this.events.length + 1,
         ),
       );
+    }
+  }
+
+  /**
+   * M061 — bookkeeping: the acting holder's autonomous commanders pop
+   * one queue head each (paced, one head per lance — no recursion).
+   * Runs FIRST (act, then think — own-action lessons record here so
+   * counsel sees this lance's doing). Owner-bounded (your lance,
+   * your commanders act — prompt spends stay honest); assisted/
+   * manual stay manual (THE ladder, complete). Reuses the PLAYER
+   * execute verb (no new transition): exhausted ledgers and verb
+   * rejects fail closed and retry silently next lance. The
+   * applied-gate is load-bearing (the executed producer throws on
+   * no-change); the FULL producer list rides (execute moves
+   * map/units — riders matter here, unlike M059/M060).
+   */
+  private autoexecuteHeads(session: SessionHandle): void {
+    for (const record of this.kernel.getSnapshot().commanders?.commanders ?? []) {
+      if (!record.active) {
+        continue;
+      }
+      if (record.owner !== session.playerId) {
+        continue;
+      }
+      if ((record.directives ?? {}).autonomy !== 'autonomous') {
+        continue;
+      }
+      if ((record.orders ?? []).length === 0) {
+        continue;
+      }
+      const payload = { id: record.id };
+      const before = this.kernel.getSnapshot();
+      const outcome = this.kernel.dispatch(
+        session,
+        markUntrusted({
+          requestId:
+            `order.execute auto ${record.id} rev ${this.kernel.getRevision()}` as RequestId,
+          playerId: session.playerId,
+          type: EXECUTE_TRANSITION,
+          payload,
+        }),
+      );
+      if (outcome.status !== 'applied') {
+        continue;
+      }
+      const after = this.kernel.getSnapshot();
+      // Total lookup: EXECUTE registers producers at construction
+      // (same-keys proof as the outer dispatch path).
+      const producers = this.producers.get(EXECUTE_TRANSITION) as readonly EventProducer[];
+      const inner = runProducers(
+        { type: EXECUTE_TRANSITION, caller: session.playerId, params: payload, before, after },
+        producers,
+        this.kernel.getRevision(),
+        this.events.length + 1,
+      );
+      this.events.push(...inner);
+      // Own-action lessons persist (inner executes bypass the outer
+      // record — without this the AI never learns its own doing).
+      this.recordMemories(session, inner);
     }
   }
 

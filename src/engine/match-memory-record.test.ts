@@ -13,7 +13,7 @@ import {
   type SessionHandle,
   type Untrusted,
 } from './authority.js';
-import type { CommanderRecord, CommandersData } from './commanders.js';
+import type { CommanderOrder, CommanderRecord, CommandersData } from './commanders.js';
 import { DEACTIVATE_TRANSITION } from './commander-state.js';
 import type { EventProducer } from './events.js';
 import { isMapData, neighborsOf, type MapCell, type MapData } from './map.js';
@@ -70,6 +70,8 @@ interface CampaignOptions {
   readonly c0Dna?: CommanderRecord['dna'];
   readonly c0Directives?: CommanderRecord['directives'];
   readonly c0Proposal?: CommanderRecord['proposal'];
+  readonly c1Directives?: CommanderRecord['directives'];
+  readonly c1Orders?: CommanderRecord['orders'];
   readonly promptsPerPlayer?: number;
   readonly extraProducers?: ReadonlyMap<string, readonly EventProducer[]>;
   readonly extraConditions?: readonly VictoryCondition[];
@@ -97,7 +99,13 @@ function campaign(options: CampaignOptions = {}): Match {
         ...(options.c0Directives === undefined ? {} : { directives: options.c0Directives }),
         ...(options.c0Proposal === undefined ? {} : { proposal: options.c0Proposal }),
       },
-      { id: 'c1', owner: 'p2', active: true },
+      {
+        id: 'c1',
+        owner: 'p2',
+        active: true,
+        ...(options.c1Directives === undefined ? {} : { directives: options.c1Directives }),
+        ...(options.c1Orders === undefined ? {} : { orders: options.c1Orders }),
+      },
     ],
   };
   return new Match({
@@ -513,10 +521,23 @@ describe('autofileProposals (M059 assisted proposer, live bookkeeping)', () => {
   it('files AND self-approves the same lance for autonomous commanders', () => {
     const match = campaign({ c0Dna: EDGY_DNA, c0Directives: { autonomy: 'autonomous' } });
     const session = match.join(P1);
-    attack(match, session, 'r1');
+    // M061: the issue auto-fires the head (act), the battle lesson
+    // files counsel, the verdict lands — all one lance.
+    expect(
+      dispatch(match, session, 'r1', ISSUE_TRANSITION, {
+        id: 'c0',
+        kind: 'unit.attack',
+        params: { id: 'u1', target: 'u2' },
+      }),
+    ).toMatchObject({ status: 'applied' });
     const record = match.getSnapshot().commanders?.commanders.find((entry) => entry.id === 'c0');
     expect(record?.directives).toEqual({ autonomy: 'autonomous', stance: 'aggressive' });
     expect(record !== undefined && 'proposal' in record).toBe(false);
+    expect(match.getEvents().some((event) => event.type === 'unit.attacked')).toBe(true);
+    expect(match.recall('c0')?.fresh.map((memory) => memory.kind)).toEqual([
+      'order.executed',
+      'unit.attacked',
+    ]);
     expect(match.getEvents().find((event) => event.type === 'proposal.proposed')).toMatchObject({
       payload: { player: 'p1', commander: 'c0', kind: 'stance' },
     });
@@ -524,6 +545,7 @@ describe('autofileProposals (M059 assisted proposer, live bookkeeping)', () => {
       priority: 'normal',
       payload: { player: 'p1', commander: 'c0', kind: 'stance' },
     });
+    expect(promptsOf(match, 'p1')).toBe(8);
   });
 
   it('stays silent for manual and directive-less commanders', () => {
@@ -673,18 +695,24 @@ describe('autoapproveProposals (M060 self-verdict, live bookkeeping)', () => {
     expect(match.getEvents().some((event) => event.type === 'proposal.approved')).toBe(false);
   });
 
-  it('stays silent for manual, directive-less and empty autonomous slots', () => {
-    for (const c0Directives of [
-      { autonomy: 'manual' },
-      undefined,
-      { autonomy: 'autonomous' },
-    ] as const) {
+  it('stays silent for manual and directive-less commanders', () => {
+    for (const c0Directives of [{ autonomy: 'manual' }, undefined] as const) {
       const match = campaign({ c0Directives });
       const session = match.join(P1);
       attack(match, session, 'r1');
       expect(recordOf(match, 'c0')?.proposal).toBeUndefined();
       expect(match.getEvents().some((event) => event.type === 'proposal.approved')).toBe(false);
     }
+  });
+
+  it('stays silent for empty autonomous slots', () => {
+    const match = campaign({ c0Directives: { autonomy: 'autonomous' } });
+    const session = match.join(P1);
+    expect(
+      dispatch(match, session, 'r1', MOVE_TRANSITION, { id: 'u0', col: 0, row: 1 }),
+    ).toMatchObject({ status: 'applied' });
+    expect(recordOf(match, 'c0')?.proposal).toBeUndefined();
+    expect(match.getEvents().some((event) => event.type === 'proposal.approved')).toBe(false);
   });
 
   it('skips inactive autonomous commanders with pending proposals', () => {
@@ -743,5 +771,153 @@ describe('autoapproveProposals (M060 self-verdict, live bookkeeping)', () => {
     expect(match.getEvents().find((event) => event.type === 'proposal.approved')).toMatchObject({
       payload: { player: 'p1', commander: 'c0', kind: 'order' },
     });
+  });
+});
+
+describe('autoexecuteHeads (M061 autonomous action, live bookkeeping)', () => {
+  function recordOf(match: Match, id: string): CommanderRecord | undefined {
+    return match.getSnapshot().commanders?.commanders.find((record) => record.id === id);
+  }
+
+  function unitAt(match: Match, id: string): { readonly col: number; readonly row: number } {
+    const unit = match.getSnapshot().units?.units.find((entry) => entry.id === id);
+    if (unit === undefined) {
+      throw new Error('TEST BUG: unit missing');
+    }
+    return { col: unit.col, row: unit.row };
+  }
+
+  const HEAD_ONE: CommanderOrder = { kind: 'unit.move', params: { id: 'u0', col: 0, row: 1 } };
+  const HEAD_TWO: CommanderOrder = { kind: 'unit.move', params: { id: 'u0', col: 0, row: 0 } };
+
+  it('autonomous acts and verdicts the same lance, one head per lance', () => {
+    const match = campaign({
+      c0Directives: { autonomy: 'autonomous' },
+      p1Orders: [HEAD_ONE, HEAD_TWO],
+    });
+    const session = match.join(P1);
+    expect(
+      dispatch(match, session, 'r1', PROPOSE_TRANSITION, {
+        id: 'c0',
+        proposal: { kind: 'stance', stance: 'aggressive' },
+      }),
+    ).toMatchObject({ status: 'applied' });
+    expect(recordOf(match, 'c0')?.directives).toEqual({
+      autonomy: 'autonomous',
+      stance: 'aggressive',
+    });
+    expect(recordOf(match, 'c0')?.orders).toHaveLength(1);
+    expect(unitAt(match, 'u0')).toEqual({ col: 0, row: 1 });
+    expect(match.getEvents().find((event) => event.type === 'order.executed')).toMatchObject({
+      payload: { player: 'p1', commander: 'c0', kind: 'unit.move', depth: 1 },
+    });
+    expect(match.recall('c0')?.fresh.map((memory) => memory.kind)).toEqual(['order.executed']);
+    expect(promptsOf(match, 'p1')).toBe(8);
+    expect(
+      dispatch(match, session, 'r2', PROPOSE_TRANSITION, {
+        id: 'c0',
+        proposal: { kind: 'stance', stance: 'defensive' },
+      }),
+    ).toMatchObject({ status: 'applied' });
+    expect(recordOf(match, 'c0')?.orders).toHaveLength(0);
+    expect(unitAt(match, 'u0')).toEqual({ col: 0, row: 0 });
+  });
+
+  it('leaves assisted and manual queues to the holder', () => {
+    for (const c0Directives of [{ autonomy: 'assisted' }, { autonomy: 'manual' }] as const) {
+      const match = campaign({ c0Directives, p1Orders: [HEAD_ONE] });
+      const session = match.join(P1);
+      expect(
+        dispatch(match, session, 'r1', MOVE_TRANSITION, { id: 'u0', col: 0, row: 1 }),
+      ).toMatchObject({ status: 'applied' });
+      expect(recordOf(match, 'c0')?.orders).toHaveLength(1);
+      expect(match.getEvents().some((event) => event.type === 'order.executed')).toBe(false);
+    }
+  });
+
+  it('never touches enemy autonomous queues (valid heads kept)', () => {
+    const match = campaign({
+      c1Directives: { autonomy: 'autonomous' },
+      c1Orders: [{ kind: 'unit.attack', params: { id: 'u2', target: 'u1' } }],
+    });
+    const session = match.join(P1);
+    expect(
+      dispatch(match, session, 'r1', MOVE_TRANSITION, { id: 'u0', col: 0, row: 1 }),
+    ).toMatchObject({ status: 'applied' });
+    expect(recordOf(match, 'c1')?.orders).toHaveLength(1);
+    expect(match.getSnapshot().units?.units.find((unit) => unit.id === 'u1')?.hp).toBe(12);
+  });
+
+  it('skips inactive autonomous commanders', () => {
+    const match = campaign({ c0Directives: { autonomy: 'autonomous' }, p1Orders: [HEAD_ONE] });
+    const session = match.join(P1);
+    expect(dispatch(match, session, 'r1', DEACTIVATE_TRANSITION, { id: 'c0' })).toMatchObject({
+      status: 'applied',
+    });
+    expect(
+      dispatch(match, session, 'r2', MOVE_TRANSITION, { id: 'u0', col: 0, row: 1 }),
+    ).toMatchObject({ status: 'applied' });
+    expect(recordOf(match, 'c0')?.orders).toHaveLength(1);
+  });
+
+  it('tolerates exhausted ledgers (head kept, silent retry)', () => {
+    const match = campaign({
+      c0Directives: { autonomy: 'autonomous' },
+      p1Orders: [HEAD_ONE],
+      promptsPerPlayer: 1,
+    });
+    const session = match.join(P1);
+    expect(
+      dispatch(match, session, 'r1', MOVE_TRANSITION, { id: 'u0', col: 0, row: 1 }),
+    ).toMatchObject({ status: 'applied' });
+    expect(recordOf(match, 'c0')?.orders).toHaveLength(1);
+    expect(promptsOf(match, 'p1')).toBe(0);
+  });
+
+  it('tolerates bad heads (verb rejects, queue wedged honestly)', () => {
+    const match = campaign({
+      c0Directives: { autonomy: 'autonomous' },
+      p1Orders: [{ kind: 'unit.move' }],
+    });
+    const session = match.join(P1);
+    expect(
+      dispatch(match, session, 'r1', MOVE_TRANSITION, { id: 'u0', col: 0, row: 1 }),
+    ).toMatchObject({ status: 'applied' });
+    expect(recordOf(match, 'c0')?.orders).toHaveLength(1);
+    expect(match.getEvents().some((event) => event.type === 'order.executed')).toBe(false);
+  });
+
+  it('acts, learns and counsels itself in one lance (the autonomous loop)', () => {
+    const edgy = {
+      aggression: 60,
+      defense: 50,
+      economy: 50,
+      exploration: 50,
+      risk: 50,
+      expansion: 50,
+      diplomacy: 50,
+      patience: 50,
+      greed: 50,
+      adaptability: 50,
+    };
+    const match = campaign({
+      c0Dna: edgy,
+      c0Directives: { autonomy: 'autonomous' },
+      p1Orders: [{ kind: 'unit.attack', params: { id: 'u1', target: 'u2' } }],
+    });
+    const session = match.join(P1);
+    expect(
+      dispatch(match, session, 'r1', MOVE_TRANSITION, { id: 'u0', col: 0, row: 1 }),
+    ).toMatchObject({ status: 'applied' });
+    expect(match.getSnapshot().units?.units.find((unit) => unit.id === 'u2')?.hp).toBe(4);
+    expect(match.recall('c0')?.fresh.map((memory) => memory.kind)).toEqual([
+      'order.executed',
+      'unit.attacked',
+    ]);
+    const record = recordOf(match, 'c0');
+    expect(record?.directives).toEqual({ autonomy: 'autonomous', stance: 'aggressive' });
+    expect(record !== undefined && 'proposal' in record).toBe(false);
+    expect(match.getEvents().some((event) => event.type === 'proposal.proposed')).toBe(true);
+    expect(match.getEvents().some((event) => event.type === 'proposal.approved')).toBe(true);
   });
 });

@@ -1848,3 +1848,38 @@ recollection)` em stance.ts (MESMO
 - DISADVANTAGES: nenhum novo conceito.
 - RISKS: baixo — molde M059 verbatim.
 - CUTS: auto-execute; order templates.
+
+## D-055 — Auto-execute M061 (voto auto-execute)
+
+- DECISION: AUTO-STEP Match PRIMEIRO na
+  cadeia (act-then-think):
+  `autoexecuteHeads(session)` — active +
+  owner === acting player (prompt economics
+  corretos) + autonomy === 'autonomous' +
+  orders non-empty → inner kernel.dispatch
+  `order.execute` {id} (PLAYER verb
+  reutilizado: spend real, exhausted→
+  rejected tolerado) + gate `applied`
+  OBRIGATÓRIO (executed producer THROWs
+  em no-change — grounded) + hand-run da
+  FULL producer list + INNER recordMemories
+  (sem isto a AI nunca aprende o que faz).
+  Gate new-lesson `>=` outerRev (inners
+  stampam revs later). Victory movida p/
+  DEPOIS dos auto-steps, snapshot fresco
+  (spends autónomos podem decidir; stamp
+  outerRev). Um head por lance.
+- MOTIVE: voto + último passo manual —
+  loop autónomo completo.
+- ALTERNATIVES: system execute free
+  (rejeitado: quebra economia prompts);
+  cross-player (rejeitado: spend alheio);
+  single-producer (rejeitado: riders
+  importam aqui); drain total (rejeitado:
+  paced 1/lance).
+- ADVANTAGES: ladder manual→assisted→
+  autonomous 100% mecânico; zero rasgos.
+- DISADVANTAGES: nenhum.
+- RISKS: baixo — molde + gate grounded.
+- CUTS: order templates (futuro?); bloco
+  AI Evolution FECHA aqui.
