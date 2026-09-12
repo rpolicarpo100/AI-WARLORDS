@@ -9,8 +9,8 @@
 
 | Estado     | Contagem       |
 | ---------- | -------------- |
-| `VERIFIED` | 86 (M001–M086) |
-| `PLANNED`  | 79 (M087–M165) |
+| `VERIFIED` | 87 (M001–M087) |
+| `PLANNED`  | 78 (M088–M165) |
 | Outros     | 0              |
 
 Checkpoints `VERIFIED`:
@@ -445,7 +445,8 @@ Checkpoints `VERIFIED`:
 | M084 | Security (audit) | `VERIFIED` |
 | M085 | Security (watcher cap) | `VERIFIED` |
 | M086 | Security (supply chain) | `VERIFIED` |
-| M087 | Security | `PLANNED` |
+| M087 | Security (leakage audit) | `VERIFIED` |
+| M088–M093 | Observability | `PLANNED` |
 | M081–M087 | Security                         | `PLANNED`  |
 | M088–M093 | Observability                    | `PLANNED`  |
 

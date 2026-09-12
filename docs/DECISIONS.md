@@ -2584,3 +2584,26 @@ rev R (seed S)` últimas 6,
 - DISADVANTAGES: nenhum.
 - RISKS: baixo.
 - CUTS: lockfile lint.
+
+## D-082 — Leakage audit M087 (sem voto: sequência apontada)
+
+- DECISION: auditoria fechada:
+  500 genérico pinado; 26 erros
+  fixos (0 stacks/messages);
+  validation reasons públicas
+  by design (client precisa);
+  /state público pinado como
+  tripwire (sem hidden info
+  no skirmish; fog-matches
+  filtram futuro); CORS *
+  by design (D-066); Server
+  header: verificar live.
+- MOTIVE: fechar Security.
+- ALTERNATIVES: esconder
+  reasons (rejeitado: quebra
+  UX + page precisa).
+- ADVANTAGES: superfície
+  provada fechada.
+- DISADVANTAGES: nenhum.
+- RISKS: baixo.
+- CUTS: timing attacks.

@@ -165,3 +165,5 @@
 - M085: watchers com cap 32 (503); RISK: deps sem audit (ver M086).
 
 - M086: supply chain pinada (0 vulns, node 20); RISK: erros podem vazar detalhe (ver M087).
+
+- M087: SECURITY FECHADO (0 fugas); próximo: Observability M088–M093.

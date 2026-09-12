@@ -965,6 +965,19 @@ describe('watcher cap (flood fence)', () => {
   });
 });
 
+describe('leakage tripwire (M087)', () => {
+  it('serves state publicly by design (no hidden info in skirmish — refilter when fog lands)', async () => {
+    await withClock(async () => {
+      const created = await postJson('/match', {});
+      const matchId = (created.json as { matchId: string }).matchId;
+      const seen = await get(`/match/${matchId}/state`);
+      expect(seen.code).toBe(200);
+      const snap = seen.json as { units?: { units?: unknown[] } };
+      expect(snap.units?.units).toHaveLength(3);
+    });
+  });
+});
+
 describe('POST /match/:id/close (last call)', () => {
   it('ends streams, deletes the table, refuses seconds', async () => {
     const { matchId } = await sessionFor('p1');
