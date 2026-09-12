@@ -1883,3 +1883,38 @@ recollection)` em stance.ts (MESMO
 - RISKS: baixo — molde + gate grounded.
 - CUTS: order templates (futuro?); bloco
   AI Evolution FECHA aqui.
+
+## D-056 — Replay-verify M062 (voto replay-verify)
+
+- DECISION: JOURNAL + REDRIVE em match.ts
+  (zero ficheiros, zero pins): kernel log
+  NÃO tem payloads (grounded — replay dele
+  é IMPOSSÍVEL) → Match.dispatch regista
+  `JournalEntry` {requestId, playerId,
+  type, payload, outcome-verbatim} no
+  finally (applied+rejected+error; early
+  MATCH_FINISHED fora — no-op, timeline
+  intacta) + `getJournal()` +
+  `Match.replay(init, journal)` static
+  (fresh Match, join por entry — zero
+  branches — redispatch, retorna
+  {match, outcomes}). Outcome verbatim =
+  zero branches novas. M063 persiste o
+  blob; M064 faz stepping por slice.
+  Determinismo grounded: matchId morto
+  (never read), sessionIds validation-
+  only, started sem UUID.
+- MOTIVE: voto + fundação Replay + twins
+  provam scripts, journal prova história.
+- ALTERNATIVES: replay do kernel log
+  (rejeitado: sem payloads, impossível);
+  journal só-applied (rejeitado: rejects
+  entram na timeline); outcomes extraídos
+  (rejeitado: verbatim sem branches).
+- ADVANTAGES: redrive real, M063/M064
+  encaixam direto.
+- DISADVANTAGES: journal em memória
+  (M063 persiste).
+- RISKS: baixo — straight-line code.
+- CUTS: export blob (M063); stepping UX
+  (M064); matchId revive (morto).

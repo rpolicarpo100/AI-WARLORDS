@@ -212,6 +212,22 @@ export interface TimelineEntry {
   readonly stateHash: string;
 }
 
+/**
+ * M062 — one journaled lance: the full envelope plus its verbatim
+ * outcome (the kernel log carries no payloads, so redrive is
+ * impossible without this). Payload stored by reference (M063
+ * serializes on export); sessionPlayer replays forgeries exactly;
+ * post-finish no-ops never journal.
+ */
+export interface JournalEntry {
+  readonly requestId: RequestId;
+  readonly playerId: PlayerId;
+  readonly sessionPlayer: PlayerId;
+  readonly type: string;
+  readonly payload: unknown;
+  readonly outcome: MatchDispatchOutcome;
+}
+
 export interface MatchInit {
   readonly matchId?: string;
   readonly seed: unknown;
@@ -254,6 +270,7 @@ export class Match {
   private readonly domainHandlers: ReadonlyMap<string, TransitionHandler<WorldState>>;
   private readonly domainRules: ReadonlyMap<string, PreRule>;
   private readonly timeline: TimelineEntry[] = [];
+  private readonly journal: JournalEntry[] = [];
   private readonly producers: ReadonlyMap<string, readonly EventProducer[]>;
   private readonly events: GameEvent[] = [];
   private readonly conditions: readonly VictoryCondition[];
@@ -660,6 +677,22 @@ export class Match {
         }
       }
     } finally {
+      // M062: every readable in-try attempt journals (applied,
+      // rejected and kernel errors alike — replay re-attempts all,
+      // outcomes re-derive; nullish adversarial noise skips — reads
+      // would throw, and garbage has no redrive value; the
+      // MATCH_FINISHED early-return never reaches here).
+      if (raw) {
+        const envelope = raw as ClientRequest;
+        this.journal.push({
+          requestId: envelope.requestId,
+          playerId: envelope.playerId,
+          sessionPlayer: session.playerId,
+          type: envelope.type,
+          payload: envelope.payload,
+          outcome,
+        });
+      }
       this.syncTimeline();
     }
     return outcome;
@@ -1070,6 +1103,42 @@ export class Match {
 
   getEvents(): readonly GameEvent[] {
     return [...this.events];
+  }
+
+  /** M062 — the dispatch journal (copy; redrive with Match.replay). */
+  getJournal(): readonly JournalEntry[] {
+    return [...this.journal];
+  }
+
+  /**
+   * M062 — redrive a journal through a fresh Match (deterministic
+   * rebuild: same init, same envelopes, same sessions-by-holder,
+   * outcomes re-derive — forgeries included). One session per entry
+   * (join is cheap; session ids are unobservable). Returns the live
+   * Match plus per-attempt replay outcomes for verify-comparison
+   * (M063 persists, M064 steps by slice).
+   */
+  static replay(
+    init: MatchInit,
+    journal: readonly JournalEntry[],
+  ): { readonly match: Match; readonly outcomes: readonly MatchDispatchOutcome[] } {
+    const match = new Match(init);
+    const outcomes: MatchDispatchOutcome[] = [];
+    for (const entry of journal) {
+      const session = match.join(entry.sessionPlayer);
+      outcomes.push(
+        match.dispatch(
+          session,
+          markUntrusted({
+            requestId: entry.requestId,
+            playerId: entry.playerId,
+            type: entry.type,
+            payload: entry.payload,
+          }),
+        ),
+      );
+    }
+    return { match, outcomes };
   }
 
   getVerdict(): Verdict {

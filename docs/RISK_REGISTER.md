@@ -126,3 +126,4 @@
 | 2026-09-12 | M059      | Assisted proposer live (autofile system, new-lesson gate, bundle +1302); self-approve→M060                                |
 | 2026-09-12 | M060      | Self-approve live (autoapprove system, ladder distinction, bundle +959); M061 fecha bloco                                 |
 | 2026-09-12 | M061      | Auto-execute live (act-then-think, inner record, bundle +738); AI Evolution CLOSED                                        |
+| 2026-09-12 | M062      | Replay-verify live (journal + redrive, bundle +410); export blob→M063                                                     |
