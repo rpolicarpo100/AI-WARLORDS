@@ -171,3 +171,5 @@
 - M088: métricas live (requests+byStatus); RISK: health raso (ver M089).
 
 - M089: health profundo live; RISK: sem access log (ver M090).
+
+- M090: access log live (AW_LOG); RISK: sem status UI (ver M091).

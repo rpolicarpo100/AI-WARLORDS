@@ -12,6 +12,9 @@
 import { createServer } from 'node:http';
 import { createTransport } from './transport.js';
 
+// Production access log (Render captures stdout; quiet anywhere else).
+process.env['AW_LOG'] ??= '1';
+
 const raw = process.env['PORT'] ?? '3000';
 const port = Number(raw);
 if (!Number.isInteger(port) || port < 0 || port > 65535) {

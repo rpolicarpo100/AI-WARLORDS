@@ -2652,3 +2652,26 @@ rev R (seed S)` últimas 6,
 - DISADVANTAGES: nenhum.
 - RISKS: baixo.
 - CUTS: readiness vs liveness.
+
+## D-085 — Access log M090 (sem voto: sequência apontada)
+
+- DECISION: linha JSON {t,
+  method, path, code, ms} no
+  finish (now() p/ ms — 0
+  c/ clock frozen,
+  ístico); opt-in AW_LOG=1
+  (1 branch, spy test on +
+  resto off); serve.ts liga
+  (Render lê stdout); sem IP
+  (inútil atrás proxy +
+  privacidade); path = raw url.
+- MOTIVE: RISK M089; traces
+  sem ruído (off em dev).
+- ALTERNATIVES: sempre-on
+  (rejeitado: suite poluída);
+  logger injectável (rejeitado:
+  5º param); IP (rejeitado).
+- ADVANTAGES: 1 teste exacto.
+- DISADVANTAGES: nenhum.
+- RISKS: baixo.
+- CUTS: sampling; trace ids.

@@ -256,10 +256,24 @@ export function createTransport(
   };
 
   const onRequest = (req: IncomingMessage, res: ServerResponse): void => {
-    metrics.requests += 1;
+    let started = 0;
+    let method = '';
+    let path = '';
+    try {
+      metrics.requests += 1;
+      started = now();
+      method = req.method as string;
+      path = req.url as string;
+    } catch {
+      // Hostile request object (throwing getters) — the 500 path below
+      // answers; the access line keeps its blanks, never throws.
+    }
     res.on('finish', () => {
       const code = res.statusCode;
       metrics.byStatus[code] = (metrics.byStatus[code] ?? 0) + 1;
+      if (process.env['AW_LOG'] === '1') {
+        console.log(JSON.stringify({ t: started, method, path, code, ms: now() - started }));
+      }
     });
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');

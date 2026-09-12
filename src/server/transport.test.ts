@@ -1045,6 +1045,33 @@ describe('GET /healthz (deep health)', () => {
   });
 });
 
+describe('access log (AW_LOG opt-in)', () => {
+  it('logs one structured line per request when enabled (exact)', async () => {
+    await withClock(async () => {
+      const lines: string[] = [];
+      const orig = console.log;
+      console.log = (line: string) => {
+        lines.push(line);
+      };
+      process.env['AW_LOG'] = '1';
+      try {
+        expect((await get('/ratings')).code).toBe(200);
+      } finally {
+        console.log = orig;
+        delete process.env['AW_LOG'];
+      }
+      expect(lines).toHaveLength(1);
+      expect(JSON.parse(lines[0] as string)).toEqual({
+        t: 1_000_000,
+        method: 'GET',
+        path: '/ratings',
+        code: 200,
+        ms: 0,
+      });
+    });
+  });
+});
+
 describe('POST /match/:id/close (last call)', () => {
   it('ends streams, deletes the table, refuses seconds', async () => {
     const { matchId } = await sessionFor('p1');
