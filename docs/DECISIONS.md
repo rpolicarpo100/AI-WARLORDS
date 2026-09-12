@@ -2813,3 +2813,24 @@ rev R (seed S)` últimas 6,
   no board (by design).
 - RISKS: nenhum.
 - CUTS: lobby mode; UI (M097).
+
+## D-092 — Free UI M097 (sem voto: fecho apontado)
+
+- DECISION: select netMode +
+  Forge envia mode + State ∞
+  em absent + Close loga modo
+  (agulha distinta p/ E2E);
+  smoke:api perna free (12
+  noops rev-by-rev + state ∞
+  + close void + shadows
+  history (3) absent).
+- MOTIVE: fechar Free Mode +
+  bloco 9 (m097).
+- ALTERNATIVES: nada mais —
+  resto é M095/M096.
+- ADVANTAGES: E2E prova void
+  pela UI.
+- DISADVANTAGES: perna E2E
+  longa (~12 roundtrips).
+- RISKS: baixo (localhost).
+- CUTS: lobby mode; resign.

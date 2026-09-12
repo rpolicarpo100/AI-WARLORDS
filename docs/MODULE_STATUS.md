@@ -9,8 +9,8 @@
 
 | Estado     | Contagem       |
 | ---------- | -------------- |
-| `VERIFIED` | 96 (M001–M096) |
-| `PLANNED`  | 69 (M097–M165) |
+| `VERIFIED` | 97 (M001–M097) |
+| `PLANNED`  | 68 (M098–M165) |
 | Outros     | 0              |
 
 Checkpoints `VERIFIED`:
@@ -415,6 +415,10 @@ Checkpoints `VERIFIED`:
   (forge mode? + close void;
   1960/1960; R-32).
   Registo em `docs/modules/M096.md`.
+- **M097 @ 2026-09-12** — Free Mode UI
+  (netMode + E2E free; 576520;
+  Free CLOSED; bloco 9 CLOSED).
+  Registo em `docs/modules/M097.md`.
 
 ---
 
@@ -553,7 +557,7 @@ Checkpoints `VERIFIED`:
 | M094      | Economy Simulator  | `VERIFIED`                                                   |
 | M095      | Free Mode (endless data) | `VERIFIED`                                                  |
 | M096      | Free Mode (exclusion) | `VERIFIED`                                                  |
-| M097 | Free Mode | `PLANNED`                                                   |
+| M097 | Free Mode (UI) | `VERIFIED`                                                   |
 | M098–M101 | Solana Foundation  | `PLANNED`                                                   |
 | M102–M107 | USDC               | `PLANNED`                                                   |
 | M108–M111 | Financial Security | `PLANNED`                                                   |

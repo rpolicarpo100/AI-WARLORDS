@@ -172,6 +172,7 @@
   <div id="onlinePanel" hidden>
     <input id="apiUrl" value="https://ai-warlords-api.onrender.com" title="transport base URL" size="34">
     <select id="netSide" title="side to join"><option value="p1">p1</option><option value="p2">p2</option></select>
+    <select id="netMode" title="table mode"><option value="standard">standard</option><option value="free">free</option></select>
     <button class="tbtn" id="netLobby" title="list open tables">🗺 Lobby</button>
     <button class="tbtn" id="netForge" title="forge a new skirmish">⚒ Forge</button>
     <button class="tbtn" id="netJoin" title="join the forged table">🚪 Join</button>
@@ -10811,7 +10812,7 @@
     toast(`Arena: ${lances} lances, p1 ${scores.p1} — p2 ${scores.p2} (${verdict})`, false);
   }
   // ── Online mode (M073: real client for the SSE+POST transport — the browser is never trusted) ──
-  const NET = { matchId: '', sessionId: '', watching: false, abort: null, rid: 0 };
+  const NET = { matchId: '', sessionId: '', watching: false, abort: null, rid: 0, mode: '' };
   function netLog(line) {
     const out = $('netOut');
     out.textContent = `${out.textContent}\n${line}`.trim();
@@ -10843,9 +10844,10 @@
   }
   async function netForge() {
     try {
-      const forged = await netCall('/match', {});
-      NET.matchId = forged.matchId; NET.sessionId = '';
-      netLog(`forged ${forged.matchId}`);
+      const mode = $('netMode').value || 'standard';
+      const forged = await netCall('/match', { mode });
+      NET.matchId = forged.matchId; NET.sessionId = ''; NET.mode = mode;
+      netLog(`forged ${forged.matchId} (${mode})`);
     } catch (err) { netLog(`net error: ${err.message || err}`); }
   }
   async function netJoin() {
@@ -10924,8 +10926,12 @@
       const res = await fetch(`${netBase()}/match/${NET.matchId}/state`);
       const snap = await res.json();
       if (!res.ok) throw new Error((snap && snap.error) || `http ${res.status}`);
-      const left = (snap.prompts && snap.prompts.remaining) || {};
-      netLog(`state: prompts p1:${left.p1} p2:${left.p2}`);
+      if (!snap.prompts) {
+        netLog('state: prompts free (\u221e)');
+      } else {
+        const left = snap.prompts.remaining || {};
+        netLog(`state: prompts p1:${left.p1} p2:${left.p2}`);
+      }
       const units = (snap.units && snap.units.units) || [];
       for (const u of units) {
         netLog(`- ${u.id} ${u.owner} ${u.type} hp${u.hp} @${u.col},${u.row}`);
@@ -10937,11 +10943,13 @@
     try {
       const out = await netCall(`/match/${NET.matchId}/close`, {});
       if (out.closed) {
+        const mode = NET.mode || 'standard';
         if (NET.abort) { NET.abort.abort(); NET.abort = null; }
         NET.watching = false;
         NET.matchId = '';
         NET.sessionId = '';
-        netLog('table closed');
+        NET.mode = '';
+        netLog(`table closed (${mode})`);
       } else netLog('close refused');
     } catch (err) { netLog(`net error: ${err.message || err}`); }
   }

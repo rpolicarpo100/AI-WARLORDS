@@ -473,8 +473,30 @@ if (process.env.API_TEST) {
     await waitOut('pulse: ok', 'pulse line');
     await waitOut('- matches 0 streams 0 results 2 ratings 2', 'inventory line');
     await waitOut('reqs ', 'requests line');
+    // M097: free leg — endless through the UI (rev-by-rev past 10),
+    // state renders the endless budget, close leaves zero trace.
+    globalThis.document.getElementById('netMode').value = 'free';
+    fire('netForge', 'click');
+    await waitOut('(free)', 'free forge line');
+    globalThis.document.getElementById('netSide').value = 'p1';
+    fire('netJoin', 'click');
+    await sleep(300);
+    for (let i = 0; i < 12; i += 1) {
+      globalThis.document.getElementById('netSide').value = i % 2 === 0 ? 'p1' : 'p2';
+      fire('netJoin', 'click');
+      fire('netNoop', 'click');
+      await waitOut(`dispatch: applied rev ${i + 1}`, `free rev ${i + 1}`);
+    }
+    fire('netState', 'click');
+    await waitOut('state: prompts free', 'free prompts line');
+    fire('netClose', 'click');
+    await waitOut('table closed (free)', 'free close line');
+    fire('netBoard', 'click');
+    await waitOut('history (2):', 'history still two');
+    await sleep(300);
+    if (out().includes('history (3):')) throw new Error('api test: free close leaked history');
     console.log(
-      'online E2E OK (lobby → forge → join → noop → attack → move → state → close → board → pulse)',
+      'online E2E OK (lobby → forge → join → noop → attack → move → state → close → board → pulse → free)',
     );
   } finally {
     try {

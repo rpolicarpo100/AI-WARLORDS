@@ -185,3 +185,5 @@
 - M095: endless engine live. RISK: free nunca termina in-engine (resign futuro); AI vê 0 prompts em free (M097+); tsx órfãos acumulam → pkill periódico.
 
 - M096: exclusion live. RISK: UI sem modo (ver M097).
+
+- M097: free UI live; Free Mode CLOSED; BLOCO M095–M097 CLOSED. FIX: M096.md missed push (race) — incluído. REGRA: git add nunca em paralelo com write.
