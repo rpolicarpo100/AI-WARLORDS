@@ -325,6 +325,88 @@ Checkpoints `VERIFIED`:
   bundle +0); 1898/1898 testes, 100
   global.
   Registo em `docs/modules/M072.md`.
+- **M073 @ 2026-09-12** — Multiplayer Page Client
+  (Online panel + fetch-reader SSE + API_TEST
+  E2E); 1898/1898 testes, 100 global.
+  Registo em `docs/modules/M073.md`.
+- **M074 @ 2026-09-12** — Multiplayer Free Orders
+  (netUnit/netTarget/netTo + Move; E2E move
+  rev 3); match.html 572081.
+  Registo em `docs/modules/M074.md`.
+- **M075 @ 2026-09-12** — Multiplayer State Button
+  (snapshot E2E p1:7 + u1@1,1); 572934.
+  Registo em `docs/modules/M075.md`.
+- **M076 @ 2026-09-12** — Multiplayer Close Button
+  (full-lifecycle E2E); 573587; Multiplayer
+  CLOSED (bloco M065–M076).
+  Registo em `docs/modules/M076.md`.
+- **M077 @ 2026-09-12** — Competitive History
+  (results-on-close + GET /results cap 50);
+  1903/1903 testes, 100 global.
+  Registo em `docs/modules/M077.md`.
+- **M078 @ 2026-09-12** — Competitive Score Victory
+  (victory-score L3 + winnerOf; bundle 91640
+  ac042dc9); 1910/1910 testes, 100 global.
+  Registo em `docs/modules/M078.md`.
+- **M079 @ 2026-09-12** — Competitive Ratings
+  (Elo L0 + GET /ratings finished-only);
+  1920/1920 testes, 100 global.
+  Registo em `docs/modules/M079.md`.
+- **M080 @ 2026-09-12** — Competitive Leaderboard UI
+  (Board button + E2E void+rated); 574844;
+  Competitive CLOSED.
+  Registo em `docs/modules/M080.md`.
+- **M081 @ 2026-09-12** — Security Rate Limit
+  (IP key dead → global 300/60s D-076);
+  1923/1923 testes, 100 global.
+  Registo em `docs/modules/M081.md`.
+- **M082 @ 2026-09-12** — Security Body Limits
+  (64KB cap + 413); 1926/1926 testes.
+  Registo em `docs/modules/M082.md`.
+- **M083 @ 2026-09-12** — Security Headers
+  (API nosniff+DENY; static BLOQUEADO
+  dashboard-only); 1927/1927 testes.
+  Registo em `docs/modules/M083.md`.
+- **M084 @ 2026-09-12** — Security Validation Audit
+  (timeouts/isSeed/deep-JSON/from/URL);
+  1931/1931 testes, zero prod.
+  Registo em `docs/modules/M084.md`.
+- **M085 @ 2026-09-12** — Security Watcher Cap
+  (32 streams + 503); 1933/1933 testes.
+  Registo em `docs/modules/M085.md`.
+- **M086 @ 2026-09-12** — Security Supply Chain
+  (engines<21, strict, audit 0 vuln);
+  1933 intactos.
+  Registo em `docs/modules/M086.md`.
+- **M087 @ 2026-09-12** — Security Leakage Audit
+  (500 pinned, 26 fixed errors);
+  1934/1934 testes; Security CLOSED.
+  Registo em `docs/modules/M087.md`.
+- **M088 @ 2026-09-12** — Observability Metrics
+  (finish-listener); 1936/1936 testes.
+  Registo em `docs/modules/M088.md`.
+- **M089 @ 2026-09-12** — Observability Health
+  (/healthz inventory); 1938/1938 testes.
+  Registo em `docs/modules/M089.md`.
+- **M090 @ 2026-09-12** — Observability Access Log
+  (AW_LOG JSONL + onRequest try/catch);
+  1939/1939 testes.
+  Registo em `docs/modules/M090.md`.
+- **M091 @ 2026-09-12** — Observability Status UI
+  (Pulse button); match.html 575818.
+  Registo em `docs/modules/M091.md`.
+- **M092 @ 2026-09-12** — Observability Prod Drill
+  (tools/prod-drill.mjs + gate-breach fix
+  test:run→test).
+  Registo em `docs/modules/M092.md`.
+- **M093 @ 2026-09-12** — Observability Ops Runbook
+  (OPERATIONS.md); Observability CLOSED;
+  bloco M077–M093 CLOSED.
+  Registo em `docs/modules/M093.md`.
+- **M094 @ 2026-09-12** — Economy Simulator
+  (economy-drill pressure + ledger,
+  1200/0); Fase 21 aberta.
+  Registo em `docs/modules/M094.md`.
 
 ---
 
@@ -434,7 +516,10 @@ Checkpoints `VERIFIED`:
 | M070      | Multiplayer — Presence           | `VERIFIED` |
 | M071      | Multiplayer — Lobby              | `VERIFIED` |
 | M072      | Multiplayer — Deploy             | `VERIFIED` |
-| M073–M076 | Multiplayer                      | `PLANNED`  |
+| M073      | Multiplayer — Page Client        | `VERIFIED` |
+| M074      | Multiplayer — Free Orders        | `VERIFIED` |
+| M075      | Multiplayer — State Button       | `VERIFIED` |
+| M076      | Multiplayer — Close Button       | `VERIFIED` |
 | M077 | Competitive (history) | `VERIFIED` |
 | M078 | Competitive (score victory) | `VERIFIED` |
 | M079 | Competitive (ratings) | `VERIFIED` |
@@ -452,8 +537,6 @@ Checkpoints `VERIFIED`:
 | M091 | Observability (status UI) | `VERIFIED` |
 | M092 | Observability (prod drill) | `VERIFIED` |
 | M093 | Observability (ops runbook) | `VERIFIED` |
-| M081–M087 | Security                         | `PLANNED`  |
-| M088–M093 | Observability                    | `PLANNED`  |
 
 ## Fases 21–28 — Economy sim, Free mode, Solana, Compliance, Seasons
 
@@ -507,11 +590,11 @@ Alinhadas por número: 0, 1, 3, 4, 28. Divergentes:
 ## Ordem recomendada (estrita, sem saltos)
 
 ```text
-M001 → M002 → … → M020 → M021 → M022 → M023 (VERIFIED) → M024 → … → M165
+M001 → … → M094 (VERIFIED) → M095 → … → M165
 ```
 
-Próximo permitido: **M019 — City System**, apenas após autorização
-explícita. Saltos, paralelização ou batch = violação do §35 (recusar).
+Próximo permitido: **M095 — Free Mode**, apenas após autorização
+explícita (bloco 9: M095–M097). Saltos, paralelização ou batch = violação do §35 (recusar).
 
 ---
 
