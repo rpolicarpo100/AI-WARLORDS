@@ -38,6 +38,7 @@ import {
 } from '../engine/authority.js';
 import type { MapCell, MapId } from '../engine/map.js';
 import { Match, STANDARD_RULESET, createMatchId, isSeed, type MatchInit } from '../engine/match.js';
+import { DEFAULT_MATCH_MODE, isMatchMode } from '../engine/mode.js';
 import { scoreTable } from '../engine/score.js';
 import { eloPair, scoreOf } from '../engine/ratings.js';
 import { winnerOf } from '../engine/victory.js';
@@ -381,7 +382,12 @@ export function createTransport(
         send(res, 400, { error: 'bad seed' });
         return;
       }
-      const match = new Match(skirmishInit(seed));
+      const mode = record['mode'];
+      if (mode !== undefined && !isMatchMode(mode)) {
+        send(res, 400, { error: 'bad mode' });
+        return;
+      }
+      const match = new Match({ ...skirmishInit(seed), mode: mode ?? DEFAULT_MATCH_MODE });
       matches.set(match.id, {
         match,
         sessions: new Map(),
@@ -530,6 +536,12 @@ export function createTransport(
       }
       const verdict = entry.match.getVerdict();
       const rosterPlayers = entry.match.getSnapshot().players.map((player) => player.id);
+      // M096: free tables close void (no history, no ratings — R-32).
+      if (entry.match.mode !== 'standard') {
+        matches.delete(parts[1] as string);
+        send(res, 200, { closed: true });
+        return;
+      }
       if (verdict.status === 'finished') {
         // Pairwise Elo over the forged pair (forge is always 2p — the
         // cast is the transport mold for structurally-fixed shapes).

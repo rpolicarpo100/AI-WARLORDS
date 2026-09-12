@@ -1142,3 +1142,41 @@ describe('root + preflight + CORS (M072 deploy seams)', () => {
     expect(headers['x-frame-options']).toBe('DENY');
   });
 });
+
+describe('free mode exclusion (M096)', () => {
+  it('rejects bad modes', async () => {
+    expect(await postJson('/match', { mode: 'endless' })).toMatchObject({ code: 400 });
+    expect(await postJson('/match', { mode: 42 })).toMatchObject({ code: 400 });
+  });
+
+  it('plays free past 10 and closes void (no history, no ratings)', async () => {
+    const before = await get('/results');
+    const beforeRatings = await get('/ratings');
+    const created = await postJson('/match', { mode: 'free' });
+    expect(created.code).toBe(200);
+    const matchId = (created.json as { matchId: string }).matchId;
+    const j1 = await postJson(`/match/${matchId}/join`, { playerId: 'p1' });
+    const j2 = await postJson(`/match/${matchId}/join`, { playerId: 'p2' });
+    const s1 = (j1.json as { sessionId: string }).sessionId;
+    const s2 = (j2.json as { sessionId: string }).sessionId;
+    for (let i = 0; i < 12; i += 1) {
+      const even = i % 2 === 0;
+      const { code, json } = await postJson(`/match/${matchId}/dispatch`, {
+        sessionId: even ? s1 : s2,
+        requestId: `free${i}`,
+        type: 'world.noop',
+        payload: {},
+      });
+      expect(code).toBe(200);
+      expect(json).toMatchObject({ status: 'applied' });
+    }
+    expect(await postJson(`/match/${matchId}/close`, {})).toEqual({
+      code: 200,
+      json: { closed: true },
+    });
+    const after = await get('/results');
+    expect((after.json as unknown[]).length).toBe((before.json as unknown[]).length);
+    expect(after.json).not.toContainEqual(expect.objectContaining({ matchId }));
+    expect(await get('/ratings')).toEqual(beforeRatings);
+  });
+});

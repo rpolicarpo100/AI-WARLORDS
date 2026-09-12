@@ -183,3 +183,5 @@
 - M094: economy drill live (pressure configs, ledger holds 1200/0). RISK: STATUS tem linhas-fantasma (M073–M076/M081–M093 PLANNED) + bullets param em M072 — housekeeping por fazer.
 
 - M095: endless engine live. RISK: free nunca termina in-engine (resign futuro); AI vê 0 prompts em free (M097+); tsx órfãos acumulam → pkill periódico.
+
+- M096: exclusion live. RISK: UI sem modo (ver M097).

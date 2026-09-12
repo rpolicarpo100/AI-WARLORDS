@@ -2792,3 +2792,24 @@ rev R (seed S)` últimas 6,
 - RISKS: AI vê 0 prompts em
   free (M097+).
 - CUTS: transport; página.
+
+## D-091 — Free exclusion M096 (voto m096: exclude-both)
+
+- DECISION: POST /match aceita
+  mode? (400 'bad mode');
+  close free = void total (sem
+  history, sem ratings);
+  standard intacto; lobby
+  intocado (cliente sabe o que
+  forjou).
+- MOTIVE: R-32 anti-farming;
+  history = registo
+  competitivo puro.
+- ALTERNATIVES: history-flagged
+  (rejeitado: churn Entry).
+- ADVANTAGES: 2 seams, 0 churn
+  shapes.
+- DISADVANTAGES: free invisível
+  no board (by design).
+- RISKS: nenhum.
+- CUTS: lobby mode; UI (M097).
