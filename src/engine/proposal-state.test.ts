@@ -16,6 +16,7 @@ import type { CommanderRecord, CommandersData } from './commanders.js';
 import { Match, STANDARD_RULESET } from './match.js';
 import {
   APPROVE_TRANSITION,
+  AUTOFILE_TRANSITION,
   createApproveHandler,
   DECLINE_TRANSITION,
   PROPOSE_TRANSITION,
@@ -78,16 +79,18 @@ function recordOf(match: Match, id: string): CommanderRecord | undefined {
 }
 
 describe('proposal handlers (registration)', () => {
-  it('registers propose + approve + decline (no collisions)', () => {
+  it('registers propose + approve + decline + autofile (no collisions)', () => {
     const handlers = proposalStateHandlers();
     expect([...handlers.keys()].sort()).toEqual([
       'proposal.approve',
+      'proposal.autofile',
       'proposal.decline',
       'proposal.propose',
     ]);
     expect(PROPOSE_TRANSITION).toBe('proposal.propose');
     expect(APPROVE_TRANSITION).toBe('proposal.approve');
     expect(DECLINE_TRANSITION).toBe('proposal.decline');
+    expect(AUTOFILE_TRANSITION).toBe('proposal.autofile');
   });
 });
 
@@ -308,6 +311,45 @@ describe('proposal.decline (drops, nothing executes)', () => {
       status: 'rejected',
       reason: 'proposal.decline: no proposal.',
     });
+  });
+});
+
+describe('proposal.autofile (system actor, no owner check)', () => {
+  it('files cross-owner on direct dispatch, budget-free', () => {
+    const match = makeMatch();
+    const session = match.join(P1);
+    expect(
+      dispatch(match, session, 'r1', AUTOFILE_TRANSITION, { id: 'c1', proposal: STANCE }),
+    ).toMatchObject({ status: 'applied' });
+    expect(recordOf(match, 'c1')?.proposal).toMatchObject({ kind: 'stance' });
+    expect(match.getSnapshot().prompts?.remaining['p1']).toBe(10);
+  });
+
+  it('fails closed on unknown commanders and occupied slots', () => {
+    const match = makeMatch();
+    const session = match.join(P1);
+    expect(
+      dispatch(match, session, 'r1', AUTOFILE_TRANSITION, { id: 'cx', proposal: STANCE }),
+    ).toEqual({ status: 'rejected', reason: 'proposal.autofile: unknown commander.' });
+    expect(
+      dispatch(match, session, 'r2', AUTOFILE_TRANSITION, { id: 'c0', proposal: STANCE }),
+    ).toMatchObject({ status: 'applied' });
+    expect(
+      dispatch(match, session, 'r3', AUTOFILE_TRANSITION, { id: 'c0', proposal: ORDER }),
+    ).toEqual({ status: 'rejected', reason: 'proposal.autofile: pending.' });
+  });
+
+  it('fails closed without commanders in state', () => {
+    const bare = new Match({
+      seed: 59,
+      ruleset: STANDARD_RULESET,
+      players: [P1, P2],
+      initialState: createWorldState({ players: [P1, P2] }),
+    });
+    const session = bare.join(P1);
+    expect(
+      dispatch(bare, session, 'r1', AUTOFILE_TRANSITION, { id: 'c0', proposal: STANCE }),
+    ).toEqual({ status: 'rejected', reason: 'proposal.autofile: unknown commander.' });
   });
 });
 

@@ -14,10 +14,12 @@ import {
   type Untrusted,
 } from './authority.js';
 import type { CommanderRecord, CommandersData } from './commanders.js';
+import { DEACTIVATE_TRANSITION } from './commander-state.js';
 import type { EventProducer } from './events.js';
 import { isMapData, neighborsOf, type MapCell, type MapData } from './map.js';
 import { Match, STANDARD_RULESET } from './match.js';
 import { RECORD_TRANSITION } from './memory-record.js';
+import { DECLINE_TRANSITION } from './proposal-state.js';
 import { EXECUTE_TRANSITION } from './order-execution.js';
 import { CANCEL_TRANSITION, ISSUE_TRANSITION } from './order-state.js';
 import type { VictoryCondition } from './victory.js';
@@ -66,6 +68,8 @@ function battleMap(): MapData {
 interface CampaignOptions {
   readonly p1Orders?: CommanderRecord['orders'];
   readonly c0Dna?: CommanderRecord['dna'];
+  readonly c0Directives?: CommanderRecord['directives'];
+  readonly c0Proposal?: CommanderRecord['proposal'];
   readonly promptsPerPlayer?: number;
   readonly extraProducers?: ReadonlyMap<string, readonly EventProducer[]>;
   readonly extraConditions?: readonly VictoryCondition[];
@@ -90,6 +94,8 @@ function campaign(options: CampaignOptions = {}): Match {
         active: true,
         ...(options.p1Orders === undefined ? {} : { orders: options.p1Orders }),
         ...(options.c0Dna === undefined ? {} : { dna: options.c0Dna }),
+        ...(options.c0Directives === undefined ? {} : { directives: options.c0Directives }),
+        ...(options.c0Proposal === undefined ? {} : { proposal: options.c0Proposal }),
       },
       { id: 'c1', owner: 'p2', active: true },
     ],
@@ -456,5 +462,162 @@ describe('stancesOf (M054 live recalled posture)', () => {
       'order.executed',
       'unit.attacked',
     ]);
+  });
+});
+
+describe('autofileProposals (M059 assisted proposer, live bookkeeping)', () => {
+  const EDGY_DNA = {
+    aggression: 60,
+    defense: 50,
+    economy: 50,
+    exploration: 50,
+    risk: 50,
+    expansion: 50,
+    diplomacy: 50,
+    patience: 50,
+    greed: 50,
+    adaptability: 50,
+  };
+
+  function attack(match: Match, session: SessionHandle, tag: string): void {
+    expect(
+      dispatch(match, session, `${tag}-issue`, ISSUE_TRANSITION, {
+        id: 'c0',
+        kind: 'unit.attack',
+        params: { id: 'u1', target: 'u2' },
+      }),
+    ).toMatchObject({ status: 'applied' });
+    expect(dispatch(match, session, `${tag}-exec`, EXECUTE_TRANSITION, { id: 'c0' })).toMatchObject(
+      {
+        status: 'applied',
+      },
+    );
+  }
+
+  function proposalOf(match: Match, id: string): unknown {
+    return match.getSnapshot().commanders?.commanders.find((record) => record.id === id)?.proposal;
+  }
+
+  it('files a stance proposal from the first recalled battle (assisted, budget-free)', () => {
+    const match = campaign({ c0Dna: EDGY_DNA, c0Directives: { autonomy: 'assisted' } });
+    const session = match.join(P1);
+    attack(match, session, 'r1');
+    expect(proposalOf(match, 'c0')).toEqual({ kind: 'stance', stance: 'aggressive' });
+    expect(match.getEvents().find((event) => event.type === 'proposal.proposed')).toMatchObject({
+      priority: 'normal',
+      payload: { player: 'p1', commander: 'c0', kind: 'stance' },
+    });
+    expect(promptsOf(match, 'p1')).toBe(8);
+  });
+
+  it('files for autonomous commanders too', () => {
+    const match = campaign({ c0Dna: EDGY_DNA, c0Directives: { autonomy: 'autonomous' } });
+    const session = match.join(P1);
+    attack(match, session, 'r1');
+    expect(proposalOf(match, 'c0')).toEqual({ kind: 'stance', stance: 'aggressive' });
+  });
+
+  it('stays silent for manual and directive-less commanders', () => {
+    const manual = campaign({ c0Dna: EDGY_DNA, c0Directives: { autonomy: 'manual' } });
+    const manualSession = manual.join(P1);
+    attack(manual, manualSession, 'r1');
+    expect(proposalOf(manual, 'c0')).toBeUndefined();
+    const plain = campaign({ c0Dna: EDGY_DNA });
+    const plainSession = plain.join(P1);
+    attack(plain, plainSession, 'r1');
+    expect(proposalOf(plain, 'c0')).toBeUndefined();
+  });
+
+  it('leaves occupied slots and set stances untouched', () => {
+    const busy = campaign({
+      c0Dna: EDGY_DNA,
+      c0Directives: { autonomy: 'assisted' },
+      c0Proposal: { kind: 'stance', stance: 'defensive' },
+    });
+    const busySession = busy.join(P1);
+    attack(busy, busySession, 'r1');
+    expect(proposalOf(busy, 'c0')).toEqual({ kind: 'stance', stance: 'defensive' });
+    const ordered = campaign({
+      c0Dna: EDGY_DNA,
+      c0Directives: { autonomy: 'assisted', stance: 'defensive' },
+    });
+    const orderedSession = ordered.join(P1);
+    attack(ordered, orderedSession, 'r1');
+    expect(proposalOf(ordered, 'c0')).toBeUndefined();
+  });
+
+  it('stays silent when the lesson does not diverge from DNA', () => {
+    const fifties = {
+      aggression: 50,
+      defense: 50,
+      economy: 50,
+      exploration: 50,
+      risk: 50,
+      expansion: 50,
+      diplomacy: 50,
+      patience: 50,
+      greed: 50,
+      adaptability: 50,
+    };
+    const match = campaign({ c0Dna: fifties, c0Directives: { autonomy: 'assisted' } });
+    const session = match.join(P1);
+    attack(match, session, 'r1');
+    expect(proposalOf(match, 'c0')).toBeUndefined();
+  });
+
+  it('keeps declines declined until new evidence refiles', () => {
+    const match = campaign({ c0Dna: EDGY_DNA, c0Directives: { autonomy: 'assisted' } });
+    const session = match.join(P1);
+    attack(match, session, 'r1');
+    expect(proposalOf(match, 'c0')).toEqual({ kind: 'stance', stance: 'aggressive' });
+    expect(dispatch(match, session, 'r2', DECLINE_TRANSITION, { id: 'c0' })).toMatchObject({
+      status: 'applied',
+    });
+    expect(proposalOf(match, 'c0')).toBeUndefined();
+    attack(match, session, 'r3');
+    expect(proposalOf(match, 'c0')).toEqual({ kind: 'stance', stance: 'aggressive' });
+  });
+
+  it('skips inactive commanders with live divergence', () => {
+    const match = campaign({ c0Dna: EDGY_DNA, c0Directives: { autonomy: 'assisted' } });
+    const session = match.join(P1);
+    attack(match, session, 'r1');
+    expect(dispatch(match, session, 'r2', DECLINE_TRANSITION, { id: 'c0' })).toMatchObject({
+      status: 'applied',
+    });
+    expect(dispatch(match, session, 'r3', DEACTIVATE_TRANSITION, { id: 'c0' })).toMatchObject({
+      status: 'applied',
+    });
+    expect(
+      dispatch(match, session, 'r4', ISSUE_TRANSITION, {
+        id: 'c0',
+        kind: 'unit.move',
+        params: { id: 'u0', col: 0, row: 1 },
+      }),
+    ).toMatchObject({ status: 'applied' });
+    expect(proposalOf(match, 'c0')).toBeUndefined();
+  });
+
+  it('runs clean on commander-less states', () => {
+    const bare = new Match({
+      seed: 59,
+      ruleset: STANDARD_RULESET,
+      players: [P1, P2],
+      unitsConfig: drillUnits(),
+      initialState: createWorldState({
+        players: [P1, P2],
+        map: battleMap(),
+        units: {
+          schemaVersion: 1,
+          nextId: 1,
+          units: [{ id: 'u0', owner: 'p1', type: 'worker', hp: 5, col: 0, row: 0 }],
+        },
+      }),
+    });
+    const session = bare.join(P1);
+    expect(
+      dispatch(bare, session, 'r1', MOVE_TRANSITION, { id: 'u0', col: 0, row: 1 }),
+    ).toMatchObject({ status: 'applied' });
+    expect(bare.getEvents().some((event) => event.type === 'proposal.proposed')).toBe(false);
   });
 });

@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 58 (M001–M058)  |
-| `PLANNED`  | 107 (M059–M165) |
+| `VERIFIED` | 59 (M001–M059)  |
+| `PLANNED`  | 106 (M060–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -258,6 +258,12 @@ Checkpoints `VERIFIED`:
   producers; bloco P↔C FECHADO); 1789/1789
   testes, 100 global.
   Registo em `docs/modules/M058.md`.
+- **M059 @ 2026-09-12** — Assisted
+  Proposer (autofile system, new-lesson
+  gate, manual silente); 1800/1800 testes,
+  100 global.
+  Registo em `docs/modules/M059.md`.
+  Bloco AI Evolution M059–M061 ABERTO.
 
 ---
 
@@ -348,7 +354,8 @@ Checkpoints `VERIFIED`:
 | M056      | Player ↔ Commander — Directive Set      | `VERIFIED` |
 | M057      | Player ↔ Commander — Proposal Data      | `VERIFIED` |
 | M058      | Player ↔ Commander — Proposal Verbs     | `VERIFIED` |
-| M059–M061 | AI Evolution                            | `PLANNED`  |
+| M059      | AI Evolution — Assisted Proposer        | `VERIFIED` |
+| M060–M061 | AI Evolution                            | `PLANNED`  |
 | M062–M064 | Replay                                  | `PLANNED`  |
 | M065–M068 | AI Arena                                | `PLANNED`  |
 

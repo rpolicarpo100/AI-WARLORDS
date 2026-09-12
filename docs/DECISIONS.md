@@ -1769,3 +1769,50 @@ recollection)` em stance.ts (MESMO
   (teatro até M059+).
 - RISKS: baixo — molde provado.
 - CUTS: AI writers (M059+); notes; kinds.
+
+## D-053 — Assisted proposer M059 (voto assisted-proposer)
+
+- DECISION: AUTO-STEP Match (molde M052
+  recordMemories): após recordMemories,
+  `autofileProposals(session, outerRev)`
+  corre por lance aplicado. Elegível:
+  active + autonomy assisted|autonomous +
+  slot vazio + stance unset + NOVA lição
+  (fresh battle/failure memory c/ revision
+  == outerRev — sem re-nag após decline)
+  - divergência (stanceWithRecall ≠
+    stanceOf). Elegíveis → inner
+    kernel.dispatch `proposal.autofile`
+    {id,proposal} (NOVA transição SYSTEM em
+    proposal-state.ts: sem owner check,
+    budget-free, wire rule = proposeParamsRule
+    reutilizada) + runProducers manual
+    (proposalProposedProducer — o jogador TEM
+    de notar; M052-silêncio aqui derrota o
+    propósito). Fire-and-forget SEM outcome
+    check (desvio M052 documentado:
+    pre-checked single-threaded, slots
+    distintos; ramos unreachable são
+    proibidos pelo 100×4; rejects defensivos
+    provados por dispatches diretos).
+    Brain no Match (lookup+recall L4-only),
+    write dumb em L2. stance.ts exporta
+    STANCE_BATTLE/FAILURE_KINDS (refactor
+    behavior-identical). Sem pins (zero
+    ficheiros novos).
+- MOTIVE: voto + fecha training-wheels
+  D-052 + ladder manual→assisted real
+  (manual = status quo HONRADO).
+- ALTERNATIVES: order templates (rejeitado:
+  units são do player, params arbitrários —
+  M061 c/ unit-link); re-nag (rejeitado:
+  new-lesson gate); batch dispatch
+  (rejeitado: N revisions honestas);
+  silêncio (rejeitado: attention slot).
+- ADVANTAGES: loop P↔C completo visível
+  (batalha→memória→proposta→veredicto);
+  M060 self-approve encaixa direto.
+- DISADVANTAGES: só stance (honesto).
+- RISKS: baixo — molde M052 verbatim.
+- CUTS: order/autonomy templates (M061?);
+  self-approve (M060).

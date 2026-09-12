@@ -14,8 +14,10 @@
  * key whole (never an explicit undefined — M047 law). Structural
  * producers emit proposed/approved/declined facts (audit on the
  * stream; NOT memorable — M056 precedent). propose is
- * owner-dispatched today (training wheels until M059+ AI writers;
- * no auto-propose). LAYER L2 (imports authority/commanders/
+ * owner-dispatched (training wheels until M059). M059 adds the
+ * system fourth verb proposal.autofile (same write as propose,
+ * NO owner check — the assisted proposer files both holders).
+ * LAYER L2 (imports authority/commanders/
  * proposals L0 + world-state L1 type-only, all downward;
  * replaceRecord is local — directive-state sits at L2 too, L2↛L2).
  */
@@ -34,6 +36,7 @@ import type { WorldState } from './world-state.js';
 export const PROPOSE_TRANSITION = 'proposal.propose';
 export const APPROVE_TRANSITION = 'proposal.approve';
 export const DECLINE_TRANSITION = 'proposal.decline';
+export const AUTOFILE_TRANSITION = 'proposal.autofile';
 
 /** Validated propose parameters: target commander, full suggestion. */
 export interface ProposeParams {
@@ -180,11 +183,38 @@ export function createDeclineHandler(): TransitionHandler<WorldState> {
   };
 }
 
+export function createAutofileHandler(): TransitionHandler<WorldState> {
+  return (ctx) => {
+    // System actor (M059): the wire pre-rule (proposeParamsRule,
+    // fixed in match.ts like recordParamsRule) validated { id,
+    // proposal }; this cast documents the seam. NO owner check —
+    // the engine files for every eligible commander, both holders.
+    const { id, proposal } = ctx.params as ProposeParams;
+    const data = ctx.state.commanders;
+    const record = commanderById(data, id);
+    if (data === undefined || record === undefined) {
+      return { applied: false, reason: 'proposal.autofile: unknown commander.' };
+    }
+    if (record.proposal !== undefined) {
+      return { applied: false, reason: 'proposal.autofile: pending.' };
+    }
+    return {
+      applied: true,
+      state: {
+        ...ctx.state,
+        commanders: replaceRecord(data, id, { ...record, proposal }),
+      },
+      summary: `autofiled ${proposal.kind} on ${id}`,
+    };
+  };
+}
+
 export function proposalStateHandlers(): Map<string, TransitionHandler<WorldState>> {
   return new Map([
     [PROPOSE_TRANSITION, createProposeHandler()],
     [APPROVE_TRANSITION, createApproveHandler()],
     [DECLINE_TRANSITION, createDeclineHandler()],
+    [AUTOFILE_TRANSITION, createAutofileHandler()],
   ]);
 }
 

@@ -40,6 +40,12 @@ export const STANCE_RECALL_NUDGE = 5;
 /** M054: recalled memories counted per side (feedback-loop cap). */
 export const STANCE_RECALL_CAP = 2;
 
+/** M059: memory kinds that embolden (fresh battles; stance.ts canonical). */
+export const STANCE_BATTLE_KINDS: readonly string[] = ['unit.attacked', 'unit.slain'];
+
+/** M059: memory kinds that humble (fresh failures; stance.ts canonical). */
+export const STANCE_FAILURE_KINDS: readonly string[] = ['order.overridden', 'order.canceled'];
+
 export function isStanceId(value: unknown): value is Stance {
   return typeof value === 'string' && STANCE_IDS.includes(value);
 }
@@ -106,9 +112,9 @@ export function stanceWithRecall(
   let battles = 0;
   let failures = 0;
   for (const memory of recollection.fresh) {
-    if (memory.kind === 'unit.attacked' || memory.kind === 'unit.slain') {
+    if (STANCE_BATTLE_KINDS.includes(memory.kind)) {
       battles += 1;
-    } else if (memory.kind === 'order.overridden' || memory.kind === 'order.canceled') {
+    } else if (STANCE_FAILURE_KINDS.includes(memory.kind)) {
       failures += 1;
     }
   }

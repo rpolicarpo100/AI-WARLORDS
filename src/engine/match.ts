@@ -88,6 +88,7 @@ import {
 } from './directive-state.js';
 import {
   APPROVE_TRANSITION,
+  AUTOFILE_TRANSITION,
   DECLINE_TRANSITION,
   PROPOSE_TRANSITION,
   proposalApprovedProducer,
@@ -147,7 +148,13 @@ import {
 } from './warfare.js';
 import { seedPrompts, spendPrompt } from './prompts.js';
 import { postureOf, type ArmyPosture } from './posture.js';
-import { stanceWithRecall, type CommanderStance } from './stance.js';
+import {
+  STANCE_BATTLE_KINDS,
+  STANCE_FAILURE_KINDS,
+  stanceOf,
+  stanceWithRecall,
+  type CommanderStance,
+} from './stance.js';
 import { isUnitType, type UnitType } from './units.js';
 import { isBuildingId } from './buildings.js';
 import { confidenceOfOrder, type ConfidenceRules, type OrderConfidence } from './confidence.js';
@@ -388,6 +395,7 @@ export class Match {
       [PROPOSE_TRANSITION, proposeParamsRule],
       [APPROVE_TRANSITION, commanderIdParamsRule],
       [DECLINE_TRANSITION, commanderIdParamsRule],
+      [AUTOFILE_TRANSITION, proposeParamsRule],
     ]);
     // M045: execute runs heads through the live verb maps (treasury
     // precedent — the L2 executor cannot import them, so Match injects).
@@ -425,10 +433,14 @@ export class Match {
       // M052: the system record transition is budget-free (bookkeeping
       // is not a player action — no budget pre-check, no spend, no
       // ledger post-check). Its wire rule is fixed, not looked up.
-      const system = name === RECORD_TRANSITION;
+      // M059: the assisted autofile rides the same system rail (its
+      // fixed wire rule is proposeParamsRule — same { id, proposal }).
+      const system = name === RECORD_TRANSITION || name === AUTOFILE_TRANSITION;
       let pre: readonly PreRule[];
-      if (system) {
+      if (name === RECORD_TRANSITION) {
         pre = [recordParamsRule, ...validator.pre];
+      } else if (name === AUTOFILE_TRANSITION) {
+        pre = [proposeParamsRule, ...validator.pre];
       } else if (paramRule !== undefined) {
         pre = [promptsAvailableRule, paramRule, ...validator.pre];
       } else if (noParamHandlers.has(name)) {
@@ -609,6 +621,9 @@ export class Match {
         // M052: stamped memorable events persist as commander memories
         // (direct kernel call — bookkeeping bypasses producers/victory).
         this.recordMemories(session, emitted);
+        // M059: assisted commanders file stance proposals from new
+        // lessons (after memories — recall reads this lance's record).
+        this.autofileProposals(session, outcome.revision);
         const verdict = evaluateVictory(this.conditions, {
           state: after,
           revision: outcome.revision,
@@ -657,6 +672,77 @@ export class Match {
     );
     if (outcome.status === 'error') {
       throw new Error(`recordMemories: bookkeeping fault (${outcome.code}).`);
+    }
+  }
+
+  /**
+   * M059 — bookkeeping: assisted/autonomous commanders file a stance
+   * proposal when a NEW lesson diverges recall from DNA (the slot
+   * fills from this lance's record — battle, then counsel). Manual
+   * and directive-less commanders stay silent (manual is status
+   * quo, D-049 honored); occupied slots, set stances and inactive
+   * records are skipped; the new-lesson gate (fresh battle/failure
+   * stamped this lance) keeps declines declined until new evidence.
+   * Direct kernel dispatches (fire-and-forget — pre-checked slots
+   * are distinct and single-threaded, so the defensive rejects are
+   * unreachable here; direct-dispatch tests prove them instead).
+   * Each filing runs the proposed producer by hand (bookkeeping
+   * bypasses producers — but the holder MUST notice an attention
+   * slot; M052-silence would defeat the purpose).
+   */
+  private autofileProposals(session: SessionHandle, outerRevision: number): void {
+    const lookup = this.streamLookup();
+    for (const record of this.kernel.getSnapshot().commanders?.commanders ?? []) {
+      if (!record.active) {
+        continue;
+      }
+      // Absent directives read silent (manual-by-default, D-049).
+      const directives = record.directives ?? {};
+      const autonomy = directives.autonomy;
+      if (autonomy !== 'assisted' && autonomy !== 'autonomous') {
+        continue;
+      }
+      if (record.proposal !== undefined) {
+        continue;
+      }
+      if (directives.stance !== undefined) {
+        continue;
+      }
+      // Defined records always recollect (cast documents the seam).
+      const recollected = recallMemories(record, lookup) as Recollection;
+      const lesson = recollected.fresh.some(
+        (memory) =>
+          (STANCE_BATTLE_KINDS.includes(memory.kind) ||
+            STANCE_FAILURE_KINDS.includes(memory.kind)) &&
+          memory.revision === outerRevision,
+      );
+      if (!lesson) {
+        continue;
+      }
+      const counsel = stanceWithRecall(record, recollected);
+      if (counsel === stanceOf(record)) {
+        continue;
+      }
+      const payload = { id: record.id, proposal: { kind: 'stance', stance: counsel } };
+      const before = this.kernel.getSnapshot();
+      this.kernel.dispatch(
+        session,
+        markUntrusted({
+          requestId: `proposal.autofile ${record.id} rev ${this.kernel.getRevision()}` as RequestId,
+          playerId: session.playerId,
+          type: AUTOFILE_TRANSITION,
+          payload,
+        }),
+      );
+      const after = this.kernel.getSnapshot();
+      this.events.push(
+        ...runProducers(
+          { type: AUTOFILE_TRANSITION, caller: session.playerId, params: payload, before, after },
+          [proposalProposedProducer],
+          this.kernel.getRevision(),
+          this.events.length + 1,
+        ),
+      );
     }
   }
 
