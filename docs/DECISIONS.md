@@ -2204,3 +2204,31 @@ Date.now)` (relógio injetável):
 - DISADVANTAGES: cold-start free-tier.
 - RISKS: baixo — moldes dev+transport.
 - CUTS: page client (M073+); domínio.
+
+## D-067 — Page client M073 (sem voto: sequência apontada)
+
+- DECISION: painel Online em match.html
+  (apiUrl default prod + lobby/forge/
+  join p1|p2/noop/attack/stop + netOut):
+  fetch real; SSE via fetch+reader
+  (não EventSource — corre no node,
+  testável); erros → netLog (jamais
+  throw); stop = AbortController (UI
+  real + fim limpo nos testes).
+  Teste: `API_TEST=1` no smoke (sobe
+  serve.ts local via tsx, flow
+  completo forge→attack→SSE→close,
+  asserts conteúdo; base smoke clica
+  tudo c/ API inalcançável (no-crash).
+- MOTIVE: multiplayer jogável no
+  browser contra a API live.
+- ALTERNATIVES: EventSource (rejeitado:
+  node20 não tem — SSE intestável);
+  bater na API prod nos testes
+  (rejeitado: cold-start + lixo);
+  WS client (rejeitado: API é SSE).
+- ADVANTAGES: E2E local honesto;
+  default = prod (online real).
+- DISADVANTAGES: painel ~120 linhas.
+- RISKS: baixo — fetch+try/catch.
+- CUTS: board render online; auto-rejoin.

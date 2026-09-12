@@ -137,3 +137,5 @@
 | 2026-09-12 | M070      | Presence live (heartbeat/roster/sweep, bundle +0); lobby/lifecycle→M071                                                   |
 | 2026-09-12 | M071      | Lobby live (list/close/lifecycle, bundle +0); deploy→M072                                                                 |
 | 2026-09-12 | M072      | Deploy live (entry + Render API + CORS, bundle +0); page client→M073                                                      |
+
+- M073: page client online jogável (default prod); RISK: ataques online ainda drill fixo u1→u2 (ver M074).

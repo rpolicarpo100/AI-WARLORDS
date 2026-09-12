@@ -28,6 +28,7 @@
     "smoke": "node tools/smoke-match.mjs",
     "smoke:attack": "ATTACK_TEST=1 node tools/smoke-match.mjs",
     "smoke:arena": "ARENA_TEST=1 node tools/smoke-match.mjs",
+    "smoke:api": "API_TEST=1 node tools/smoke-match.mjs",
     "verify:bundle": "node tools/verify-bundle.mjs"
   },
   "devDependencies": {

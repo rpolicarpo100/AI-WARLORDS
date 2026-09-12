@@ -83,9 +83,13 @@ globalThis.window = { devicePixelRatio: 1, addEventListener() {} };
 globalThis.requestAnimationFrame = (cb) => {
   rafCb = cb;
 };
-globalThis.setTimeout = () => 0;
+// Frozen clock for page toasts (IIFE parameter only — the REAL global
+// setTimeout stays: node fetch (API_TEST) needs unref-able timeouts).
+const timeoutStub = () => 0;
 let nowMs = 1000;
-globalThis.performance = { now: () => nowMs };
+// Manual clock for the page loop (IIFE parameter only — the REAL global
+// performance stays: node fetch (API_TEST) needs markResourceTiming).
+const perfStub = { now: () => nowMs };
 
 const html = readFileSync(new URL('../mockups/match.html', import.meta.url), 'utf8');
 const m = html.match(/<script>const SCENARIO = (\{.*?\});<\/script>/s);
@@ -160,8 +164,8 @@ run(
   globalThis.window,
   globalThis.document,
   globalThis.requestAnimationFrame,
-  globalThis.setTimeout,
-  globalThis.performance,
+  timeoutStub,
+  perfStub,
 );
 console.log('IIFE top-level OK; raf captured:', typeof rafCb);
 
@@ -195,10 +199,22 @@ fire('vFull', 'click');
 fire('vFog', 'click');
 fire('vHeat', 'click');
 fire('tCmd', 'click');
-for (const id of ['cmdGather', 'cmdAttack', 'cmdHouse', 'cmdTower', 'cmdStorage', 'cmdWait', 'cmdUpgrade'])
+for (const id of [
+  'cmdGather',
+  'cmdAttack',
+  'cmdHouse',
+  'cmdTower',
+  'cmdStorage',
+  'cmdWait',
+  'cmdUpgrade',
+])
   fire(id, 'click');
 fire('tArena', 'click');
 fire('arenaRun', 'click');
+globalThis.document.getElementById('apiUrl').value = 'http://127.0.0.1:1/';
+fire('tOnline', 'click');
+for (const id of ['netLobby', 'netForge', 'netJoin', 'netNoop', 'netAttack', 'netStop'])
+  fire(id, 'click');
 fire('tMute', 'click');
 fire('tMute', 'click');
 fire('tRain', 'click');
@@ -234,12 +250,17 @@ if (process.env.ATTACK_TEST) {
     if (byId['cmdbar'].hidden !== true) throw new Error('FASEB E2E: release failed');
     const st15 = SCENARIO.snapshots[5];
     const us = (st15.units && st15.units.units) || [];
-    let atk = null, foe = null;
+    let atk = null,
+      foe = null;
     for (const a of us) {
       if (a.owner !== 'p1' || a.hp <= 0) continue;
       const nbs = new Set(E.neighborsOf(st15.map, a.col, a.row).map((c) => c.col + ',' + c.row));
       const f = us.find((b) => b.owner !== a.owner && b.hp > 0 && nbs.has(b.col + ',' + b.row));
-      if (f) { atk = a; foe = f; break; }
+      if (f) {
+        atk = a;
+        foe = f;
+        break;
+      }
     }
     if (!atk) throw new Error('FASEB E2E: no adjacent p1/enemy pair at rev 5');
     const expDmg = ((SCENARIO.configs.unitsScenario || {})[atk.type] || {}).damage;
@@ -250,12 +271,20 @@ if (process.env.ATTACK_TEST) {
     const cells0 = SCENARIO.snapshots[0].map.cells;
     const W = Math.max(...cells0.map((c) => c.col)) + 1;
     const H = Math.max(...cells0.map((c) => c.row)) + 1;
-    const SQ3 = Math.sqrt(3), SQUASH = 0.56, cw = 1200, ch = 700;
+    const SQ3 = Math.sqrt(3),
+      SQUASH = 0.56,
+      cw = 1200,
+      ch = 700;
     const s = Math.min(cw / (SQ3 * (W - 0.5) + 1.9), ch / (1.5 * (H - 1) * SQUASH + 4.9));
     const ox = cw / 2 - (s * SQ3 * (W - 0.5)) / 2;
     const oy = ch / 2 - (s * (-3.4 + 1.5 * (H - 1) * SQUASH + 1.5)) / 2;
     const px = (c, r) => [ox + s * SQ3 * (c + 0.5 * (r & 1)), oy + s * 1.5 * r * SQUASH];
-    const pump = (n) => { for (let i = 0; i < n; i++) { nowMs += 100; rafCb(nowMs); } };
+    const pump = (n) => {
+      for (let i = 0; i < n; i++) {
+        nowMs += 100;
+        rafCb(nowMs);
+      }
+    };
     const orderBtns = () => created.filter((e) => e.dataset.k && e.__listeners.click);
     const seekers = orderBtns().filter((e) => e.dataset.k === '5');
     for (const fn of seekers[seekers.length - 1].__listeners.click) fn(); // seek rev 15
@@ -269,7 +298,8 @@ if (process.env.ATTACK_TEST) {
     fire('cmdAttack', 'click');
     if (!/ready \u2014 click an adjacent enemy/.test(toastEl.textContent))
       throw new Error('FASEB E2E: arming toast missing: ' + toastEl.textContent);
-    if (byId['iso'].style.cursor !== 'crosshair') throw new Error('FASEB E2E: cursor not crosshair when armed');
+    if (byId['iso'].style.cursor !== 'crosshair')
+      throw new Error('FASEB E2E: cursor not crosshair when armed');
     const [ex, ey] = px(foe.col, foe.row);
     let hn = heraldSeen.length;
     fire('iso', 'click', { clientX: ex, clientY: ey });
@@ -277,13 +307,21 @@ if (process.env.ATTACK_TEST) {
       throw new Error('FASEB E2E: attack not applied: ' + toastEl.textContent);
     pump(60);
     const struck1 = heraldSeen.slice(hn).find((t) => t.includes('struck') && t.includes(atk.id));
-    if (!struck1 || !struck1.includes(atk.id) || !struck1.includes(foe.id) || !struck1.includes(`for ${expDmg}`))
+    if (
+      !struck1 ||
+      !struck1.includes(atk.id) ||
+      !struck1.includes(foe.id) ||
+      !struck1.includes(`for ${expDmg}`)
+    )
       throw new Error('FASEB E2E: struck feedback wrong: ' + JSON.stringify(heraldSeen.slice(hn)));
-    if (byId['iso'].style.cursor !== 'default') throw new Error('FASEB E2E: still armed after applied attack');
+    if (byId['iso'].style.cursor !== 'default')
+      throw new Error('FASEB E2E: still armed after applied attack');
     const obs = orderBtns();
     const last = obs[obs.length - 1];
-    if (!String(last.className).includes('local')) throw new Error('FASEB E2E: local order not highlighted');
-    if (String(obs[0].className).includes('local')) throw new Error('FASEB E2E: chronicle order wrongly marked local');
+    if (!String(last.className).includes('local'))
+      throw new Error('FASEB E2E: local order not highlighted');
+    if (String(obs[0].className).includes('local'))
+      throw new Error('FASEB E2E: chronicle order wrongly marked local');
     hn = heraldSeen.length; // unarmed click-attack (pre-existing path, first coverage)
     fire('iso', 'click', { clientX: ex, clientY: ey });
     pump(60);
@@ -291,7 +329,9 @@ if (process.env.ATTACK_TEST) {
       throw new Error('FASEB E2E: unarmed click-attack produced no struck feedback');
     fire('tCmd', 'click');
     if (byId['cmdbar'].hidden !== true) throw new Error('FASEB E2E: final release failed');
-    console.log(`FASEB E2E OK (${atk.id} x ${foe.id}, dmg ${expDmg}, armed + unarmed + local orders)`);
+    console.log(
+      `FASEB E2E OK (${atk.id} x ${foe.id}, dmg ${expDmg}, armed + unarmed + local orders)`,
+    );
   }
 }
 if (process.env.ARENA_TEST) {
@@ -303,5 +343,75 @@ if (process.env.ARENA_TEST) {
   fire('arenaRun', 'click');
   if (byId['arenaOut'].textContent !== first) throw new Error('arena nondeterministic');
   console.log('arena E2E OK (' + out.split('\n').slice(0, 3).join(' | ') + ')');
+}
+if (process.env.API_TEST) {
+  // API_TEST=1: boots the REAL transport (tsx child, like serve.test.ts — no
+  // TEST MOCK) and drives the full online flow through the page client.
+  const { spawn } = await import('node:child_process');
+  const { setTimeout: sleep } = await import('node:timers/promises');
+  const { setTimeout: realTimeout, clearTimeout: realClear } = await import('node:timers');
+  const child = spawn('npx', ['--no-install', 'tsx', 'src/server/serve.ts'], {
+    cwd: process.cwd(),
+    env: { ...process.env, PORT: '0' },
+    stdio: ['ignore', 'pipe', 'pipe'],
+    detached: true, // own process group: SIGTERM reaps npx AND the server
+  });
+  const url = await new Promise((resolve, reject) => {
+    let out = '';
+    const timer = realTimeout(() => {
+      try {
+        process.kill(-child.pid, 'SIGTERM');
+      } catch {
+        child.kill();
+      }
+      reject(new Error('api test: no listen URL: ' + out));
+    }, 30000);
+    child.stdout.on('data', (c) => {
+      out += c;
+      const m = /listening on (http:\/\/\S+)/.exec(out);
+      if (m) {
+        realClear(timer);
+        resolve(m[1]);
+      }
+    });
+    child.on('error', reject);
+  });
+  try {
+    globalThis.document.getElementById('apiUrl').value = url;
+    globalThis.document.getElementById('netSide').value = 'p1';
+    const out = () => byId['netOut'].textContent;
+    const waitOut = async (needle, label) => {
+      for (let i = 0; i < 200; i += 1) {
+        if (out().includes(needle)) return;
+        await sleep(25);
+      }
+      throw new Error(`api test: ${label} missing in: ${JSON.stringify(out())}`);
+    };
+    fire('netLobby', 'click');
+    await waitOut('lobby: 0 table(s)', 'empty lobby');
+    fire('netForge', 'click');
+    await waitOut('forged ', 'forge line');
+    const mid = /forged (\S+)/.exec(out())[1];
+    fire('netJoin', 'click');
+    await waitOut('joined p1', 'join line');
+    await waitOut('event: ', 'backlog event over SSE');
+    fire('netNoop', 'click');
+    await waitOut('dispatch: applied rev 1', 'noop outcome');
+    fire('netAttack', 'click');
+    await waitOut('event: unit.attacked', 'live attack event');
+    fire('netStop', 'click');
+    await waitOut('watch stopped', 'stop line');
+    const closed = await globalThis.fetch(`${url}/match/${mid}/close`, { method: 'POST' });
+    if (!closed.ok) throw new Error('api test: close failed');
+    console.log('online E2E OK (lobby → forge → join → noop → attack → sse → stop)');
+  } finally {
+    try {
+      process.kill(-child.pid, 'SIGTERM');
+    } catch {
+      child.kill('SIGTERM');
+    }
+    child.stdout.destroy();
+    child.stderr.destroy();
+  }
 }
 console.log('HARNESS PASS');

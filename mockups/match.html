@@ -80,6 +80,12 @@
     z-index:6; font:12px system-ui,sans-serif; color:var(--ink); }
   #arenaPanel[hidden] { display:none; }
   #arenaOut { white-space:pre-wrap; margin:6px 0 0; font:11px ui-monospace,monospace; color:var(--dim); }
+  #onlinePanel { position:absolute; left:10px; bottom:8px; width:360px; max-height:70%; overflow:auto;
+    background:rgba(10,12,16,.92); border:2px solid var(--gold-dim); border-radius:8px; padding:8px 10px;
+    z-index:6; font:12px system-ui,sans-serif; color:var(--ink); }
+  #onlinePanel[hidden] { display:none; }
+  #onlinePanel input, #onlinePanel select { margin:0 4px 6px 0; font:12px system-ui,sans-serif; }
+  #netOut { white-space:pre-wrap; margin:6px 0 0; font:11px ui-monospace,monospace; color:var(--dim); }
   #statusline { font-size:12px; color:var(--dim); padding:5px 14px 0; flex:none; }
   #statusline b { color:var(--ink); }
   /* ── Dock ── */
@@ -138,6 +144,7 @@
     <option value="2">2×</option><option value="4">4×</option></select>
     <button class="tbtn" id="tCmd" title="take command with the local engine">⚔ Command</button>
     <button class="tbtn" id="tArena" title="arena: self-play the current position">🏟 Arena</button>
+    <button class="tbtn" id="tOnline" title="online: play on the SSE+POST transport">🌐 Online</button>
   <button class="tbtn" id="tRain" title="rain on/off">🌧</button>
   <button class="tbtn" id="tMute" title="sound on/off">🔊</button>
   <div class="progress" id="prog"><div class="fill" id="fill"></div></div>
@@ -161,6 +168,17 @@
   <div id="arenaPanel" hidden>
     <button class="tbtn" id="arenaRun" title="run template-player self-play on the current position">▶ Run self-play</button>
     <pre id="arenaOut">The arena awaits, sire.</pre>
+  </div>
+  <div id="onlinePanel" hidden>
+    <input id="apiUrl" value="https://ai-warlords-api.onrender.com" title="transport base URL" size="34">
+    <select id="netSide" title="side to join"><option value="p1">p1</option><option value="p2">p2</option></select>
+    <button class="tbtn" id="netLobby" title="list open tables">🗺 Lobby</button>
+    <button class="tbtn" id="netForge" title="forge a new skirmish">⚒ Forge</button>
+    <button class="tbtn" id="netJoin" title="join the forged table">🚪 Join</button>
+    <button class="tbtn" id="netNoop" title="spend a prompt doing nothing">⏳ Noop</button>
+    <button class="tbtn" id="netAttack" title="u1 strikes u2 (skirmish drill)">⚔ Attack</button>
+    <button class="tbtn" id="netStop" title="stop watching">⏹ Stop</button>
+    <pre id="netOut">Offline, sire.</pre>
   </div>
   <div id="toast" hidden></div>
   <div id="tooltip" hidden></div>
@@ -10784,6 +10802,110 @@
     $('arenaOut').textContent = lines.join('\n');
     toast(`Arena: ${lances} lances, p1 ${scores.p1} — p2 ${scores.p2} (${verdict})`, false);
   }
+  // ── Online mode (M073: real client for the SSE+POST transport — the browser is never trusted) ──
+  const NET = { matchId: '', sessionId: '', watching: false, abort: null, rid: 0 };
+  function netLog(line) {
+    const out = $('netOut');
+    out.textContent = `${out.textContent}\n${line}`.trim();
+  }
+  function netBase() {
+    const typed = $('apiUrl').value.trim().replace(/\/+$/, '');
+    return typed === '' ? 'https://ai-warlords-api.onrender.com' : typed;
+  }
+  async function netCall(path, body) {
+    const res = await fetch(`${netBase()}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body === undefined ? {} : body),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error((json && json.error) || `http ${res.status}`);
+    return json;
+  }
+  async function netLobby() {
+    try {
+      const res = await fetch(`${netBase()}/matches`);
+      const tables = await res.json();
+      if (!res.ok) throw new Error('lobby refused');
+      netLog(`lobby: ${tables.length} table(s)`);
+      for (const t of tables.slice(0, 6)) {
+        netLog(`- ${t.matchId.slice(0, 8)} ${t.status} rev ${t.revision} online [${t.online.join(',')}]`);
+      }
+    } catch (err) { netLog(`net error: ${err.message || err}`); }
+  }
+  async function netForge() {
+    try {
+      const forged = await netCall('/match', {});
+      NET.matchId = forged.matchId; NET.sessionId = '';
+      netLog(`forged ${forged.matchId}`);
+    } catch (err) { netLog(`net error: ${err.message || err}`); }
+  }
+  async function netJoin() {
+    if (NET.matchId === '') { netLog('forge or pick a table first'); return; }
+    try {
+      const side = $('netSide').value;
+      const joined = await netCall(`/match/${NET.matchId}/join`, { playerId: side });
+      NET.sessionId = joined.sessionId;
+      netLog(`joined ${side} ${joined.sessionId.slice(0, 8)}`);
+      void netWatch();
+    } catch (err) { netLog(`net error: ${err.message || err}`); }
+  }
+  async function netAct(kind) {
+    if (NET.sessionId === '') { netLog('join first'); return; }
+    NET.rid += 1;
+    const lance = kind === 'attack'
+      ? { type: 'unit.attack', payload: { id: 'u1', target: 'u2' } }
+      : { type: 'world.noop', payload: {} };
+    try {
+      const out = await netCall(`/match/${NET.matchId}/dispatch`, {
+        sessionId: NET.sessionId, requestId: `web${NET.rid}`, type: lance.type, payload: lance.payload,
+      });
+      const tail = out.revision === undefined ? '' : ` rev ${out.revision}`;
+      const why = out.reason || out.code ? ` (${out.reason || out.code})` : '';
+      netLog(`dispatch: ${out.status}${tail}${why}`);
+    } catch (err) { netLog(`net error: ${err.message || err}`); }
+  }
+  async function netWatch() {
+    if (NET.watching || NET.matchId === '') return;
+    NET.watching = true;
+    NET.abort = new AbortController();
+    try {
+      const res = await fetch(`${netBase()}/match/${NET.matchId}/events?from=0`, { signal: NET.abort.signal });
+      if (!res.ok || !res.body) { netLog('sse: unavailable'); return; }
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = '';
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        let cut = buf.indexOf('\n\n');
+        while (cut >= 0) {
+          const frame = buf.slice(0, cut);
+          buf = buf.slice(cut + 2);
+          for (const line of frame.split('\n')) {
+            if (line.startsWith('data: ')) {
+              try {
+                const ev = JSON.parse(line.slice(6));
+                netLog(`event: ${ev.type || ev.kind || '?'}`);
+              } catch { /* partial flush — ignore */ }
+            }
+          }
+          cut = buf.indexOf('\n\n');
+        }
+      }
+    } catch (err) {
+      if (err && err.name !== 'AbortError') netLog(`sse: ${err.message || err}`);
+    } finally {
+      NET.watching = false;
+    }
+  }
+  function netStop() {
+    if (NET.abort) { NET.abort.abort(); NET.abort = null; }
+    NET.watching = false;
+    NET.sessionId = '';
+    netLog('watch stopped');
+  }
   function cmdSelUnit() {
     if (!CMD || !selUnit) return null;
     return ((kf(rev()).units || {}).units || []).find((x) => x.id === selUnit) || null;
@@ -11958,6 +12080,13 @@
   });
   $('tArena').addEventListener('click', () => { $('arenaPanel').hidden = !$('arenaPanel').hidden; });
   $('arenaRun').addEventListener('click', arenaRun);
+  $('tOnline').addEventListener('click', () => { $('onlinePanel').hidden = !$('onlinePanel').hidden; });
+  $('netLobby').addEventListener('click', () => { void netLobby(); });
+  $('netForge').addEventListener('click', () => { void netForge(); });
+  $('netJoin').addEventListener('click', () => { void netJoin(); });
+  $('netNoop').addEventListener('click', () => { void netAct('noop'); });
+  $('netAttack').addEventListener('click', () => { void netAct('attack'); });
+  $('netStop').addEventListener('click', netStop);
   const cmdSide = () => { const u = cmdSelUnit(); return u ? u.owner : 'p1'; };
   $('cmdGather').addEventListener('click', () => {
     const u = cmdSelUnit();
