@@ -1479,3 +1479,36 @@ state, hypothetical, deps)` — target? (fail-
 - RISKS: baixo — delegação pinnada.
 - CUTS: advance (futuro, se scores lerem
   cities); pesos tuning; raise (M051+).
+
+## D-045 — Memory data M051 (voto memory-data)
+
+- DECISION: NOVO `memories.ts` (LEAF L0, zero
+  imports — molde M046): MEMORABLE_KINDS (6
+  tipos EMITIDOS reais: order.executed,
+  order.overridden, order.canceled,
+  unit.attacked, unit.slain, unit.spotted) +
+  CommanderMemory {seq, revision, kind,
+  subject} (auto-validável: seq localiza no
+  stream, revision+kind confirmam) +
+  MAX_MEMORIES_PER_COMMANDER 8 (simétrico
+  orders) + MAX_MEMORY_SUBJECT_CHARS 64 +
+  guards totais + isMemoryLog capped.
+  commanders.ts: `memories?` mirror (L0↛L0,
+  absent=vazio) + validação capped +
+  copyRecord. Pins: census + LAYERS
+  `memories: 0`.
+- MOTIVE: voto memory-data + M046 (data-first
+  abre-bloco) + 18 tipos emitidos grounded
+  (6 AI-relevantes).
+- ALTERNATIVES: vocab largo (rejeitado: ruído
+  — assessment/cell/economy são estado
+  alheio); snapshots payload (rejeitado:
+  unbounded, refs bastam); record path já
+  (rejeitado: data-first).
+- ADVANTAGES: refs bounded; stream é verdade;
+  stale detetável (kind/seq mismatch).
+- DISADVANTAGES: sem readers até M052+.
+- RISKS: baixo — data pura, molde provado.
+- CUTS: record/append (M052); recall (M052+);
+  staleness resolution (M052+); crescimento
+  vocab; pesos/decay.

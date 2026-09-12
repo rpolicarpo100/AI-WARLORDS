@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 50 (M001–M050)  |
-| `PLANNED`  | 115 (M051–M165) |
+| `VERIFIED` | 51 (M001–M051)  |
+| `PLANNED`  | 114 (M052–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -215,6 +215,12 @@ Checkpoints `VERIFIED`:
   Registo em `docs/modules/M050.md`.
   Bloco Refutation → Counterfactual M046–M050
   FECHADO.
+- **M051 @ 2026-09-12** — AI Memory Data
+  (vocabulário votado: 6 kinds emitidos,
+  log capped 8, espelho commanders);
+  1673/1673 testes, 100 global.
+  Registo em `docs/modules/M051.md`.
+  Bloco Memory M051–M054 ABERTO.
 
 ---
 
@@ -297,7 +303,8 @@ Checkpoints `VERIFIED`:
 | M048      | Confidence Engine — Reason Evaluators   | `VERIFIED` |
 | M049      | Counterfactual AI — What-If Query       | `VERIFIED` |
 | M050      | Counterfactual AI — Ranking             | `VERIFIED` |
-| M051–M054 | Memory                                  | `PLANNED`  |
+| M051      | Memory — Data                           | `VERIFIED` |
+| M052–M054 | Memory                                  | `PLANNED`  |
 | M055–M058 | Player ↔ Commander                      | `PLANNED`  |
 | M059–M061 | AI Evolution                            | `PLANNED`  |
 | M062–M064 | Replay                                  | `PLANNED`  |

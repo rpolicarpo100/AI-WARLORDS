@@ -15,6 +15,7 @@ import {
   isCommandersData,
   MAX_COMMANDER_ID_CHARS,
   MAX_HOLDER_ID_CHARS,
+  type CommanderMemory,
   type CommanderOrders,
   type CommanderRefutation,
   type CommandersData,
@@ -28,6 +29,13 @@ import {
   MAX_REFUTATION_BY_CHARS,
   REFUTATION_REASONS,
 } from './refutations.js';
+import {
+  isCommanderMemory,
+  isMemoryLog,
+  MAX_MEMORIES_PER_COMMANDER,
+  MAX_MEMORY_SUBJECT_CHARS,
+  MEMORABLE_KINDS,
+} from './memories.js';
 import { perceive } from './views.js';
 import { createWorldState, isWorldState } from './world-state.js';
 
@@ -839,6 +847,71 @@ describe('refutation mirror cross-check (M046)', () => {
     expect(copy?.refutation).toEqual(good);
     expect(copy?.refutation).not.toBe(data.commanders[0]?.refutation);
     expect(commanderById(data, 'c0')?.refutation).toEqual(good);
+  });
+});
+
+describe('memory mirror cross-check (M051)', () => {
+  const good: CommanderMemory = { seq: 12, revision: 3, kind: 'unit.slain', subject: 'u7' };
+
+  it('mirror agrees with canonical on memories + abuse batteries', () => {
+    for (const kind of MEMORABLE_KINDS) {
+      const memory = { ...good, kind };
+      expect(isCommanderMemory(memory)).toBe(true);
+      expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true, memories: [memory] })).toBe(
+        true,
+      );
+    }
+    const battery: ReadonlyArray<{ readonly memory: unknown; readonly valid: boolean }> = [
+      { memory: { ...good, seq: 0, revision: 0 }, valid: true },
+      { memory: { ...good, seq: 0xffffffff, revision: 0xffffffff }, valid: true },
+      { memory: { ...good, subject: 's'.repeat(64) }, valid: true },
+      { memory: { ...good, note: 'extra' }, valid: true },
+      { memory: { ...good, seq: -1 }, valid: false },
+      { memory: { ...good, seq: 1.5 }, valid: false },
+      { memory: { ...good, revision: 0x100000000 }, valid: false },
+      { memory: { ...good, kind: 'ai.assessment' }, valid: false },
+      { memory: { ...good, subject: '' }, valid: false },
+      { memory: { ...good, subject: 's'.repeat(65) }, valid: false },
+      { memory: { kind: 'unit.slain', subject: 'u7' }, valid: false },
+      { memory: 7, valid: false },
+      { memory: null, valid: false },
+      { memory: [], valid: false },
+    ];
+    for (const { memory, valid } of battery) {
+      expect(isCommanderMemory(memory)).toBe(valid);
+      expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true, memories: [memory] })).toBe(
+        valid,
+      );
+    }
+    expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true })).toBe(true);
+    expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true, memories: 'nope' })).toBe(
+      false,
+    );
+  });
+
+  it('locks the mirrored log and subject ceilings', () => {
+    expect(MAX_MEMORIES_PER_COMMANDER).toBe(8);
+    expect(MAX_MEMORY_SUBJECT_CHARS).toBe(64);
+    const full = Array.from({ length: 8 }, (_, seq) => ({ ...good, seq }));
+    expect(isMemoryLog(full)).toBe(true);
+    expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true, memories: full })).toBe(true);
+    const overflow = [...full, { ...good, seq: 8 }];
+    expect(isMemoryLog(overflow)).toBe(false);
+    expect(isCommanderRecord({ id: 'c0', owner: 'p1', active: true, memories: overflow })).toBe(
+      false,
+    );
+  });
+
+  it('copies memories fresh (no aliasing)', () => {
+    const data: CommandersData = {
+      schemaVersion: COMMANDERS_SCHEMA_VERSION,
+      nextId: 1,
+      commanders: [{ id: 'c0', owner: 'p1', active: true, memories: [good] }],
+    };
+    const [copy] = commandersOf(data, 'p1');
+    expect(copy?.memories).toEqual([good]);
+    expect(copy?.memories?.[0]).not.toBe(data.commanders[0]?.memories?.[0]);
+    expect(commanderById(data, 'c0')?.memories).toEqual([good]);
   });
 });
 

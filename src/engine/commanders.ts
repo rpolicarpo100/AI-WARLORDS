@@ -22,6 +22,8 @@
  * stale M043 `order` key is ignored, never rejected (back-compat).
  * M046 embeds an optional refutation challenge (shape mirror —
  * refutations.ts canonical, L0↛L0; resolution NOT mirrored, M047+ owns).
+ * M051 embeds an optional memory log (shape mirror — memories.ts
+ * canonical, L0↛L0; recording/recall NOT mirrored, M052+ owns).
  */
 
 export const COMMANDERS_SCHEMA_VERSION = 1;
@@ -78,6 +80,26 @@ export interface CommanderRefutation {
 export type CommanderRefutationReason =
   'blocked' | 'out-of-range' | 'redundant' | 'suicidal' | 'unaffordable';
 
+/** M051 mirror of CommanderMemory (memories.ts canonical; L0↛L0: deliberately not imported). */
+export interface CommanderMemory {
+  readonly seq: number;
+  readonly revision: number;
+  readonly kind: CommanderMemorableKind;
+  readonly subject: string;
+}
+
+/** M051 mirror of MemorableKind (memories.ts canonical; L0↛L0: deliberately not imported). */
+export type CommanderMemorableKind =
+  | 'order.canceled'
+  | 'order.executed'
+  | 'order.overridden'
+  | 'unit.attacked'
+  | 'unit.slain'
+  | 'unit.spotted';
+
+/** M051 bounded log of remembered events (absent means empty; capped). */
+export type CommanderMemories = readonly CommanderMemory[];
+
 export interface CommanderRecord {
   readonly id: string;
   readonly owner: string;
@@ -87,6 +109,7 @@ export interface CommanderRecord {
   readonly doctrine?: CommanderDoctrine;
   readonly orders?: CommanderOrders;
   readonly refutation?: CommanderRefutation;
+  readonly memories?: CommanderMemories;
 }
 
 export interface CommandersData {
@@ -308,6 +331,60 @@ function isMirroredRefutation(value: unknown): value is CommanderRefutation {
   );
 }
 
+/** Mirrors MEMORABLE_KINDS (memories.ts). Leaf: deliberately not imported. */
+const MIRRORED_MEMORABLE_KINDS: readonly string[] = [
+  'order.canceled',
+  'order.executed',
+  'order.overridden',
+  'unit.attacked',
+  'unit.slain',
+  'unit.spotted',
+];
+
+/** Mirrors MAX_MEMORIES_PER_COMMANDER (memories.ts). Leaf: deliberately not imported. */
+const MIRRORED_MAX_MEMORIES = 8;
+
+/** Mirrors MAX_MEMORY_SUBJECT_CHARS (memories.ts). Leaf: deliberately not imported. */
+const MIRRORED_MAX_MEMORY_SUBJECT_CHARS = 64;
+
+/** Mirrors isMemorableKind (memories.ts). */
+function isMirroredMemorableKind(value: unknown): value is CommanderMemorableKind {
+  return typeof value === 'string' && MIRRORED_MEMORABLE_KINDS.includes(value);
+}
+
+/** Mirrors isCommanderMemory (memories.ts): total check, extras ignored (M015). */
+function isMirroredMemory(value: unknown): value is CommanderMemory {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const fields = value as Record<string, unknown>;
+  const subject = fields['subject'];
+  return (
+    isWord(fields['seq']) &&
+    isWord(fields['revision']) &&
+    isMirroredMemorableKind(fields['kind']) &&
+    typeof subject === 'string' &&
+    subject.length >= 1 &&
+    subject.length <= MIRRORED_MAX_MEMORY_SUBJECT_CHARS
+  );
+}
+
+/** Mirrors isMemoryLog (memories.ts): capped array of valid memories. */
+function isMirroredMemories(value: unknown): value is CommanderMemories {
+  if (!Array.isArray(value)) {
+    return false;
+  }
+  if (value.length > MIRRORED_MAX_MEMORIES) {
+    return false;
+  }
+  for (const entry of value) {
+    if (!isMirroredMemory(entry)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export function isCommanderRecord(value: unknown): value is CommanderRecord {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     return false;
@@ -321,7 +398,8 @@ export function isCommanderRecord(value: unknown): value is CommanderRecord {
     (fields['personality'] === undefined || isMirroredPersonality(fields['personality'])) &&
     (fields['doctrine'] === undefined || isMirroredDoctrine(fields['doctrine'])) &&
     (fields['orders'] === undefined || isMirroredOrders(fields['orders'])) &&
-    (fields['refutation'] === undefined || isMirroredRefutation(fields['refutation']))
+    (fields['refutation'] === undefined || isMirroredRefutation(fields['refutation'])) &&
+    (fields['memories'] === undefined || isMirroredMemories(fields['memories']))
   );
 }
 
@@ -367,7 +445,7 @@ export function commandersOf(data: CommandersData | undefined, holder: string): 
     .map((commander) => copyRecord(commander));
 }
 
-/** Fresh copy incl. nested DNA (M031), queued orders (M044: spreads alias nested) and refutation (M046: flat scalars, one spread suffices). */
+/** Fresh copy incl. nested DNA (M031), queued orders (M044: spreads alias nested), refutation (M046: flat scalars, one spread suffices) and memories (M051: flat scalars, spread each). */
 function copyRecord(commander: CommanderRecord): CommanderRecord {
   let copy: CommanderRecord = { ...commander };
   if (commander.dna !== undefined) {
@@ -378,6 +456,9 @@ function copyRecord(commander: CommanderRecord): CommanderRecord {
   }
   if (commander.refutation !== undefined) {
     copy = { ...copy, refutation: { ...commander.refutation } };
+  }
+  if (commander.memories !== undefined) {
+    copy = { ...copy, memories: commander.memories.map((memory) => ({ ...memory })) };
   }
   return copy;
 }
