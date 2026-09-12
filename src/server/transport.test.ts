@@ -925,4 +925,21 @@ describe('root + preflight + CORS (M072 deploy seams)', () => {
     );
     expect(headers['access-control-allow-origin']).toBe('*');
   });
+
+  it('hardens real responses (nosniff + deny-framing)', async () => {
+    const headers = await new Promise<Record<string, string | string[] | undefined>>(
+      (resolve, reject) => {
+        const req = httpRequest({ port, path: '/ratings', method: 'GET' }, (res) => {
+          res.resume();
+          res.on('end', () => {
+            resolve({ ...res.headers });
+          });
+        });
+        req.on('error', reject);
+        req.end();
+      },
+    );
+    expect(headers['x-content-type-options']).toBe('nosniff');
+    expect(headers['x-frame-options']).toBe('DENY');
+  });
 });

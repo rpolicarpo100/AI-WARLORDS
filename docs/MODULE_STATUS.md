@@ -9,8 +9,8 @@
 
 | Estado     | Contagem       |
 | ---------- | -------------- |
-| `VERIFIED` | 82 (M001–M082) |
-| `PLANNED`  | 83 (M083–M165) |
+| `VERIFIED` | 83 (M001–M083) |
+| `PLANNED`  | 82 (M084–M165) |
 | Outros     | 0              |
 
 Checkpoints `VERIFIED`:
@@ -441,7 +441,8 @@ Checkpoints `VERIFIED`:
 | M080 | Competitive (leaderboard) | `VERIFIED` |
 | M081 | Security (rate limit) | `VERIFIED` |
 | M082 | Security (body limits) | `VERIFIED` |
-| M083–M087 | Security | `PLANNED` |
+| M083 | Security (headers) | `VERIFIED` |
+| M084–M087 | Security | `PLANNED` |
 | M081–M087 | Security                         | `PLANNED`  |
 | M088–M093 | Observability                    | `PLANNED`  |
 

@@ -157,3 +157,5 @@
 - M081: rate limit live (120/60s IP); RISK: bodies sem cap (ver M082).
 
 - M082: bodies com cap 64KB (413); RISK: headers sem hardening (ver M083).
+
+- M083: API headers live; static BLOQUEADO dashboard (click path em M083.md); RISK: sem audit validação (ver M084).

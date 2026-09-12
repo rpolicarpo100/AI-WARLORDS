@@ -2486,3 +2486,30 @@ rev R (seed S)` últimas 6,
 - RISKS: baixo.
 - CUTS: 413 por-rota ×5
   (helper cobre).
+
+## D-078 — Security headers M083 (sem voto: sequência apontada)
+
+- DECISION: API: nosniff + DENY
+  em onRequest (todas respostas
+  +SSE+OPTIONS, 2 linhas, zero
+  branch); Referrer/CSP CUT
+  (sem efeito em JSON puro).
+  STATIC: BLOQUEADO — headers
+  só via Dashboard (docs
+  oficiais); sem poking em APIs
+  undocumented no site live.
+  Click path em M083.md.
+- MOTIVE: RISK M082; MIME-sniff
+  - framing fechados na API.
+- ALTERNATIVES: meta http-equiv
+  (rejeitado: inline IIFE
+  exigiria unsafe-inline =
+  teatro); PATCH undocumented
+  (rejeitado: risco sem
+  conhecimento).
+- ADVANTAGES: 1 teste prova o
+  ponto único.
+- DISADVANTAGES: static nu até
+  ao click.
+- RISKS: baixo.
+- CUTS: Referrer-Policy; CSP.
