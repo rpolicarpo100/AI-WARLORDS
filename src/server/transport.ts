@@ -38,6 +38,7 @@ import {
 } from '../engine/authority.js';
 import type { MapCell, MapId } from '../engine/map.js';
 import { Match, STANDARD_RULESET, createMatchId, isSeed, type MatchInit } from '../engine/match.js';
+import { scoreTable } from '../engine/score.js';
 import { createWorldState } from '../engine/world-state.js';
 
 interface Stream {
@@ -55,7 +56,24 @@ interface Entry {
   readonly sessions: Map<string, SessionRecord>;
   readonly streams: Set<Stream>;
   readonly createdAt: number;
+  readonly seed: number;
 }
+
+/** One closed table, kept for the history board (M077, D-071). */
+export interface MatchResult {
+  readonly matchId: string;
+  readonly seed: number;
+  readonly status: 'finished' | 'ongoing';
+  readonly outcome: 'win' | 'draw' | null;
+  readonly condition: string | null;
+  readonly scores: Readonly<Record<string, number>>;
+  readonly revision: number;
+  readonly createdAt: number;
+  readonly closedAt: number;
+}
+
+/** History keeps the freshest tables (FIFO eviction past this). */
+const DEFAULT_MAX_RESULTS = 50;
 
 /** Idle strictly past this, a session dies (the boundary stays online). */
 export const PRESENCE_TIMEOUT_MS = 30_000;
@@ -145,8 +163,10 @@ function asRecord(body: unknown): Record<string, unknown> | undefined {
  */
 export function createTransport(
   now: () => number = Date.now,
+  maxResults: number = DEFAULT_MAX_RESULTS,
 ): (req: IncomingMessage, res: ServerResponse) => void {
   const matches = new Map<string, Entry>();
+  const results: MatchResult[] = [];
 
   const presence = (entry: Entry, playerId: string, online: boolean): void => {
     const line = `event: presence\ndata: ${JSON.stringify({ source: 'transport', kind: 'presence', playerId, online, at: now() })}\n\n`;
@@ -221,6 +241,10 @@ export function createTransport(
       send(res, 200, listing);
       return;
     }
+    if (parts[0] === 'results' && parts.length === 1 && method === 'GET') {
+      send(res, 200, results);
+      return;
+    }
     if (parts[0] !== 'match') {
       send(res, 404, { error: 'unknown route' });
       return;
@@ -246,7 +270,13 @@ export function createTransport(
         return;
       }
       const match = new Match(skirmishInit(seed));
-      matches.set(match.id, { match, sessions: new Map(), streams: new Set(), createdAt: now() });
+      matches.set(match.id, {
+        match,
+        sessions: new Map(),
+        streams: new Set(),
+        createdAt: now(),
+        seed: seed ?? DEFAULT_SKIRMISH_SEED,
+      });
       send(res, 200, { matchId: match.id });
       return;
     }
@@ -385,6 +415,22 @@ export function createTransport(
       req.resume();
       for (const stream of entry.streams) {
         stream.res.end();
+      }
+      const verdict = entry.match.getVerdict();
+      const rosterPlayers = entry.match.getSnapshot().players.map((player) => player.id);
+      results.push({
+        matchId: parts[1] as string,
+        seed: entry.seed,
+        status: verdict.status,
+        outcome: verdict.status === 'finished' ? verdict.outcome.kind : null,
+        condition: verdict.status === 'finished' ? verdict.condition : null,
+        scores: scoreTable(entry.match.getSnapshot(), rosterPlayers),
+        revision: entry.match.getRevision(),
+        createdAt: entry.createdAt,
+        closedAt: now(),
+      });
+      if (results.length > maxResults) {
+        results.shift();
       }
       matches.delete(parts[1] as string);
       send(res, 200, { closed: true });

@@ -9,8 +9,8 @@
 
 | Estado     | Contagem       |
 | ---------- | -------------- |
-| `VERIFIED` | 76 (M001–M076) |
-| `PLANNED`  | 89 (M077–M165) |
+| `VERIFIED` | 77 (M001–M077) |
+| `PLANNED`  | 88 (M078–M165) |
 | Outros     | 0              |
 
 Checkpoints `VERIFIED`:
@@ -435,7 +435,8 @@ Checkpoints `VERIFIED`:
 | M071      | Multiplayer — Lobby              | `VERIFIED` |
 | M072      | Multiplayer — Deploy             | `VERIFIED` |
 | M073–M076 | Multiplayer                      | `PLANNED`  |
-| M077–M080 | Competitive                      | `PLANNED`  |
+| M077 | Competitive (history) | `VERIFIED` |
+| M078–M080 | Competitive | `PLANNED` |
 | M081–M087 | Security                         | `PLANNED`  |
 | M088–M093 | Observability                    | `PLANNED`  |
 

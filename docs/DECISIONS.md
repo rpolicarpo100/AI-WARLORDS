@@ -2257,7 +2257,7 @@ Date.now)` (relógio injetável):
 
 - DECISION: botão State → GET /state
   → netOut (`state: prompts p1:N
-  p2:M` + 1 linha/unidade
+p2:M` + 1 linha/unidade
   `- id owner type hp @col,row`);
   guard = matchId (state não exige
   sessão); parse defensivo.
@@ -2287,3 +2287,27 @@ Date.now)` (relógio injetável):
 - DISADVANTAGES: sem.
 - RISKS: baixo.
 - CUTS: kick dono; TTL auto.
+
+## D-071 — Match history M077 (voto: history)
+
+- DECISION: servidor regista
+  resultado no close — {matchId,
+  seed, status, outcome, condition,
+  scores, revision, createdAt,
+  closedAt}; GET /results (ordem
+  append); cap 50 FIFO via 2º
+  param createTransport; Entry
+  ganha seed; outcome regista só
+  kind ('draw'|null — 'win' é tipo
+  futuro, sem branch incobrível:
+  única condition é draw).
+- MOTIVE: base do Competitive;
+  scores via scoreTable (M067).
+- ALTERNATIVES: winner direto
+  (rejeitado: branch win jamais
+  cobre); newest-first (rejeitado:
+  append é estável).
+- ADVANTAGES: replay story (seed).
+- DISADVANTAGES: memória (cap 50).
+- RISKS: baixo.
+- CUTS: ratings (M078).

@@ -149,10 +149,13 @@ async function sessionFor(playerId: string): Promise<{ matchId: string; sessionI
   return { matchId, sessionId };
 }
 
-async function withClock(fn: (clock: { now: number }) => Promise<void>): Promise<void> {
+async function withClock(
+  fn: (clock: { now: number }) => Promise<void>,
+  maxResults?: number,
+): Promise<void> {
   const main = port;
   const clock = { now: 1_000_000 };
-  const manual = createServer(createTransport(() => clock.now));
+  const manual = createServer(createTransport(() => clock.now, maxResults));
   await new Promise<void>((resolve) => manual.listen(0, resolve));
   port = (manual.address() as { port: number }).port;
   try {
@@ -658,6 +661,85 @@ describe('GET /matches (lobby)', () => {
   it('404s lobby lookalikes', async () => {
     expect(await get('/matches/x')).toMatchObject({ code: 404 });
     expect(await postJson('/matches', {})).toMatchObject({ code: 404 });
+  });
+});
+
+describe('GET /results (history)', () => {
+  it('lists nothing on a fresh server', async () => {
+    await withClock(async () => {
+      expect(await get('/results')).toEqual({ code: 200, json: [] });
+    });
+  });
+
+  it('records an early close with live scores', async () => {
+    await withClock(async () => {
+      const created = await postJson('/match', { seed: 7 });
+      const matchId = (created.json as { matchId: string }).matchId;
+      const joined = await postJson(`/match/${matchId}/join`, { playerId: 'p1' });
+      const { sessionId } = joined.json as { sessionId: string };
+      await postJson(`/match/${matchId}/dispatch`, {
+        sessionId,
+        requestId: 'r1',
+        type: 'world.noop',
+        payload: {},
+      });
+      expect(await postJson(`/match/${matchId}/close`, {})).toMatchObject({ code: 200 });
+      expect(await get('/results')).toEqual({
+        code: 200,
+        json: [
+          {
+            matchId,
+            seed: 7,
+            status: 'ongoing',
+            outcome: null,
+            condition: null,
+            scores: { p1: 177, p2: 113 },
+            revision: 1,
+            createdAt: 1_000_000,
+            closedAt: 1_000_000,
+          },
+        ],
+      });
+    });
+  });
+
+  it('records a finished draw with its condition', async () => {
+    const { matchId, sessionId } = await sessionFor('p1');
+    const joined = await postJson(`/match/${matchId}/join`, { playerId: 'p2' });
+    await spendAll(matchId, sessionId, (joined.json as { sessionId: string }).sessionId);
+    await postJson(`/match/${matchId}/close`, {});
+    const history = (await get('/results')).json as {
+      matchId: string;
+      status: string;
+      outcome: string;
+      condition: string;
+      revision: number;
+    }[];
+    expect(history.find((row) => row.matchId === matchId)).toMatchObject({
+      status: 'finished',
+      outcome: 'draw',
+      condition: 'prompts-exhausted',
+      revision: 20,
+    });
+  });
+
+  it('evicts the oldest past the cap', async () => {
+    await withClock(async () => {
+      const ids: string[] = [];
+      for (let i = 0; i < 3; i += 1) {
+        const created = await postJson('/match', {});
+        const matchId = (created.json as { matchId: string }).matchId;
+        ids.push(matchId);
+        await postJson(`/match/${matchId}/close`, {});
+      }
+      const history = (await get('/results')).json as { matchId: string }[];
+      expect(history.map((row) => row.matchId)).toEqual([ids[1], ids[2]]);
+    }, 2);
+  });
+
+  it('404s history lookalikes', async () => {
+    expect(await get('/results/x')).toMatchObject({ code: 404 });
+    expect(await postJson('/results', {})).toMatchObject({ code: 404 });
   });
 });
 
