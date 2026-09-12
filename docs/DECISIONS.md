@@ -2437,3 +2437,28 @@ rev R (seed S)` últimas 6,
 - RISKS: médio-baixo.
 - CUTS: Retry-After; sweep;
   key wallet (M098+).
+
+## D-076 — Rate limit global (M081 fix, sem voto: evidência)
+
+- DECISION: D-075 keying morreu
+  no prod (130/130 200, XFF-last
+  fana out nos hops Render —
+  limiter jamais tripa; first-hop
+  seria spoofável). Bucket GLOBAL
+  300/60s (5/s sustido: folga p/
+  humanos+E2E, pára floods;
+  v1 tune-with-data). Wallet-keyed
+  volta em M098+ (identidade
+  unspoofable).
+- MOTIVE: ameaça real = overload
+  instância free, não fairness.
+- ALTERNATIVES: Nth-from-right
+  (rejeitado: adivinhar hops =
+  inventar); introspecção
+  (rejeitado: scope Observability).
+- ADVANTAGES: robusto a qualquer
+  topologia; testável igual.
+- DISADVANTAGES: 1 abusador
+  afeta todos (aceite: jogo 2p).
+- RISKS: baixo.
+- CUTS: Retry-After; sweep.

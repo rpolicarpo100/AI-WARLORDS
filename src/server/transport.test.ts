@@ -96,19 +96,6 @@ function options(
   });
 }
 
-function getWith(path: string, headers: Record<string, string>): Promise<{ code: number }> {
-  return new Promise((resolve, reject) => {
-    const req = httpRequest({ port, path, method: 'GET', headers }, (res) => {
-      res.resume();
-      res.on('end', () => {
-        resolve({ code: res.statusCode ?? 0 });
-      });
-    });
-    req.on('error', reject);
-    req.end();
-  });
-}
-
 function get(path: string): Promise<{ code: number; json: unknown }> {
   return new Promise((resolve, reject) => {
     const req = httpRequest({ port, path, method: 'GET' }, (res) => {
@@ -816,9 +803,9 @@ describe('GET /ratings (elo)', () => {
   });
 });
 
-describe('rate limiting (fixed window per key)', () => {
+describe('rate limiting (one shared window)', () => {
   it('pins the shipped default policy', () => {
-    expect(DEFAULT_RATE_LIMIT).toEqual({ windowMs: 60_000, max: 120 });
+    expect(DEFAULT_RATE_LIMIT).toEqual({ windowMs: 60_000, max: 300 });
   });
 
   it('refuses past the max, then serves again past the window', async () => {
@@ -835,29 +822,28 @@ describe('rate limiting (fixed window per key)', () => {
     );
   });
 
-  it('keys distinct XFF clients apart', async () => {
+  it('shares one bucket across claimed identities (no key evasion)', async () => {
+    const once = (xff: string): Promise<{ code: number; json: unknown }> =>
+      new Promise((resolve, reject) => {
+        const req = httpRequest(
+          { port, path: '/ratings', method: 'GET', headers: { 'X-Forwarded-For': xff } },
+          (res) => {
+            let text = '';
+            res.on('data', (chunk) => {
+              text += chunk;
+            });
+            res.on('end', () => {
+              resolve({ code: res.statusCode ?? 0, json: JSON.parse(text) });
+            });
+          },
+        );
+        req.on('error', reject);
+        req.end();
+      });
     await withClock(
       async () => {
-        expect((await getWith('/ratings', { 'X-Forwarded-For': '10.0.0.1' })).code).toBe(200);
-        expect((await getWith('/ratings', { 'X-Forwarded-For': '10.0.0.1' })).code).toBe(429);
-        expect((await getWith('/ratings', { 'X-Forwarded-For': '10.0.0.2' })).code).toBe(200);
-      },
-      50,
-      { windowMs: 60_000, max: 1 },
-    );
-  });
-
-  it('reads the last hop and falls back on empty XFF', async () => {
-    await withClock(
-      async () => {
-        expect((await getWith('/ratings', { 'X-Forwarded-For': 'spoof, 10.0.0.9' })).code).toBe(
-          200,
-        );
-        expect((await getWith('/ratings', { 'X-Forwarded-For': 'spoof, 10.0.0.9' })).code).toBe(
-          429,
-        );
-        expect((await getWith('/ratings', { 'X-Forwarded-For': '' })).code).toBe(200);
-        expect((await get('/ratings')).code).toBe(429);
+        expect((await once('spoof-a')).code).toBe(200);
+        expect(await once('spoof-b')).toEqual({ code: 429, json: { error: 'rate limited' } });
       },
       50,
       { windowMs: 60_000, max: 1 },

@@ -88,26 +88,8 @@ export interface RateLimit {
   readonly max: number;
 }
 
-/** v1 policy: human pace with burst room (D-075). */
-export const DEFAULT_RATE_LIMIT: RateLimit = { windowMs: 60_000, max: 120 };
-
-/**
- * Rate key: last X-Forwarded-For hop when present (single trusted
- * proxy — the Render topology), else the socket address. Empty XFF
- * falls back (spoofed rotation buys nothing but the shared bucket).
- */
-function rateKey(req: IncomingMessage): string {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (typeof forwarded === 'string') {
-    const hops = forwarded.split(',');
-    const last = hops[hops.length - 1] as string;
-    const trimmed = last.trim();
-    if (trimmed.length > 0) {
-      return trimmed;
-    }
-  }
-  return req.socket.remoteAddress as string;
-}
+/** v1 policy: one shared window (D-076 — per-key fanout dies behind proxies). */
+export const DEFAULT_RATE_LIMIT: RateLimit = { windowMs: 60_000, max: 300 };
 
 /** Idle strictly past this, a session dies (the boundary stays online). */
 export const PRESENCE_TIMEOUT_MS = 30_000;
@@ -203,7 +185,7 @@ export function createTransport(
   const matches = new Map<string, Entry>();
   const results: MatchResult[] = [];
   const ratings = new Map<string, number>();
-  const buckets = new Map<string, { count: number; resetAt: number }>();
+  const window = { count: 0, resetAt: 0 };
 
   const presence = (entry: Entry, playerId: string, online: boolean): void => {
     const line = `event: presence\ndata: ${JSON.stringify({ source: 'transport', kind: 'presence', playerId, online, at: now() })}\n\n`;
@@ -250,13 +232,12 @@ export function createTransport(
   };
 
   const route = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
-    const key = rateKey(req);
-    const bucket = buckets.get(key);
-    if (bucket === undefined || now() >= bucket.resetAt) {
-      buckets.set(key, { count: 1, resetAt: now() + rateLimit.windowMs });
+    if (now() >= window.resetAt) {
+      window.count = 1;
+      window.resetAt = now() + rateLimit.windowMs;
     } else {
-      bucket.count += 1;
-      if (bucket.count > rateLimit.max) {
+      window.count += 1;
+      if (window.count > rateLimit.max) {
         send(res, 429, { error: 'rate limited' });
         return;
       }
