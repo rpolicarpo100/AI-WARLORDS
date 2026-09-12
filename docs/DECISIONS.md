@@ -2717,3 +2717,22 @@ rev R (seed S)` últimas 6,
   (documentado).
 - RISKS: baixo.
 - CUTS: cron; alertas.
+
+## D-088 — Runbook M093 (voto m093: runbook)
+
+- DECISION: docs/OPERATIONS.md
+  (endpoints, limites, env,
+  deploys, drill, click-paths);
+  docs-only (molde audits);
+  drill-cron rejeitado (tráfego
+  sozinho no prod sem pedir).
+- MOTIVE: fechar Observability
+  com conhecimento, risco 0.
+- ALTERNATIVES: drill-cron
+  (possível futuro, c/
+  consentimento explícito).
+- ADVANTAGES: onboarding 5min.
+- DISADVANTAGES: doc apodrece
+  (rever por bloco).
+- RISKS: nenhum (docs).
+- CUTS: cron; alertas.

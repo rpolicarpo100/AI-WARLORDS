@@ -9,8 +9,8 @@
 
 | Estado     | Contagem       |
 | ---------- | -------------- |
-| `VERIFIED` | 92 (M001–M092) |
-| `PLANNED`  | 73 (M093–M165) |
+| `VERIFIED` | 93 (M001–M093) |
+| `PLANNED`  | 72 (M094–M165) |
 | Outros     | 0              |
 
 Checkpoints `VERIFIED`:
@@ -451,7 +451,7 @@ Checkpoints `VERIFIED`:
 | M090 | Observability (access log) | `VERIFIED` |
 | M091 | Observability (status UI) | `VERIFIED` |
 | M092 | Observability (prod drill) | `VERIFIED` |
-| M093 | Observability | `PLANNED` |
+| M093 | Observability (ops runbook) | `VERIFIED` |
 | M081–M087 | Security                         | `PLANNED`  |
 | M088–M093 | Observability                    | `PLANNED`  |
 
