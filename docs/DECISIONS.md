@@ -2059,3 +2059,35 @@ player)` = hp vivo + stock + city level
 - RISKS: baixo — puro + pins.
 - CUTS: buildings? INCLUÍDOS (+1);
   UI Arena (M068?); score-wins.
+
+## D-062 — Arena UI M068 (voto arena-ui; FECHA bloco)
+
+- DECISION: `simplePolicy` exportado em
+  `tools/browser-engine.ts` (primeiro
+  reader UI — deixa de ser shaken) +
+  painel Arena em `match.html` (botão
+  tArena, arenaRun, arenaOut): fork do
+  snapshot corrente (molde Take-Command)
+  → `Match.selfplay` → lances, verdict,
+  scores, rank, journal. Sem engine →
+  toast gracioso (molde engineOK).
+  Teste: `ARENA_TEST=1` no smoke
+  (bundle real via Function, molde
+  ATTACK_TEST): asserts output +
+  determinismo (2 runs idênticas).
+- MOTIVE: voto + bloco Arena fecha com
+  UI jogável; bloco CLOSED aqui.
+- ALTERNATIVES: harness separado
+  (rejeitado: duplica 100 linhas);
+  policy em JS na página (rejeitado:
+  regras vivem no engine); arena.html
+  novo (rejeitado: match.html tem o
+  bundle + fork mold).
+- ADVANTAGES: zero engine churn (0
+  testes engine novos — UI testada no
+  smoke); self-play visível.
+- DISADVANTAGES: E2E corre selfplay
+  real (~22 lances — ms).
+- RISKS: baixo — moldes cmd+ATTACK.
+- CUTS: configurador de prompts;
+  animações lance-a-lance (futuro).

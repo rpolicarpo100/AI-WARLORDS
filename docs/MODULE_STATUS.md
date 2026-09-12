@@ -9,8 +9,8 @@
 
 | Estado     | Contagem       |
 | ---------- | -------------- |
-| `VERIFIED` | 67 (M001–M067) |
-| `PLANNED`  | 98 (M068–M165) |
+| `VERIFIED` | 68 (M001–M068) |
+| `PLANNED`  | 97 (M069–M165) |
 | Outros     | 0              |
 
 Checkpoints `VERIFIED`:
@@ -300,6 +300,11 @@ Checkpoints `VERIFIED`:
   (pesos-um + selfplay scores, bundle
   +545); 1850/1850 testes, 100 global.
   Registo em `docs/modules/M067.md`.
+- **M068 @ 2026-09-12** — AI Arena UI
+  (painel self-play + E2E, bundle
+  +1792; bloco Arena FECHADO);
+  1850/1850 testes, 100 global.
+  Registo em `docs/modules/M068.md`.
 
 ---
 
@@ -399,7 +404,7 @@ Checkpoints `VERIFIED`:
 | M065      | AI Arena — Self-Play                    | `VERIFIED` |
 | M066      | AI Arena — Smarter Brains               | `VERIFIED` |
 | M067      | AI Arena — Scoring                      | `VERIFIED` |
-| M068      | AI Arena                                | `PLANNED`  |
+| M068      | AI Arena — Arena UI                     | `VERIFIED` |
 
 ## Fases 17–20 — Multiplayer, Competitive, Security, Observability
 

@@ -138,6 +138,13 @@ if (process.env.ATTACK_TEST) {
   });
   console.log('attack injection armed (revs 5/6, u4 DOWN from rev 6)');
 }
+if (process.env.ARENA_TEST && !globalThis.AIWLEngine) {
+  // ARENA_TEST=1: loads the REAL engine bundle (like a browser would — no TEST MOCK)
+  // so the Arena panel runs genuine self-play.
+  const bundleText = readFileSync(new URL('./engine.bundle.js', import.meta.url), 'utf8');
+  globalThis.AIWLEngine = new Function(`${bundleText};return AIWLEngine;`)();
+  console.log('arena engine armed (real bundle, like a browser)');
+}
 
 const run = new Function(
   'SCENARIO',
@@ -190,6 +197,8 @@ fire('vHeat', 'click');
 fire('tCmd', 'click');
 for (const id of ['cmdGather', 'cmdAttack', 'cmdHouse', 'cmdTower', 'cmdStorage', 'cmdWait', 'cmdUpgrade'])
   fire(id, 'click');
+fire('tArena', 'click');
+fire('arenaRun', 'click');
 fire('tMute', 'click');
 fire('tMute', 'click');
 fire('tRain', 'click');
@@ -284,5 +293,15 @@ if (process.env.ATTACK_TEST) {
     if (byId['cmdbar'].hidden !== true) throw new Error('FASEB E2E: final release failed');
     console.log(`FASEB E2E OK (${atk.id} x ${foe.id}, dmg ${expDmg}, armed + unarmed + local orders)`);
   }
+}
+if (process.env.ARENA_TEST) {
+  const out = (byId['arenaOut'] && byId['arenaOut'].textContent) || '';
+  if (!out.includes('lances=') || !out.includes('scores:') || !out.includes('rank:'))
+    throw new Error('arena output missing: ' + JSON.stringify(out));
+  fire('arenaRun', 'click');
+  const first = byId['arenaOut'].textContent;
+  fire('arenaRun', 'click');
+  if (byId['arenaOut'].textContent !== first) throw new Error('arena nondeterministic');
+  console.log('arena E2E OK (' + out.split('\n').slice(0, 3).join(' | ') + ')');
 }
 console.log('HARNESS PASS');

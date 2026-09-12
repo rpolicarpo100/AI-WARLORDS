@@ -14,3 +14,5 @@ export { markExplored } from '../src/engine/exploration.js';
 // The page never re-implements engine rules — it calls them (guarded).
 export { neighborsOf } from '../src/engine/map.js';
 export { DEFAULT_TERRAIN_CONFIG, modifiersFor } from '../src/engine/terrain.js';
+// M068 — Arena panel: the page runs real self-play (first UI reader).
+export { simplePolicy } from '../src/engine/selfplay.js';
