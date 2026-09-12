@@ -1407,3 +1407,44 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
   injectada; semântica por evaluator pinnada.
 - CUTS: tuning pesos (futuro); raise (M049+);
   whole-queue query.
+
+## D-043 — Counterfactual query M049 (voto sim-query)
+
+- DECISION: NOVO `counterfactual.ts` (L3,
+  read-only): `whatIfConfidence(record, index,
+  state, hypothetical, deps)` — target? (fail-
+  soft) → hypothetical orderable? (isOrderKind,
+  senão 'not orderable') → rule+handler? (senão
+  'unknown kind') → rule passa? (senão detail)
+  → handler sobre FORK structuredClone (caller
+  = record.owner as PlayerId, seam M029; verb
+  rules shape-only ignoram caller) → falha?
+  (reason verbatim) → `confidenceOfOrder` do
+  TARGET sobre outcome. SEM fork exposto, SEM
+  prompts/eventos, SEM advance (buildings/
+  cities não entram nos evaluators — cut
+  declarado). Deps injectadas (mold M045):
+  handlers+rules+confidenceFor (factory por
+  estado — o sim pontua o OUTCOME, closures
+  de snapshot rebondem; bug apanhado no gate:
+  treasury fixa pontuava fundos originais).
+  Match: `whatIf` (mold confidenceOf) +
+  fields domainHandlers/domainRules +
+  refactor privado confidenceRules(snapshot).
+  Pins census+LAYERS 3.
+- MOTIVE: voto sim-query + M045 (injecção,
+  fork-clone) + M048 (confidence pronta) —
+  primeiro consumer transversal.
+- ALTERNATIVES: fork exposto (rejeitado:
+  voto); multi-order scripts (rejeitado:
+  M050 estende); advance no sim (rejeitado:
+  irrelevante p/ scores M049); mirror
+  PreRule (rejeitado: L3 importa L2).
+- ADVANTAGES: "e se?" honesto via handlers
+  vivos; read-only; M050 consome.
+- DISADVANTAGES: 1 hipotético/query; sem
+  advance (M050).
+- RISKS: baixo-médio — semântica sim-vs-
+  dispatch pinnada por teste.
+- CUTS: scripts multi-order (M050); advance
+  (M050); ranking (M050).

@@ -126,6 +126,12 @@ import { stanceOf, type CommanderStance } from './stance.js';
 import { isUnitType, type UnitType } from './units.js';
 import { isBuildingId } from './buildings.js';
 import { confidenceOfOrder, type ConfidenceRules, type OrderConfidence } from './confidence.js';
+import {
+  whatIfConfidence,
+  type CounterfactualDeps,
+  type HypotheticalOrder,
+  type WhatIfConfidence,
+} from './counterfactual.js';
 
 declare const matchBrand: unique symbol;
 declare const seedBrand: unique symbol;
@@ -208,6 +214,8 @@ export class Match {
   private readonly unitsConfig: UnitsConfig;
   private readonly buildingsConfig: BuildingsConfig;
   private readonly terrainConfig: TerrainConfig;
+  private readonly domainHandlers: ReadonlyMap<string, TransitionHandler<WorldState>>;
+  private readonly domainRules: ReadonlyMap<string, PreRule>;
   private readonly timeline: TimelineEntry[] = [];
   private readonly producers: ReadonlyMap<string, readonly EventProducer[]>;
   private readonly events: GameEvent[] = [];
@@ -348,6 +356,9 @@ export class Match {
       handlers: new Map([...economy, ...city, ...warfare]),
       rules: paramRules,
     });
+    // M049: the counterfactual query runs these same live maps over forks.
+    this.domainHandlers = new Map([...economy, ...city, ...warfare]);
+    this.domainRules = paramRules;
     for (const [name, handler] of execution) {
       if (merged.has(name)) {
         throw new Error('Match: duplicate handler names.');
@@ -608,7 +619,44 @@ export class Match {
    */
   confidenceOf(commanderId: string, orderIndex: number): OrderConfidence | undefined {
     const snapshot = this.kernel.getSnapshot();
-    const rules: ConfidenceRules = {
+    return confidenceOfOrder(
+      snapshot.commanders?.commanders.find((record) => record.id === commanderId),
+      orderIndex,
+      snapshot,
+      this.confidenceRules(snapshot),
+    );
+  }
+
+  /**
+   * M049 — live counterfactual: what would confidence say about one
+   * queued order after a hypothetical order applied (read-only;
+   * undefined when the commander or the target is missing). The sim
+   * runs the live domain handlers over a fork — the real Match never
+   * moves (no prompts, no events, no timeline).
+   */
+  whatIf(
+    commanderId: string,
+    orderIndex: number,
+    hypothetical: HypotheticalOrder,
+  ): WhatIfConfidence | undefined {
+    const snapshot = this.kernel.getSnapshot();
+    const deps: CounterfactualDeps = {
+      handlers: this.domainHandlers,
+      rules: this.domainRules,
+      confidenceFor: (outcome: WorldState) => this.confidenceRules(outcome),
+    };
+    return whatIfConfidence(
+      snapshot.commanders?.commanders.find((record) => record.id === commanderId),
+      orderIndex,
+      snapshot,
+      hypothetical,
+      deps,
+    );
+  }
+
+  /** M048/M049 — ConfidenceRules over one snapshot (shared by both queries). */
+  private confidenceRules(snapshot: WorldState): ConfidenceRules {
+    return {
       unitStatsOf: (type: string) => {
         if (!isUnitType(type)) {
           return undefined;
@@ -629,12 +677,6 @@ export class Match {
         snapshot.stockpiles !== undefined &&
         canAfford(snapshot.stockpiles, holder as PlayerId, cost),
     };
-    return confidenceOfOrder(
-      snapshot.commanders?.commanders.find((record) => record.id === commanderId),
-      orderIndex,
-      snapshot,
-      rules,
-    );
   }
 
   getTimeline(): readonly TimelineEntry[] {

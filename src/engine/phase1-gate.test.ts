@@ -426,6 +426,7 @@ describe('determinism hygiene (static security review)', () => {
       'commander-state.ts',
       'commanders.ts',
       'confidence.ts',
+      'counterfactual.ts',
       'dna.ts',
       'doctrines.ts',
       'economy.ts',
@@ -546,6 +547,7 @@ describe('architecture boundary (static review)', () => {
     events: 3,
     posture: 3,
     'ai-events': 3,
+    counterfactual: 3,
     match: 4,
   };
 

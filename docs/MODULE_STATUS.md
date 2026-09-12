@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 48 (M001–M048)  |
-| `PLANNED`  | 117 (M049–M165) |
+| `VERIFIED` | 49 (M001–M049)  |
+| `PLANNED`  | 116 (M050–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -203,6 +203,11 @@ Checkpoints `VERIFIED`:
   + score, queries read-only); 1613/1613
   testes, 100 global.
   Registo em `docs/modules/M048.md`.
+- **M049 @ 2026-09-11** — Counterfactual Query
+  (what-if votado: fork+handlers vivos,
+  confidence do outcome, read-only);
+  1634/1634 testes, 100 global.
+  Registo em `docs/modules/M049.md`.
 
 ---
 
@@ -283,7 +288,8 @@ Checkpoints `VERIFIED`:
 | M046 | AI Refutation Data | `VERIFIED` |
 | M047 | AI Override — Order Override | `VERIFIED` |
 | M048 | Confidence Engine — Reason Evaluators | `VERIFIED` |
-| M049–M050 | Counterfactual AI                                                   | `PLANNED` |
+| M049 | Counterfactual AI — What-If Query | `VERIFIED` |
+| M050 | Counterfactual AI — Ranking | `PLANNED` |
 | M051–M054 | Memory                                                              | `PLANNED` |
 | M055–M058 | Player ↔ Commander                                                  | `PLANNED` |
 | M059–M061 | AI Evolution                                                        | `PLANNED` |
