@@ -1,0 +1,474 @@
+{
+ "meta": {
+  "kind": "economy-drill",
+  "games": 20,
+  "stepsPerGame": 60,
+  "seeds": [
+   3000,
+   3001,
+   3002,
+   3003,
+   3004,
+   3005,
+   3006,
+   3007,
+   3008,
+   3009,
+   3010,
+   3011,
+   3012,
+   3013,
+   3014,
+   3015,
+   3016,
+   3017,
+   3018,
+   3019
+  ],
+  "ms": 919,
+  "note": "Pressure economy (yields/costs/times/caps) checked against live Matches every dispatch. Deterministic per seed."
+ },
+ "totals": {
+  "applied": 1200,
+  "rejected": 1744,
+  "violations": 0,
+  "gathered": 895,
+  "spent": {
+   "food": 1130,
+   "wood": 540,
+   "stone": 400,
+   "gold": 190
+  },
+  "completed": 165,
+  "appliedByType": {
+   "world.noop": 260,
+   "economy.gather": 459,
+   "unit.move": 153,
+   "unit.train": 81,
+   "city.build": 168,
+   "city.upgrade": 79
+  }
+ },
+ "violations": [],
+ "games": [
+  {
+   "seed": 3000,
+   "applied": 60,
+   "rejected": 88,
+   "appliedByType": {
+    "world.noop": 12,
+    "economy.gather": 23,
+    "unit.move": 9,
+    "unit.train": 7,
+    "city.build": 5,
+    "city.upgrade": 4
+   },
+   "gathered": 48,
+   "spent": {
+    "food": 60,
+    "wood": 31,
+    "stone": 15,
+    "gold": 10
+   },
+   "completed": 4
+  },
+  {
+   "seed": 3001,
+   "applied": 60,
+   "rejected": 109,
+   "appliedByType": {
+    "unit.move": 9,
+    "unit.train": 3,
+    "city.upgrade": 4,
+    "economy.gather": 19,
+    "world.noop": 19,
+    "city.build": 6
+   },
+   "gathered": 32,
+   "spent": {
+    "food": 60,
+    "wood": 24,
+    "stone": 15,
+    "gold": 10
+   },
+   "completed": 6
+  },
+  {
+   "seed": 3002,
+   "applied": 60,
+   "rejected": 104,
+   "appliedByType": {
+    "world.noop": 8,
+    "economy.gather": 23,
+    "city.build": 10,
+    "unit.move": 12,
+    "city.upgrade": 4,
+    "unit.train": 3
+   },
+   "gathered": 52,
+   "spent": {
+    "food": 70,
+    "wood": 28,
+    "stone": 10,
+    "gold": 10
+   },
+   "completed": 10
+  },
+  {
+   "seed": 3003,
+   "applied": 60,
+   "rejected": 96,
+   "appliedByType": {
+    "city.build": 13,
+    "economy.gather": 20,
+    "unit.move": 8,
+    "world.noop": 15,
+    "city.upgrade": 4
+   },
+   "gathered": 31,
+   "spent": {
+    "food": 50,
+    "wood": 28,
+    "stone": 10,
+    "gold": 0
+   },
+   "completed": 13
+  },
+  {
+   "seed": 3004,
+   "applied": 60,
+   "rejected": 109,
+   "appliedByType": {
+    "world.noop": 15,
+    "unit.train": 4,
+    "economy.gather": 27,
+    "city.upgrade": 4,
+    "city.build": 6,
+    "unit.move": 4
+   },
+   "gathered": 48,
+   "spent": {
+    "food": 50,
+    "wood": 39,
+    "stone": 15,
+    "gold": 15
+   },
+   "completed": 6
+  },
+  {
+   "seed": 3005,
+   "applied": 60,
+   "rejected": 86,
+   "appliedByType": {
+    "city.upgrade": 4,
+    "economy.gather": 23,
+    "unit.train": 6,
+    "world.noop": 15,
+    "city.build": 4,
+    "unit.move": 8
+   },
+   "gathered": 43,
+   "spent": {
+    "food": 50,
+    "wood": 38,
+    "stone": 30,
+    "gold": 20
+   },
+   "completed": 4
+  },
+  {
+   "seed": 3006,
+   "applied": 60,
+   "rejected": 70,
+   "appliedByType": {
+    "economy.gather": 26,
+    "city.upgrade": 3,
+    "world.noop": 13,
+    "unit.train": 5,
+    "city.build": 10,
+    "unit.move": 3
+   },
+   "gathered": 56,
+   "spent": {
+    "food": 70,
+    "wood": 8,
+    "stone": 30,
+    "gold": 10
+   },
+   "completed": 10
+  },
+  {
+   "seed": 3007,
+   "applied": 60,
+   "rejected": 65,
+   "appliedByType": {
+    "world.noop": 15,
+    "economy.gather": 21,
+    "city.upgrade": 4,
+    "unit.train": 4,
+    "unit.move": 9,
+    "city.build": 7
+   },
+   "gathered": 42,
+   "spent": {
+    "food": 50,
+    "wood": 31,
+    "stone": 30,
+    "gold": 15
+   },
+   "completed": 7
+  },
+  {
+   "seed": 3008,
+   "applied": 60,
+   "rejected": 60,
+   "appliedByType": {
+    "unit.train": 5,
+    "economy.gather": 26,
+    "city.build": 9,
+    "city.upgrade": 4,
+    "world.noop": 11,
+    "unit.move": 5
+   },
+   "gathered": 59,
+   "spent": {
+    "food": 70,
+    "wood": 23,
+    "stone": 30,
+    "gold": 15
+   },
+   "completed": 9
+  },
+  {
+   "seed": 3009,
+   "applied": 60,
+   "rejected": 72,
+   "appliedByType": {
+    "city.build": 8,
+    "unit.train": 4,
+    "economy.gather": 22,
+    "unit.move": 5,
+    "world.noop": 17,
+    "city.upgrade": 4
+   },
+   "gathered": 41,
+   "spent": {
+    "food": 60,
+    "wood": 24,
+    "stone": 30,
+    "gold": 5
+   },
+   "completed": 8
+  },
+  {
+   "seed": 3010,
+   "applied": 60,
+   "rejected": 89,
+   "appliedByType": {
+    "world.noop": 17,
+    "economy.gather": 26,
+    "city.build": 3,
+    "unit.move": 7,
+    "unit.train": 3,
+    "city.upgrade": 4
+   },
+   "gathered": 45,
+   "spent": {
+    "food": 30,
+    "wood": 23,
+    "stone": 15,
+    "gold": 15
+   },
+   "completed": 3
+  },
+  {
+   "seed": 3011,
+   "applied": 60,
+   "rejected": 67,
+   "appliedByType": {
+    "city.build": 9,
+    "economy.gather": 28,
+    "city.upgrade": 4,
+    "unit.move": 10,
+    "unit.train": 4,
+    "world.noop": 5
+   },
+   "gathered": 47,
+   "spent": {
+    "food": 50,
+    "wood": 31,
+    "stone": 15,
+    "gold": 10
+   },
+   "completed": 9
+  },
+  {
+   "seed": 3012,
+   "applied": 60,
+   "rejected": 81,
+   "appliedByType": {
+    "city.build": 8,
+    "world.noop": 12,
+    "city.upgrade": 4,
+    "economy.gather": 23,
+    "unit.move": 9,
+    "unit.train": 4
+   },
+   "gathered": 52,
+   "spent": {
+    "food": 60,
+    "wood": 28,
+    "stone": 10,
+    "gold": 0
+   },
+   "completed": 8
+  },
+  {
+   "seed": 3013,
+   "applied": 60,
+   "rejected": 56,
+   "appliedByType": {
+    "unit.train": 4,
+    "economy.gather": 22,
+    "unit.move": 9,
+    "world.noop": 9,
+    "city.upgrade": 4,
+    "city.build": 12
+   },
+   "gathered": 49,
+   "spent": {
+    "food": 60,
+    "wood": 31,
+    "stone": 15,
+    "gold": 10
+   },
+   "completed": 12
+  },
+  {
+   "seed": 3014,
+   "applied": 60,
+   "rejected": 78,
+   "appliedByType": {
+    "world.noop": 13,
+    "city.upgrade": 4,
+    "unit.train": 2,
+    "city.build": 8,
+    "economy.gather": 26,
+    "unit.move": 7
+   },
+   "gathered": 52,
+   "spent": {
+    "food": 50,
+    "wood": 28,
+    "stone": 25,
+    "gold": 5
+   },
+   "completed": 8
+  },
+  {
+   "seed": 3015,
+   "applied": 60,
+   "rejected": 111,
+   "appliedByType": {
+    "city.build": 12,
+    "economy.gather": 20,
+    "unit.train": 2,
+    "city.upgrade": 4,
+    "world.noop": 17,
+    "unit.move": 5
+   },
+   "gathered": 33,
+   "spent": {
+    "food": 50,
+    "wood": 24,
+    "stone": 30,
+    "gold": 5
+   },
+   "completed": 11
+  },
+  {
+   "seed": 3016,
+   "applied": 60,
+   "rejected": 108,
+   "appliedByType": {
+    "city.build": 10,
+    "city.upgrade": 4,
+    "unit.train": 5,
+    "economy.gather": 21,
+    "world.noop": 11,
+    "unit.move": 9
+   },
+   "gathered": 38,
+   "spent": {
+    "food": 60,
+    "wood": 32,
+    "stone": 15,
+    "gold": 0
+   },
+   "completed": 10
+  },
+  {
+   "seed": 3017,
+   "applied": 60,
+   "rejected": 110,
+   "appliedByType": {
+    "unit.train": 6,
+    "economy.gather": 20,
+    "city.build": 9,
+    "unit.move": 9,
+    "city.upgrade": 4,
+    "world.noop": 12
+   },
+   "gathered": 44,
+   "spent": {
+    "food": 60,
+    "wood": 23,
+    "stone": 15,
+    "gold": 15
+   },
+   "completed": 9
+  },
+  {
+   "seed": 3018,
+   "applied": 60,
+   "rejected": 88,
+   "appliedByType": {
+    "city.upgrade": 4,
+    "city.build": 6,
+    "world.noop": 12,
+    "economy.gather": 21,
+    "unit.train": 5,
+    "unit.move": 12
+   },
+   "gathered": 45,
+   "spent": {
+    "food": 60,
+    "wood": 15,
+    "stone": 15,
+    "gold": 10
+   },
+   "completed": 6
+  },
+  {
+   "seed": 3019,
+   "applied": 60,
+   "rejected": 97,
+   "appliedByType": {
+    "unit.train": 5,
+    "economy.gather": 22,
+    "world.noop": 12,
+    "city.upgrade": 4,
+    "city.build": 13,
+    "unit.move": 4
+   },
+   "gathered": 38,
+   "spent": {
+    "food": 60,
+    "wood": 31,
+    "stone": 30,
+    "gold": 10
+   },
+   "completed": 12
+  }
+ ]
+}

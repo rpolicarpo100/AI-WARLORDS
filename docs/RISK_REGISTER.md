@@ -179,3 +179,5 @@
 - M092: BREACH — gate loop correu `npm run test:run` (inexistente); claims 100×4 recentes eram UNVERIFIED. Suite re-verificada verde (1939/1939 100×4). Fix: `npm test` + pipefail. RISK: janela exacta de claims afectados desconhecida.
 
 - M093: runbook live; Observability CLOSED; BLOCO M077–M093 CLOSED. RISK pendente: static-headers click (humano); unicode-check usar python (grep -P falhou).
+
+- M094: economy drill live (pressure configs, ledger holds 1200/0). RISK: STATUS tem linhas-fantasma (M073–M076/M081–M093 PLANNED) + bullets param em M072 — housekeeping por fazer.

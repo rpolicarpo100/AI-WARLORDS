@@ -2736,3 +2736,30 @@ rev R (seed S)` últimas 6,
   (rever por bloco).
 - RISKS: nenhum (docs).
 - CUTS: cron; alertas.
+
+## D-089 — Economy drill M094 (voto m094: economy-drill)
+
+- DECISION: sim/economy-drill.ts
+  (`npm run sim:economy`, seeds
+  3000+, 20×60): Matches reais
+  c/ economia injectada sob
+  pressão (yields/custos/tempos/
+  caps apertados); bots gather/
+  build/upgrade/train/move/noop;
+  7 invariantes por dispatch
+  (exactidão gather/build/train,
+  tick owner-only, caps, ledger
+  conservação, factos+fault).
+  Zero prod (molde orders-drill).
+- MOTIVE: M094 Economy Simulator
+  (Fase 21); sem spec — voto.
+- ALTERNATIVES: balance-verify
+  (auditoria csv); projection
+  (prod puro — rejeitado:
+  ticks são dispatch-driven,
+  duplicaria lógica).
+- ADVANTAGES: prova end-to-end
+  M016–M020 sob pressão.
+- DISADVANTAGES: mais um report.
+- RISKS: nenhum (sim only).
+- CUTS: UI; projecção.

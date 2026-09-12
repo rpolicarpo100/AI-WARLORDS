@@ -31,7 +31,8 @@
     "smoke:arena": "ARENA_TEST=1 node tools/smoke-match.mjs",
     "smoke:api": "API_TEST=1 node tools/smoke-match.mjs",
     "verify:bundle": "node tools/verify-bundle.mjs",
-    "drill:prod": "node tools/prod-drill.mjs"
+    "drill:prod": "node tools/prod-drill.mjs",
+    "sim:economy": "tsx sim/economy-drill.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

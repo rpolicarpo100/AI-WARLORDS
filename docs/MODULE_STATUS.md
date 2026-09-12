@@ -9,8 +9,8 @@
 
 | Estado     | Contagem       |
 | ---------- | -------------- |
-| `VERIFIED` | 93 (M001–M093) |
-| `PLANNED`  | 72 (M094–M165) |
+| `VERIFIED` | 94 (M001–M094) |
+| `PLANNED`  | 71 (M095–M165) |
 | Outros     | 0              |
 
 Checkpoints `VERIFIED`:
@@ -459,7 +459,7 @@ Checkpoints `VERIFIED`:
 
 | Módulo(s) | Âmbito             | Estado                                                      |
 | --------- | ------------------ | ----------------------------------------------------------- |
-| M094      | Economy Simulator  | `PLANNED`                                                   |
+| M094      | Economy Simulator  | `VERIFIED`                                                   |
 | M095–M097 | Free Mode          | `PLANNED`                                                   |
 | M098–M101 | Solana Foundation  | `PLANNED`                                                   |
 | M102–M107 | USDC               | `PLANNED`                                                   |
