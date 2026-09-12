@@ -746,6 +746,55 @@ describe('GET /results (history)', () => {
   });
 });
 
+describe('GET /ratings (elo)', () => {
+  async function finishSkirmish(): Promise<void> {
+    const created = await postJson('/match', {});
+    const matchId = (created.json as { matchId: string }).matchId;
+    const first = await postJson(`/match/${matchId}/join`, { playerId: 'p1' });
+    const second = await postJson(`/match/${matchId}/join`, { playerId: 'p2' });
+    await spendAll(
+      matchId,
+      (first.json as { sessionId: string }).sessionId,
+      (second.json as { sessionId: string }).sessionId,
+    );
+    await postJson(`/match/${matchId}/close`, {});
+  }
+
+  it('rates nothing on a fresh server', async () => {
+    await withClock(async () => {
+      expect(await get('/ratings')).toEqual({ code: 200, json: {} });
+    });
+  });
+
+  it('rates a finished win from fresh wallets', async () => {
+    await withClock(async () => {
+      await finishSkirmish();
+      expect(await get('/ratings')).toEqual({ code: 200, json: { p1: 1216, p2: 1184 } });
+    });
+  });
+
+  it('leaves ratings untouched on early close', async () => {
+    await withClock(async () => {
+      const { matchId } = await sessionFor('p1');
+      await postJson(`/match/${matchId}/close`, {});
+      expect(await get('/ratings')).toEqual({ code: 200, json: {} });
+    });
+  });
+
+  it('compounds repeat wins with shrinking gains', async () => {
+    await withClock(async () => {
+      await finishSkirmish();
+      await finishSkirmish();
+      expect(await get('/ratings')).toEqual({ code: 200, json: { p1: 1231, p2: 1169 } });
+    });
+  });
+
+  it('404s ratings lookalikes', async () => {
+    expect(await get('/ratings/x')).toMatchObject({ code: 404 });
+    expect(await postJson('/ratings', {})).toMatchObject({ code: 404 });
+  });
+});
+
 describe('POST /match/:id/close (last call)', () => {
   it('ends streams, deletes the table, refuses seconds', async () => {
     const { matchId } = await sessionFor('p1');

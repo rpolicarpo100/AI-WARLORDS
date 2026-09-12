@@ -2349,3 +2349,34 @@ p2:M` + 1 linha/unidade
   audit (gate/replay fixtures
   tied→draw preservado; suite dirá).
 - CUTS: sudden-death; margin bonus.
+
+## D-073 — Ratings M079 (sem voto: sequência apontada)
+
+- DECISION: `ratings.ts` L0 (math
+  standalone, zero imports — mold
+  rng): eloPair(ra,rb,scoreA,k) +
+  scoreOf (structural outcome —
+  Elo semantics juntas, sem
+  importar victory); server: Map
+  - RATING_DEFAULT=1200 +
+    RATING_K=32 (v1 standard) +
+    GET /ratings; só finished
+    rateia (early close = void);
+    pares roster[0..1] via cast
+    (mold transport; forge é
+    sempre 2p — guard seria
+    branch morto).
+- MOTIVE: wins M078 mexem dia 1.
+- ALTERNATIVES: scoreOf em
+  victory (rejeitado: Elo em
+  victory + churn bundle);
+  ratear ongoing (rejeitado:
+  rage-quit farming).
+- ADVANTAGES: bundle +0
+  (server-only); vetores
+  triplo-checados (mão+python+
+  node).
+- DISADVANTAGES: N>2 rateia
+  par 1 (sem path N>2 hoje).
+- RISKS: baixo.
+- CUTS: leaderboard page (M080).

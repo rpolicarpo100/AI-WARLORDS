@@ -149,3 +149,5 @@
 - M077: histórico live (cap 50 memória); RISK: resultados sem rating (ver M078).
 
 - M078: wins existem (score-superior); RISK: sem ratings (ver M079).
+
+- M079: ratings live (Elo 1200/K32); RISK: sem UI (ver M080 leaderboard).

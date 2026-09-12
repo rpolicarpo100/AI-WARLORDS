@@ -39,6 +39,7 @@ import {
 import type { MapCell, MapId } from '../engine/map.js';
 import { Match, STANDARD_RULESET, createMatchId, isSeed, type MatchInit } from '../engine/match.js';
 import { scoreTable } from '../engine/score.js';
+import { eloPair, scoreOf } from '../engine/ratings.js';
 import { winnerOf } from '../engine/victory.js';
 import { createWorldState } from '../engine/world-state.js';
 
@@ -76,6 +77,10 @@ export interface MatchResult {
 
 /** History keeps the freshest tables (FIFO eviction past this). */
 const DEFAULT_MAX_RESULTS = 50;
+
+/** Fresh Elo wallets (v1 standard — the caller's constants live here). */
+const RATING_DEFAULT = 1200;
+const RATING_K = 32;
 
 /** Idle strictly past this, a session dies (the boundary stays online). */
 export const PRESENCE_TIMEOUT_MS = 30_000;
@@ -169,6 +174,7 @@ export function createTransport(
 ): (req: IncomingMessage, res: ServerResponse) => void {
   const matches = new Map<string, Entry>();
   const results: MatchResult[] = [];
+  const ratings = new Map<string, number>();
 
   const presence = (entry: Entry, playerId: string, online: boolean): void => {
     const line = `event: presence\ndata: ${JSON.stringify({ source: 'transport', kind: 'presence', playerId, online, at: now() })}\n\n`;
@@ -245,6 +251,10 @@ export function createTransport(
     }
     if (parts[0] === 'results' && parts.length === 1 && method === 'GET') {
       send(res, 200, results);
+      return;
+    }
+    if (parts[0] === 'ratings' && parts.length === 1 && method === 'GET') {
+      send(res, 200, Object.fromEntries(ratings));
       return;
     }
     if (parts[0] !== 'match') {
@@ -420,6 +430,20 @@ export function createTransport(
       }
       const verdict = entry.match.getVerdict();
       const rosterPlayers = entry.match.getSnapshot().players.map((player) => player.id);
+      if (verdict.status === 'finished') {
+        // Pairwise Elo over the forged pair (forge is always 2p — the
+        // cast is the transport mold for structurally-fixed shapes).
+        const first = rosterPlayers[0] as string;
+        const second = rosterPlayers[1] as string;
+        const updated = eloPair(
+          ratings.get(first) ?? RATING_DEFAULT,
+          ratings.get(second) ?? RATING_DEFAULT,
+          scoreOf(verdict.outcome, first),
+          RATING_K,
+        );
+        ratings.set(first, updated.a);
+        ratings.set(second, updated.b);
+      }
       results.push({
         matchId: parts[1] as string,
         seed: entry.seed,
