@@ -167,3 +167,5 @@
 - M086: supply chain pinada (0 vulns, node 20); RISK: erros podem vazar detalhe (ver M087).
 
 - M087: SECURITY FECHADO (0 fugas); próximo: Observability M088–M093.
+
+- M088: métricas live (requests+byStatus); RISK: health raso (ver M089).

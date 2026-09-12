@@ -2607,3 +2607,27 @@ rev R (seed S)` últimas 6,
 - DISADVANTAGES: nenhum.
 - RISKS: baixo.
 - CUTS: timing attacks.
+
+## D-083 — Metrics M088 (recomendado, user delegou)
+
+- DECISION: contadores no
+  closure (requests + byStatus
+  exacto + startedAt); finish
+  listener em onRequest (ponto
+  único, 0 branches — apanha
+  tudo incl. 429/503/500);
+  GET /metrics (+uptimeMs);
+  quirk honesto: /metrics
+  conta-se em requests mas não
+  em byStatus (finish pendente).
+- MOTIVE: fundação Observability
+  (health/logging/página lêem).
+- ALTERNATIVES: por-rota
+  (rejeitado: tagging em N
+  sites); por-classe c/ ifs
+  (rejeitado: 3xx morto).
+- ADVANTAGES: 0 branches novos.
+- DISADVANTAGES: quirk finish.
+- RISKS: baixo.
+- CUTS: dispatches applied (M089
+  c/ health?); histogramas.

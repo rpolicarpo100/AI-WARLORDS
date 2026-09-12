@@ -217,6 +217,8 @@ export function createTransport(
   const results: MatchResult[] = [];
   const ratings = new Map<string, number>();
   const window = { count: 0, resetAt: 0 };
+  const metrics = { requests: 0, byStatus: {} as Record<number, number> };
+  const startedAt = now();
 
   const presence = (entry: Entry, playerId: string, online: boolean): void => {
     const line = `event: presence\ndata: ${JSON.stringify({ source: 'transport', kind: 'presence', playerId, online, at: now() })}\n\n`;
@@ -254,6 +256,11 @@ export function createTransport(
   };
 
   const onRequest = (req: IncomingMessage, res: ServerResponse): void => {
+    metrics.requests += 1;
+    res.on('finish', () => {
+      const code = res.statusCode;
+      metrics.byStatus[code] = (metrics.byStatus[code] ?? 0) + 1;
+    });
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -309,6 +316,15 @@ export function createTransport(
     }
     if (parts[0] === 'ratings' && parts.length === 1 && method === 'GET') {
       send(res, 200, Object.fromEntries(ratings));
+      return;
+    }
+    if (parts[0] === 'metrics' && parts.length === 1 && method === 'GET') {
+      send(res, 200, {
+        requests: metrics.requests,
+        byStatus: metrics.byStatus,
+        startedAt,
+        uptimeMs: now() - startedAt,
+      });
       return;
     }
     if (parts[0] !== 'match') {

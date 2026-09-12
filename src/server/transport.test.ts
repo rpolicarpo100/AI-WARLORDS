@@ -464,6 +464,7 @@ describe('routing (unknown paths fail loud)', () => {
     let text = '';
     const res = {
       setHeader() {},
+      on() {},
       writeHead(c: number) {
         code = c;
       },
@@ -975,6 +976,33 @@ describe('leakage tripwire (M087)', () => {
       const snap = seen.json as { units?: { units?: unknown[] } };
       expect(snap.units?.units).toHaveLength(3);
     });
+  });
+});
+
+describe('GET /metrics (counters)', () => {
+  it('counts a lifecycle exactly (self in requests, never in byStatus)', async () => {
+    await withClock(async (clock) => {
+      expect(await get('/metrics')).toEqual({
+        code: 200,
+        json: { requests: 1, byStatus: {}, startedAt: 1_000_000, uptimeMs: 0 },
+      });
+      expect((await get('/nope')).code).toBe(404);
+      expect((await postJson('/match', {})).code).toBe(200);
+      expect(await get('/metrics')).toEqual({
+        code: 200,
+        json: { requests: 4, byStatus: { 200: 2, 404: 1 }, startedAt: 1_000_000, uptimeMs: 0 },
+      });
+      clock.now += 5_000;
+      expect(await get('/metrics')).toEqual({
+        code: 200,
+        json: { requests: 5, byStatus: { 200: 3, 404: 1 }, startedAt: 1_000_000, uptimeMs: 5_000 },
+      });
+    });
+  });
+
+  it('404s metrics lookalikes', async () => {
+    expect(await get('/metrics/x')).toMatchObject({ code: 404 });
+    expect(await postJson('/metrics', {})).toMatchObject({ code: 404 });
   });
 });
 
