@@ -51,6 +51,7 @@ import {
   cityHandlers,
   completeConstructions,
   completionProducer,
+  costOf,
   createEconomyRule,
   DEFAULT_BUILDINGS_CONFIG,
   DEFAULT_ECONOMY_CONFIG,
@@ -62,6 +63,7 @@ import {
   isEconomyConfig,
   payCost,
   UPGRADE_TRANSITION,
+  type BuildingsConfig,
 } from './economy.js';
 import {
   ACTIVATE_TRANSITION,
@@ -93,7 +95,12 @@ import {
   overrideParamsRule,
 } from './order-override.js';
 import type { TerrainId } from './map.js';
-import { DEFAULT_TERRAIN_CONFIG, isTerrainConfig, modifiersFor } from './terrain.js';
+import {
+  DEFAULT_TERRAIN_CONFIG,
+  isTerrainConfig,
+  modifiersFor,
+  type TerrainConfig,
+} from './terrain.js';
 import {
   ATTACK_TRANSITION,
   attackParamsRule,
@@ -107,6 +114,7 @@ import {
   TRAIN_TRANSITION,
   trainParamsRule,
   trainProducer,
+  unitCostOf,
   unitDamageOf,
   warfareHandlers,
   type UnitsConfig,
@@ -115,7 +123,9 @@ import {
 import { seedPrompts, spendPrompt } from './prompts.js';
 import { postureOf, type ArmyPosture } from './posture.js';
 import { stanceOf, type CommanderStance } from './stance.js';
-import { type UnitType } from './units.js';
+import { isUnitType, type UnitType } from './units.js';
+import { isBuildingId } from './buildings.js';
+import { confidenceOfOrder, type ConfidenceRules, type OrderConfidence } from './confidence.js';
 
 declare const matchBrand: unique symbol;
 declare const seedBrand: unique symbol;
@@ -196,6 +206,8 @@ export class Match {
   readonly players: readonly PlayerId[];
   private readonly kernel: AuthorityKernel<WorldState>;
   private readonly unitsConfig: UnitsConfig;
+  private readonly buildingsConfig: BuildingsConfig;
+  private readonly terrainConfig: TerrainConfig;
   private readonly timeline: TimelineEntry[] = [];
   private readonly producers: ReadonlyMap<string, readonly EventProducer[]>;
   private readonly events: GameEvent[] = [];
@@ -270,6 +282,8 @@ export class Match {
       throw new Error('Match: invalid units config.');
     }
     this.unitsConfig = unitsConfig;
+    this.buildingsConfig = buildingsConfig;
+    this.terrainConfig = terrainConfig;
     const world = worldHandlers();
     const economy = economyHandlers(economyConfig, buildingsConfig);
     const city = cityHandlers(buildingsConfig);
@@ -583,6 +597,44 @@ export class Match {
   /** M039 — live army posture of one holder (read-only aggregation over stancesOf). */
   postureOf(holder: string): ArmyPosture {
     return postureOf(commandersOf(this.kernel.getSnapshot().commanders, holder));
+  }
+
+  /**
+   * M048 — live confidence of one queued order (read-only; undefined when
+   * the commander or the order is missing). Rules adapt this Match's
+   * validated configs; unknown unit/building types abstain (never throw).
+   * No treasury means unaffordable (honest: nothing to pay with). The
+   * `as` casts document the validated-state seam (M029 precedent).
+   */
+  confidenceOf(commanderId: string, orderIndex: number): OrderConfidence | undefined {
+    const snapshot = this.kernel.getSnapshot();
+    const rules: ConfidenceRules = {
+      unitStatsOf: (type: string) => {
+        if (!isUnitType(type)) {
+          return undefined;
+        }
+        return {
+          damage: unitDamageOf(this.unitsConfig, type),
+          maxHp: maxHpOf(this.unitsConfig, type),
+          cost: unitCostOf(this.unitsConfig, type),
+        };
+      },
+      buildCostOf: (type: string) =>
+        isBuildingId(type) ? costOf(this.buildingsConfig, type) : undefined,
+      passable: (terrain: string) =>
+        Number.isFinite(modifiersFor(this.terrainConfig, terrain as TerrainId).move),
+      defenseOf: (terrain: string) =>
+        modifiersFor(this.terrainConfig, terrain as TerrainId).defense,
+      canAfford: (holder: string, cost) =>
+        snapshot.stockpiles !== undefined &&
+        canAfford(snapshot.stockpiles, holder as PlayerId, cost),
+    };
+    return confidenceOfOrder(
+      snapshot.commanders?.commanders.find((record) => record.id === commanderId),
+      orderIndex,
+      snapshot,
+      rules,
+    );
   }
 
   getTimeline(): readonly TimelineEntry[] {

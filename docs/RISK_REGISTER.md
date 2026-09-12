@@ -112,3 +112,4 @@
 | 2026-09-11 | M045      | Order execution live (pop-head + live verbs, factos compostos, drill 1200/0); bloco M043–M045 FECHADO |
 | 2026-09-11 | M046      | Refutation data live (reasons fechadas, ref auto-validável, espelho, bundle +427); bloco M046–M050 ABERTO; mecânica→M047 |
 | 2026-09-11 | M047      | Override live (head+fresh, facto overridden, bundle +2250); raise+scoring→M048+ |
+| 2026-09-11 | M048      | Confidence live (5 evaluators + score, read-only, bundle +3446); counterfactual→M049–M050 |

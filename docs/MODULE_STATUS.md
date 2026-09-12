@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 47 (M001–M047)  |
-| `PLANNED`  | 118 (M048–M165) |
+| `VERIFIED` | 48 (M001–M048)  |
+| `PLANNED`  | 117 (M049–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -198,6 +198,11 @@ Checkpoints `VERIFIED`:
   overridden, clearRefutation); 1568/1568
   testes, 100 global.
   Registo em `docs/modules/M047.md`.
+- **M048 @ 2026-09-11** — Confidence Engine
+  (reasons votados executáveis: 5 evaluators
+  + score, queries read-only); 1613/1613
+  testes, 100 global.
+  Registo em `docs/modules/M048.md`.
 
 ---
 
@@ -277,7 +282,7 @@ Checkpoints `VERIFIED`:
 | M045 | Player → AI Command — Order Execution | `VERIFIED` |
 | M046 | AI Refutation Data | `VERIFIED` |
 | M047 | AI Override — Order Override | `VERIFIED` |
-| M048      | Confidence Engine                                                   | `PLANNED` |
+| M048 | Confidence Engine — Reason Evaluators | `VERIFIED` |
 | M049–M050 | Counterfactual AI                                                   | `PLANNED` |
 | M051–M054 | Memory                                                              | `PLANNED` |
 | M055–M058 | Player ↔ Commander                                                  | `PLANNED` |

@@ -1366,3 +1366,44 @@ row}`) + `warfareHandlers(passable)`. Regras: sem units→
 - RISKS: baixo — mecânica L2 sobre dados M046.
 - CUTS: refutation.raise/withdraw (M048+);
   tail-override; scoring (M048).
+
+## D-042 — Confidence engine M048 (voto reason-eval)
+
+- DECISION: NOVO `confidence.ts` (L2,
+  read-only): `confidenceOfOrder(record,
+  index, state, rules)` avalia os 5 reasons
+  M046 contra estado live + score = max(0,
+  100−20×failed). Evaluators: blocked (move→
+  célula impassível, mold M022), out-of-range
+  (move/attack não-adjacente, neighborsOf),
+  redundant (move p/ mesma célula; gather em
+  nó vazio/ausente), suicidal (HEURÍSTICA
+  documentada, precedente stance M037: net 0
+  OU hp<=dano-do-alvo — precifica o próximo
+  turno do alvo), unaffordable (train/build
+  vs stockpile, mold treasury). Malformado→
+  evaluators abstêm-se (validade é do engine).
+  Rules injectadas (mold warfareHandlers):
+  unitStatsOf/buildCostOf/passable/defenseOf/
+  canAfford (espelhos estruturais — L2↛L2
+  barra economy/warfare/terrain). Match:
+  `confidenceOf(id,index)` (mold assessmentOf;
+  guarda isUnitType/isBuildingId, undefined
+  fail-soft) + guarda buildings/terrainConfig
+  privados. Pins census+LAYERS 2.
+- MOTIVE: voto reason-eval + M046 (reasons
+  pediam avaliação) + M047 CUTS (scoring) +
+  M037/M038 (heurística documentada, queries).
+- ALTERNATIVES: scores em estado (rejeitado:
+  voto; read-only chega); validity no score
+  (rejeitado: engine já fail-closed);
+  retaliação no engine p/ suicidal (rejeitado:
+  mecânica nova — heurística documentada).
+- ADVANTAGES: reasons executáveis; score
+  determinístico; consumers M049+ prontos.
+- DISADVANTAGES: suicidal heurístico;
+  tuning do −20 futuro.
+- RISKS: baixo-médio — interface gorda mas
+  injectada; semântica por evaluator pinnada.
+- CUTS: tuning pesos (futuro); raise (M049+);
+  whole-queue query.
