@@ -87,6 +87,16 @@ import {
   setParamsRule,
 } from './directive-state.js';
 import {
+  APPROVE_TRANSITION,
+  DECLINE_TRANSITION,
+  PROPOSE_TRANSITION,
+  proposalApprovedProducer,
+  proposalDeclinedProducer,
+  proposalProposedProducer,
+  proposalStateHandlers,
+  proposeParamsRule,
+} from './proposal-state.js';
+import {
   CANCEL_TRANSITION,
   ISSUE_TRANSITION,
   issueParamsRule,
@@ -314,7 +324,11 @@ export class Match {
     const world = worldHandlers();
     const economy = economyHandlers(economyConfig, buildingsConfig);
     const city = cityHandlers(buildingsConfig);
-    const commanders = new Map([...commanderHandlers(), ...directiveStateHandlers()]);
+    const commanders = new Map([
+      ...commanderHandlers(),
+      ...directiveStateHandlers(),
+      ...proposalStateHandlers(),
+    ]);
     const orders = new Map([...orderHandlers(), ...orderOverrideHandlers()]);
     // M022: passable = finite move cost (Infinity/NaN block, fail-closed).
     const passable = (terrain: string): boolean =>
@@ -371,6 +385,9 @@ export class Match {
       [RECORD_TRANSITION, recordParamsRule],
       [SET_TRANSITION, setParamsRule],
       [CLEAR_TRANSITION, clearParamsRule],
+      [PROPOSE_TRANSITION, proposeParamsRule],
+      [APPROVE_TRANSITION, commanderIdParamsRule],
+      [DECLINE_TRANSITION, commanderIdParamsRule],
     ]);
     // M045: execute runs heads through the live verb maps (treasury
     // precedent — the L2 executor cannot import them, so Match injects).
@@ -484,6 +501,9 @@ export class Match {
     producers.set(OVERRIDE_TRANSITION, [orderOverriddenProducer]);
     producers.set(SET_TRANSITION, [directiveSetProducer]);
     producers.set(CLEAR_TRANSITION, [directiveClearedProducer]);
+    producers.set(PROPOSE_TRANSITION, [proposalProposedProducer]);
+    producers.set(APPROVE_TRANSITION, [proposalApprovedProducer]);
+    producers.set(DECLINE_TRANSITION, [proposalDeclinedProducer]);
     // M030: sightings need before/after visibility, computed here (L4 may
     // import fog; the L2 producer cannot — L2↛L2). Either map absent (or
     // the maps differing, impossible live) yields silence, never a fault.

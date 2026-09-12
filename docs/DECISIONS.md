@@ -1733,3 +1733,39 @@ recollection)` em stance.ts (MESMO
 - RISKS: baixo — data pura.
 - CUTS: propose/approve/decline verbs
   (M058); notes; kinds novos.
+
+## D-052 — Proposal verbs M058 (sem voto: D-051 + moldes)
+
+- DECISION: NOVO `proposal-state.ts` (L2,
+  molde directive-state): `proposal.propose`
+  {id,proposal} (owner-only; REJECT quando
+  ocupado 'pending.' — attention slot não
+  perde veredictos) + `proposal.approve` {id}
+  (order→append queue, cap 8 fail-closed
+  'queue full.'; stance/autonomy→directive
+  set/overwrite; limpa slot) +
+  `proposal.decline` {id} (limpa slot;
+  reject se vazio 'no proposal.').
+  Producers estruturais (proposed/approved/
+  declined; NÃO memoráveis). Propose é
+  owner-dispatched (training wheels — AI
+  writers M059+; sem auto-propose).
+  Sem active check (order/directive verbs
+  também não verificam — molde); slots
+  vazios dropam a key (M047 law).
+  Match: merge + paramRules + producers.
+  Pins: census + LAYERS `proposal-state: 2`.
+- MOTIVE: D-051 declarou + moldes M044/M056
+  verbatim + approve-com-efeitos fecha o
+  loop C→P.
+- ALTERNATIVES: overwrite pending
+  (rejeitado: perde veredictos);
+  approve sem efeitos (rejeitado: teatro);
+  auto-propose (rejeitado: sem brain);
+  memoráveis (rejeitado: futuro).
+- ADVANTAGES: bloco P↔C FECHADO ponta a
+  ponta; AI writers têm verbos prontos.
+- DISADVANTAGES: propose owner-driven
+  (teatro até M059+).
+- RISKS: baixo — molde provado.
+- CUTS: AI writers (M059+); notes; kinds.

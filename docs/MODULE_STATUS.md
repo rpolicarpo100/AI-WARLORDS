@@ -9,8 +9,8 @@
 
 | Estado     | Contagem        |
 | ---------- | --------------- |
-| `VERIFIED` | 57 (M001–M057)  |
-| `PLANNED`  | 108 (M058–M165) |
+| `VERIFIED` | 58 (M001–M058)  |
+| `PLANNED`  | 107 (M059–M165) |
 | Outros     | 0               |
 
 Checkpoints `VERIFIED`:
@@ -242,7 +242,7 @@ Checkpoints `VERIFIED`:
   set por kind, espelho); 1746/1746
   testes, 100 global.
   Registo em `docs/modules/M055.md`.
-  Bloco Player ↔ Commander M055–M058 ABERTO.
+  Bloco Player ↔ Commander M055–M058 FECHADO.
 - **M056 @ 2026-09-12** — Directive Set
   (verbos votados set/clear+facts,
   precedência stance); 1761/1761 testes,
@@ -253,6 +253,11 @@ Checkpoints `VERIFIED`:
   per-kind, single-slot); 1774/1774 testes,
   100 global.
   Registo em `docs/modules/M057.md`.
+- **M058 @ 2026-09-12** — Proposal Verbs
+  (propose/approve/decline, efeitos approve,
+  producers; bloco P↔C FECHADO); 1789/1789
+  testes, 100 global.
+  Registo em `docs/modules/M058.md`.
 
 ---
 
@@ -342,8 +347,7 @@ Checkpoints `VERIFIED`:
 | M055      | Player ↔ Commander — Directive Data     | `VERIFIED` |
 | M056      | Player ↔ Commander — Directive Set      | `VERIFIED` |
 | M057      | Player ↔ Commander — Proposal Data      | `VERIFIED` |
-| M058      | Player ↔ Commander                      | `PLANNED`  |
-| M055–M058 | Player ↔ Commander                      | `PLANNED`  |
+| M058      | Player ↔ Commander — Proposal Verbs     | `VERIFIED` |
 | M059–M061 | AI Evolution                            | `PLANNED`  |
 | M062–M064 | Replay                                  | `PLANNED`  |
 | M065–M068 | AI Arena                                | `PLANNED`  |
