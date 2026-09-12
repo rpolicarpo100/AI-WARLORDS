@@ -182,6 +182,7 @@
     <button class="tbtn" id="netAttack" title="netUnit strikes netTarget">⚔ Attack</button>
     <button class="tbtn" id="netMove" title="march netUnit to netTo">➡ Move</button>
     <button class="tbtn" id="netState" title="snapshot the table position">📡 State</button>
+    <button class="tbtn" id="netClose" title="close the table">🔒 Close</button>
     <button class="tbtn" id="netStop" title="stop watching">⏹ Stop</button>
     <pre id="netOut">Offline, sire.</pre>
   </div>
@@ -10929,6 +10930,19 @@
       }
     } catch (err) { netLog(`net error: ${err.message || err}`); }
   }
+  async function netClose() {
+    if (NET.matchId === '') { netLog('forge or pick a table first'); return; }
+    try {
+      const out = await netCall(`/match/${NET.matchId}/close`, {});
+      if (out.closed) {
+        if (NET.abort) { NET.abort.abort(); NET.abort = null; }
+        NET.watching = false;
+        NET.matchId = '';
+        NET.sessionId = '';
+        netLog('table closed');
+      } else netLog('close refused');
+    } catch (err) { netLog(`net error: ${err.message || err}`); }
+  }
   function netStop() {
     if (NET.abort) { NET.abort.abort(); NET.abort = null; }
     NET.watching = false;
@@ -12117,6 +12131,7 @@
   $('netAttack').addEventListener('click', () => { void netAct('attack'); });
   $('netMove').addEventListener('click', () => { void netAct('move'); });
   $('netState').addEventListener('click', () => { void netState(); });
+  $('netClose').addEventListener('click', () => { void netClose(); });
   $('netStop').addEventListener('click', netStop);
   const cmdSide = () => { const u = cmdSelUnit(); return u ? u.owner : 'p1'; };
   $('cmdGather').addEventListener('click', () => {

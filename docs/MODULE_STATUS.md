@@ -9,8 +9,8 @@
 
 | Estado     | Contagem       |
 | ---------- | -------------- |
-| `VERIFIED` | 72 (M001–M075) |
-| `PLANNED`  | 93 (M076–M165) |
+| `VERIFIED` | 72 (M001–M076) |
+| `PLANNED`  | 93 (M077–M165) |
 | Outros     | 0              |
 
 Checkpoints `VERIFIED`:

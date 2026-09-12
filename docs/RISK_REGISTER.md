@@ -143,3 +143,5 @@
 - M074: ordens online livres (attack/move); RISK: posição online não visível (ver M075 state).
 
 - M075: loop online fechado (ordens+posição); RISK: mesas sem dono/dono off ficam abertas (ver M076 close).
+
+- M076: BLOCO M065–M076 FECHADO (multiplayer ponta-a-ponta live); próximo bloco a votar.

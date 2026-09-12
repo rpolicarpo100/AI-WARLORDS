@@ -221,6 +221,7 @@ for (const id of [
   'netAttack',
   'netMove',
   'netState',
+  'netClose',
   'netStop',
 ])
   fire(id, 'click');
@@ -402,7 +403,7 @@ if (process.env.API_TEST) {
     await waitOut('lobby: 0 table(s)', 'empty lobby');
     fire('netForge', 'click');
     await waitOut('forged ', 'forge line');
-    const mid = /forged (\S+)/.exec(out())[1];
+    if (!/forged (\S+)/.exec(out())) throw new Error('api test: no match id forged');
     fire('netJoin', 'click');
     await waitOut('joined p1', 'join line');
     await waitOut('event: ', 'backlog event over SSE');
@@ -421,11 +422,13 @@ if (process.env.API_TEST) {
     fire('netState', 'click');
     await waitOut('state: prompts p1:7 p2:10', 'prompts line');
     await waitOut('- u1 p1 warrior hp12 @1,1', 'moved position line');
+    fire('netClose', 'click');
+    await waitOut('table closed', 'close line');
     fire('netStop', 'click');
     await waitOut('watch stopped', 'stop line');
-    const closed = await globalThis.fetch(`${url}/match/${mid}/close`, { method: 'POST' });
-    if (!closed.ok) throw new Error('api test: close failed');
-    console.log('online E2E OK (lobby → forge → join → noop → attack → sse → stop)');
+    fire('netLobby', 'click');
+    await waitOut('lobby: 0 table(s)', 'lobby empty again');
+    console.log('online E2E OK (lobby → forge → join → noop → attack → move → state → close)');
   } finally {
     try {
       process.kill(-child.pid, 'SIGTERM');

@@ -2270,3 +2270,20 @@ Date.now)` (relógio injetável):
 - DISADVANTAGES: texto, não visual.
 - RISKS: baixo — GET+try/catch.
 - CUTS: board render online.
+
+## D-070 — Online close M076 (sem voto: sequência apontada)
+
+- DECISION: botão Close → POST
+  /:id/close → `table closed` +
+  abort watch + limpa match/session
+  (guard matchId); lifecycle
+  completo na UI (lobby→…→close→
+  lobby vazio); close sem sessão
+  (probado — dono implícito M071).
+- MOTIVE: mesas órfãs (ver RISK
+  M075); fechar bloco M076.
+- ALTERNATIVES: auto-close (CUT).
+- ADVANTAGES: higiene do lobby.
+- DISADVANTAGES: sem.
+- RISKS: baixo.
+- CUTS: kick dono; TTL auto.
