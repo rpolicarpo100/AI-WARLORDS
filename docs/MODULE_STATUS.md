@@ -9,8 +9,8 @@
 
 | Estado     | Contagem       |
 | ---------- | -------------- |
-| `VERIFIED` | 68 (M001–M068) |
-| `PLANNED`  | 97 (M069–M165) |
+| `VERIFIED` | 69 (M001–M069) |
+| `PLANNED`  | 96 (M070–M165) |
 | Outros     | 0              |
 
 Checkpoints `VERIFIED`:
@@ -305,6 +305,11 @@ Checkpoints `VERIFIED`:
   +1792; bloco Arena FECHADO);
   1850/1850 testes, 100 global.
   Registo em `docs/modules/M068.md`.
+- **M069 @ 2026-09-12** — Multiplayer
+  SSE+POST (wire real, 26 testes HTTP,
+  bundle +0); 1876/1876 testes, 100
+  global.
+  Registo em `docs/modules/M069.md`.
 
 ---
 
@@ -408,12 +413,13 @@ Checkpoints `VERIFIED`:
 
 ## Fases 17–20 — Multiplayer, Competitive, Security, Observability
 
-| Módulo(s) | Âmbito        | Estado    |
-| --------- | ------------- | --------- |
-| M069–M076 | Multiplayer   | `PLANNED` |
-| M077–M080 | Competitive   | `PLANNED` |
-| M081–M087 | Security      | `PLANNED` |
-| M088–M093 | Observability | `PLANNED` |
+| Módulo(s) | Âmbito                           | Estado     |
+| --------- | -------------------------------- | ---------- |
+| M069      | Multiplayer — SSE+POST Transport | `VERIFIED` |
+| M070–M076 | Multiplayer                      | `PLANNED`  |
+| M077–M080 | Competitive                      | `PLANNED`  |
+| M081–M087 | Security                         | `PLANNED`  |
+| M088–M093 | Observability                    | `PLANNED`  |
 
 ## Fases 21–28 — Economy sim, Free mode, Solana, Compliance, Seasons
 

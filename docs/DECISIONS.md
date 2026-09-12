@@ -2091,3 +2091,35 @@ player)` = hp vivo + stock + city level
 - RISKS: baixo — moldes cmd+ATTACK.
 - CUTS: configurador de prompts;
   animações lance-a-lance (futuro).
+
+## D-063 — SSE+POST transport M069 (voto sse-post)
+
+- DECISION: NOVO `src/server/transport.ts`
+  (node:http, sem deps): POST /match
+  {seed?} (skirmish fixo 2p server-side);
+  POST /:id/join {playerId} → session;
+  POST /:id/dispatch {sessionId,
+  requestId, type, payload} (playerId
+  DERIVADO da sessão — anti-spoof por
+  construção); GET /:id/events?from=N
+  (SSE backlog+live); GET /:id/state.
+  HTTP 200 p/ bem-formado (outcome
+  carrega erros domínio); 400 corpo/
+  sessão/from; 404 rota/match.
+  Zero `??`/`?.`/`||` não-cobertos
+  (100% honestos via HTTP real).
+- MOTIVE: voto + "não assumir WS/REST"
+  decidio: SSE+POST (zero deps, qualquer
+  host); sem auth (fase Security).
+- ALTERNATIVES: WS (rejeitado: voto);
+  roster flexível (rejeitado: clash c/
+  cenário fixo — skirmish [p1,p2]);
+  broadcast só-applied (rejeitado: slice
+  incondicional = zero branches).
+- ADVANTAGES: black-box 100% (precisa
+  de nada interno); censor/layers não
+  cobrem server (dir engine-only).
+- DISADVANTAGES: 1 ficheiro ~200 linhas.
+- RISKS: baixo — kernel valida resto.
+- CUTS: prod listener; roster N;
+  body-limit; auth; match.html client.
