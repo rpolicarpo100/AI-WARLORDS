@@ -2380,3 +2380,25 @@ p2:M` + 1 linha/unidade
   par 1 (sem path N>2 hoje).
 - RISKS: baixo.
 - CUTS: leaderboard page (M080).
+
+## D-074 — Leaderboard M080 (sem voto: sequência apontada)
+
+- DECISION: botão Board → GET
+  /ratings + /results → netOut
+  (`ratings: p R · …` desc +
+  `history (N):` + `- id8 crown
+rev R (seed S)` últimas 6,
+  newest-first); sem match
+  required; vazios honestos
+  (`none yet`, `(0)`).
+- MOTIVE: fechar Competitive com
+  UI; render prova rated+ongoing.
+- ALTERNATIVES: spendAll via UI
+  (rejeitado: 2 sessões, lento);
+  raw-fetch rated + render UI
+  (ADOÇÃO: produção M079-tested,
+  render aqui-testado).
+- ADVANTAGES: E2E rápido (~2s).
+- DISADVANTAGES: nenhum.
+- RISKS: baixo.
+- CUTS: sparklines; perfis.

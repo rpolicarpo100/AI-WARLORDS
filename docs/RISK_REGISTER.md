@@ -151,3 +151,5 @@
 - M078: wins existem (score-superior); RISK: sem ratings (ver M079).
 
 - M079: ratings live (Elo 1200/K32); RISK: sem UI (ver M080 leaderboard).
+
+- M080: COMPETITIVE FECHADO (board live); próximo: Security M081–M087.

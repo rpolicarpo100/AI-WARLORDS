@@ -222,6 +222,7 @@ for (const id of [
   'netMove',
   'netState',
   'netClose',
+  'netBoard',
   'netStop',
 ])
   fire(id, 'click');
@@ -428,7 +429,48 @@ if (process.env.API_TEST) {
     await waitOut('watch stopped', 'stop line');
     fire('netLobby', 'click');
     await waitOut('lobby: 0 table(s)', 'lobby empty again');
-    console.log('online E2E OK (lobby → forge → join → noop → attack → move → state → close)');
+    fire('netBoard', 'click');
+    await waitOut('ratings: none yet', 'void ratings line');
+    await waitOut('history (1):', 'single history line');
+    await waitOut('ongoing rev 3', 'ongoing row');
+    // A rated table via raw fetch (rated production is M079-tested;
+    // the board must RENDER it) — then the UI reads it back.
+    const rated = async () => {
+      const post = (path, body) =>
+        globalThis
+          .fetch(`${url}${path}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          })
+          .then((res) => res.json());
+      const forged2 = await post('/match', {});
+      const s1 = (await post(`/match/${forged2.matchId}/join`, { playerId: 'p1' })).sessionId;
+      const s2 = (await post(`/match/${forged2.matchId}/join`, { playerId: 'p2' })).sessionId;
+      for (let i = 0; i < 10; i += 1) {
+        await post(`/match/${forged2.matchId}/dispatch`, {
+          sessionId: s1,
+          requestId: `b1-${i}`,
+          type: 'world.noop',
+          payload: {},
+        });
+        await post(`/match/${forged2.matchId}/dispatch`, {
+          sessionId: s2,
+          requestId: `b2-${i}`,
+          type: 'world.noop',
+          payload: {},
+        });
+      }
+      await post(`/match/${forged2.matchId}/close`, {});
+    };
+    await rated();
+    fire('netBoard', 'click');
+    await waitOut('ratings: p1 1216 · p2 1184', 'rated line');
+    await waitOut('history (2):', 'grown history line');
+    await waitOut('win p1 rev 20', 'crown row');
+    console.log(
+      'online E2E OK (lobby → forge → join → noop → attack → move → state → close → board)',
+    );
   } finally {
     try {
       process.kill(-child.pid, 'SIGTERM');

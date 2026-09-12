@@ -9,8 +9,8 @@
 
 | Estado     | Contagem       |
 | ---------- | -------------- |
-| `VERIFIED` | 79 (M001–M079) |
-| `PLANNED`  | 86 (M080–M165) |
+| `VERIFIED` | 80 (M001–M080) |
+| `PLANNED`  | 85 (M081–M165) |
 | Outros     | 0              |
 
 Checkpoints `VERIFIED`:
@@ -438,7 +438,8 @@ Checkpoints `VERIFIED`:
 | M077 | Competitive (history) | `VERIFIED` |
 | M078 | Competitive (score victory) | `VERIFIED` |
 | M079 | Competitive (ratings) | `VERIFIED` |
-| M080 | Competitive | `PLANNED` |
+| M080 | Competitive (leaderboard) | `VERIFIED` |
+| M081–M087 | Security | `PLANNED` |
 | M081–M087 | Security                         | `PLANNED`  |
 | M088–M093 | Observability                    | `PLANNED`  |
 
