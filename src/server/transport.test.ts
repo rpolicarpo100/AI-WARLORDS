@@ -1006,6 +1006,45 @@ describe('GET /metrics (counters)', () => {
   });
 });
 
+describe('GET /healthz (deep health)', () => {
+  it('inventories a lifecycle exactly (zeros, live, drained)', async () => {
+    await withClock(async () => {
+      expect(await get('/healthz')).toEqual({
+        code: 200,
+        json: {
+          ok: true,
+          uptimeMs: 0,
+          matches: 0,
+          streams: 0,
+          results: 0,
+          ratings: 0,
+          window: { count: 1, resetInMs: 60_000 },
+        },
+      });
+      const created = await postJson('/match', {});
+      const matchId = (created.json as { matchId: string }).matchId;
+      const stream = openSse(`/match/${matchId}/events?from=0`);
+      expect(await stream.code).toBe(200);
+      const live = (await get('/healthz')).json as { matches: number; streams: number };
+      expect(live).toMatchObject({ matches: 1, streams: 1 });
+      stream.close();
+      await postJson(`/match/${matchId}/close`, {});
+      const drained = (await get('/healthz')).json as {
+        matches: number;
+        results: number;
+        window: { count: number };
+      };
+      expect(drained).toMatchObject({ matches: 0, results: 1 });
+      expect(drained.window.count).toBeGreaterThan(1);
+    });
+  });
+
+  it('404s health lookalikes', async () => {
+    expect(await get('/healthz/x')).toMatchObject({ code: 404 });
+    expect(await postJson('/healthz', {})).toMatchObject({ code: 404 });
+  });
+});
+
 describe('POST /match/:id/close (last call)', () => {
   it('ends streams, deletes the table, refuses seconds', async () => {
     const { matchId } = await sessionFor('p1');

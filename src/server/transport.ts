@@ -318,6 +318,22 @@ export function createTransport(
       send(res, 200, Object.fromEntries(ratings));
       return;
     }
+    if (parts[0] === 'healthz' && parts.length === 1 && method === 'GET') {
+      let streams = 0;
+      for (const item of matches.values()) {
+        streams += item.streams.size;
+      }
+      send(res, 200, {
+        ok: true,
+        uptimeMs: now() - startedAt,
+        matches: matches.size,
+        streams,
+        results: results.length,
+        ratings: ratings.size,
+        window: { count: window.count, resetInMs: Math.max(0, window.resetAt - now()) },
+      });
+      return;
+    }
     if (parts[0] === 'metrics' && parts.length === 1 && method === 'GET') {
       send(res, 200, {
         requests: metrics.requests,

@@ -169,3 +169,5 @@
 - M087: SECURITY FECHADO (0 fugas); próximo: Observability M088–M093.
 
 - M088: métricas live (requests+byStatus); RISK: health raso (ver M089).
+
+- M089: health profundo live; RISK: sem access log (ver M090).

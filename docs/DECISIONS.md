@@ -2631,3 +2631,24 @@ rev R (seed S)` últimas 6,
 - RISKS: baixo.
 - CUTS: dispatches applied (M089
   c/ health?); histogramas.
+
+## D-084 — Deep health M089 (sem voto: sequência apontada)
+
+- DECISION: GET /healthz (/) fica
+  Render path intocado): {ok,
+  uptimeMs, matches, streams,
+  results, ratings, window:
+  {count, resetInMs clamp 0}};
+  tudo leitura+aritmética (0
+  branches); testes c/ clock
+  (zeros→forge/sse→close).
+- MOTIVE: RISK M088; diagnóstico
+  sem adivinha.
+- ALTERNATIVES: estender /
+  (rejeitado: path Render
+  congelado); liveness probe
+  lógica (CUT: sem deps).
+- ADVANTAGES: inventário live.
+- DISADVANTAGES: nenhum.
+- RISKS: baixo.
+- CUTS: readiness vs liveness.
