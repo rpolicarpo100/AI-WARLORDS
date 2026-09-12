@@ -2675,3 +2675,22 @@ rev R (seed S)` últimas 6,
 - DISADVANTAGES: nenhum.
 - RISKS: baixo.
 - CUTS: sampling; trace ids.
+
+## D-086 — Status UI M091 (sem voto: sequência apontada)
+
+- DECISION: botão Pulse →
+  /healthz + /metrics → netOut
+  (3 linhas: pulse/uptime,
+  inventário, window+reqs);
+  sem match required; asserts
+  formas+determinísticos
+  (matches/results/ratings),
+  nunca contagens frágeis.
+- MOTIVE: RISK M090; saúde
+  visível no browser.
+- ALTERNATIVES: auto-pulse
+  (rejeitado: ruído+rate).
+- ADVANTAGES: usa M088+M089.
+- DISADVANTAGES: nenhum.
+- RISKS: baixo.
+- CUTS: gráficos; alertas.

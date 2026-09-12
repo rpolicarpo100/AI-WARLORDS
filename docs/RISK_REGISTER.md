@@ -173,3 +173,5 @@
 - M089: health profundo live; RISK: sem access log (ver M090).
 
 - M090: access log live (AW_LOG); RISK: sem status UI (ver M091).
+
+- M091: pulse UI live; RISK: sem drill e2e prod (ver M092).

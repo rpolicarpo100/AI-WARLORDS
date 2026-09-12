@@ -223,6 +223,7 @@ for (const id of [
   'netState',
   'netClose',
   'netBoard',
+  'netPulse',
   'netStop',
 ])
   fire(id, 'click');
@@ -468,8 +469,12 @@ if (process.env.API_TEST) {
     await waitOut('ratings: p1 1216 · p2 1184', 'rated line');
     await waitOut('history (2):', 'grown history line');
     await waitOut('win p1 rev 20', 'crown row');
+    fire('netPulse', 'click');
+    await waitOut('pulse: ok', 'pulse line');
+    await waitOut('- matches 0 streams 0 results 2 ratings 2', 'inventory line');
+    await waitOut('reqs ', 'requests line');
     console.log(
-      'online E2E OK (lobby → forge → join → noop → attack → move → state → close → board)',
+      'online E2E OK (lobby → forge → join → noop → attack → move → state → close → board → pulse)',
     );
   } finally {
     try {
