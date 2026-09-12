@@ -1,6 +1,6 @@
 # AI WARLORDS — MODULE STATUS (M012)
 
-> Data: 2026-09-11 · Actualizado por: M012 (Resources)
+> Data: 2026-09-12 · Actualizado por: audit pós-M097
 > Estados oficiais: `PLANNED · IN_ANALYSIS · IN_DEVELOPMENT · IMPLEMENTED · TESTING · FAILED · BLOCKED · VERIFIED · DEPRECATED`
 
 ---
@@ -604,11 +604,11 @@ Alinhadas por número: 0, 1, 3, 4, 28. Divergentes:
 ## Ordem recomendada (estrita, sem saltos)
 
 ```text
-M001 → … → M094 (VERIFIED) → M095 → … → M165
+M001 → … → M097 (VERIFIED) → M098 → … → M165
 ```
 
-Próximo permitido: **M095 — Free Mode**, apenas após autorização
-explícita (bloco 9: M095–M097). Saltos, paralelização ou batch = violação do §35 (recusar).
+Próximo permitido: **M098 — Solana Foundation**, apenas após autorização
+explícita (bloco 9 M095–M097 CLOSED; sem fundos reais antes dos gates). Saltos, paralelização ou batch = violação do §35 (recusar).
 
 ---
 

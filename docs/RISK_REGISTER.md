@@ -42,7 +42,7 @@
 | ---- | ----------------------------------- | ------ | ------- | ------ | ---------------------------------- |
 | R-30 | Dinheiro real antes de estabilidade | 23–28  | Crítica | FUTURE | gate Fase 28; §31                  |
 | R-31 | Double-spend / reconciliação        | 23–25  | Crítica | FUTURE | Fase 26 antes de recompensas       |
-| R-32 | Farming/abuse de recompensas        | 21, 28 | Alta    | FUTURE | simulador M094; free mode primeiro |
+| R-32 | Farming/abuse de recompensas | 21, 28 | Alta | FUTURE | M094 sim landed; M096 free void landed; reavaliar na Fase 28 |
 | R-33 | Legal: gambling/skill, KYC, geo     | 26     | Crítica | FUTURE | Fase 26 antes de recompensas       |
 
 ## 5. Riscos de performance / observabilidade
